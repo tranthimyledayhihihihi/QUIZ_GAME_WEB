@@ -621,9 +621,9 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "UserID", "AnhDaiDien", "Email", "HoTen", "LanDangNhapCuoi", "MatKhau", "NgayDangKy", "TenDangNhap", "TrangThai" },
                 values: new object[,]
                 {
-                    { 1, null, "superadmin@quiz.com", "Nguyễn Super Admin", null, "hashed_sa_password", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4103), "admin_sa", true },
-                    { 2, null, "player01@quiz.com", "Trần Văn A", null, "hashed_p1_password", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4124), "player01", true },
-                    { 3, null, "player02@quiz.com", "Lê Thị B", null, "hashed_p2_password", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4166), "player02", true }
+                    { 1, null, "superadmin@quiz.com", "Nguyễn Super Admin", null, "hashed_sa_password", new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(351), "admin_sa", true },
+                    { 2, null, "player01@quiz.com", "Trần Văn A", null, "hashed_p1_password", new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(370), "player01", true },
+                    { 3, null, "player02@quiz.com", "Lê Thị B", null, "hashed_p2_password", new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(375), "player02", true }
                 });
 
             migrationBuilder.InsertData(
@@ -659,7 +659,7 @@ namespace QUIZ_GAME_WEB.Migrations
             migrationBuilder.InsertData(
                 table: "Admin",
                 columns: new[] { "AdminID", "NgayTao", "TrangThai", "UserID", "VaiTroID" },
-                values: new object[] { 1, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4192), true, 1, 1 });
+                values: new object[] { 1, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(423), true, 1, 1 });
 
             migrationBuilder.InsertData(
                 table: "BXH",
@@ -684,10 +684,10 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "CauHoiID", "ChuDeID", "DapAnA", "DapAnB", "DapAnC", "DapAnD", "DapAnDung", "DoKhoID", "HinhAnh", "NgayTao", "NoiDung" },
                 values: new object[,]
                 {
-                    { 1, 1, "Phan Đình Phùng", "Trần Văn Thời", "Trương Định", "Nguyễn Trung Trực", "C", 1, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4300), "Ai là người phất cờ khởi nghĩa đầu tiên chống Pháp?" },
-                    { 2, 1, "1953", "1954", "1975", "1950", "B", 2, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4304), "Chiến dịch Điện Biên Phủ diễn ra năm nào?" },
-                    { 3, 2, "3", "9", "3 và -3", "Không có", "C", 1, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4306), "Căn bậc hai của 9 là bao nhiêu?" },
-                    { 4, 3, "Đồng", "Vàng", "Nhựa", "Bạc", "C", 2, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4308), "Chất nào sau đây không dẫn điện?" }
+                    { 1, 1, "Phan Đình Phùng", "Trần Văn Thời", "Trương Định", "Nguyễn Trung Trực", "C", 1, null, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(505), "Ai là người phất cờ khởi nghĩa đầu tiên chống Pháp?" },
+                    { 2, 1, "1953", "1954", "1975", "1950", "B", 2, null, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(509), "Chiến dịch Điện Biên Phủ diễn ra năm nào?" },
+                    { 3, 2, "3", "9", "3 và -3", "Không có", "C", 1, null, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(511), "Căn bậc hai của 9 là bao nhiêu?" },
+                    { 4, 3, "Đồng", "Vàng", "Nhựa", "Bạc", "C", 2, null, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(513), "Chất nào sau đây không dẫn điện?" }
                 });
 
             migrationBuilder.InsertData(
@@ -695,14 +695,14 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "ChuoiID", "NgayCapNhatCuoi", "SoNgayLienTiep", "UserID" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4450), 5, 2 },
-                    { 2, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4453), 2, 3 }
+                    { 1, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(623), 5, 2 },
+                    { 2, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(625), 2, 3 }
                 });
 
             migrationBuilder.InsertData(
                 table: "QuizTuyChinh",
                 columns: new[] { "QuizTuyChinhID", "MoTa", "NgayTao", "TenQuiz", "UserID" },
-                values: new object[] { 1, "Các câu hỏi tôi thích nhất.", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4330), "Quiz Của Tôi", 2 });
+                values: new object[] { 1, "Các câu hỏi tôi thích nhất.", new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(531), "Quiz Của Tôi", 2 });
 
             migrationBuilder.InsertData(
                 table: "VaiTro_Quyen",
@@ -723,14 +723,14 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "QuizAttemptID", "Diem", "NgayBatDau", "NgayKetThuc", "QuizTuyChinhID", "SoCauDung", "SoCauHoiLam", "TrangThai", "UserID" },
                 values: new object[,]
                 {
-                    { 1, 0, new DateTime(2025, 12, 1, 14, 33, 2, 325, DateTimeKind.Local).AddTicks(4352), new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4359), 1, 0, 0, "Hoàn thành", 2 },
-                    { 2, 0, new DateTime(2025, 12, 1, 13, 33, 2, 325, DateTimeKind.Local).AddTicks(4364), new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4365), 1, 0, 0, "Hoàn thành", 3 }
+                    { 1, 0, new DateTime(2025, 12, 1, 18, 43, 42, 974, DateTimeKind.Local).AddTicks(546), new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(550), 1, 0, 0, "Hoàn thành", 2 },
+                    { 2, 0, new DateTime(2025, 12, 1, 17, 43, 42, 974, DateTimeKind.Local).AddTicks(556), new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(556), 1, 0, 0, "Hoàn thành", 3 }
                 });
 
             migrationBuilder.InsertData(
                 table: "QuizChiaSe",
                 columns: new[] { "QuizChiaSeID", "NgayChiaSe", "QuizTuyChinhID", "UserGuiID", "UserNhanID" },
-                values: new object[] { 1, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4496), 1, 2, 3 });
+                values: new object[] { 1, new DateTime(2025, 12, 1, 19, 43, 42, 974, DateTimeKind.Local).AddTicks(658), 1, 2, 3 });
 
             migrationBuilder.InsertData(
                 table: "QuizNgay",
@@ -747,8 +747,8 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "KetQuaID", "Diem", "QuizAttemptID", "SoCauDung", "ThoiGian", "TongCauHoi", "TrangThaiKetQua", "UserID" },
                 values: new object[,]
                 {
-                    { 1, 50, 1, 2, new DateTime(2025, 12, 1, 10, 33, 2, 325, DateTimeKind.Local).AddTicks(4387), 2, "Hoàn thành", 2 },
-                    { 2, 25, 2, 1, new DateTime(2025, 12, 1, 14, 33, 2, 325, DateTimeKind.Local).AddTicks(4390), 2, "Hoàn thành", 3 }
+                    { 1, 50, 1, 2, new DateTime(2025, 12, 1, 14, 43, 42, 974, DateTimeKind.Local).AddTicks(573), 2, "Hoàn thành", 2 },
+                    { 2, 25, 2, 1, new DateTime(2025, 12, 1, 18, 43, 42, 974, DateTimeKind.Local).AddTicks(576), 2, "Hoàn thành", 3 }
                 });
 
             migrationBuilder.CreateIndex(
