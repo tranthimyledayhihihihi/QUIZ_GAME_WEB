@@ -1,45 +1,7 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title - Admin Dashboard</title>
-    
-    <link href="~/Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+﻿
+@{
+    ViewBag.Title = "_AdminLayout";
+}
 
-</head>
-<body>
-    <nav class="navbar navbar-inverse">
-        <div class="container">
-            <div class="navbar-header">
-                @Html.ActionLink("TRANG ADMIN", "Index", "Admin", new { area = "" }, new { @class = "navbar-brand" })
-            </div>
-            <div class="navbar-collapse collapse">
-                <ul class="nav navbar-nav">
-                    <li>@Html.ActionLink("Dashboard", "Index", "Admin")</li>
-                    <li>@Html.ActionLink("Quản lý User", "Users", "Admin")</li>
-                    <li>@Html.ActionLink("Quản lý Câu hỏi", "Questions", "Admin")</li>
-                    <li>@Html.ActionLink("Quản lý Chủ đề", "Topics", "Admin")</li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    
-    <div class="container body-content">
-        @RenderBody() 
-        <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - My Quiz Game</p>
-        </footer>
-    </div>
+<h2>_AdminLayout</h2>
 
-    @* SỬ DỤNG TÊN FILE CHÍNH XÁC: jquery-3.7.0.min.js *@
-    <script src="~/Scripts/jquery-3.7.0.min.js"></script> 
-    
-    <script src="~/Scripts/bootstrap.min.js"></script>
-    
-    @* @RenderSection PHẢI LUÔN Ở CUỐI CÙNG *@
-    @RenderSection("scripts", required: false) 
-
-</body>
-</html>

@@ -1,19 +1,7 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <title>@ViewBag.Title - Quiz Game</title>
-</head>
-<body>
-    <div class="container body-content">
-        @RenderBody() <hr />
-        <footer>
-            <p>&copy; @DateTime.Now.Year - My Quiz Game</p>
-        </footer>
-    </div>
-    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
-    <script src="~/Scripts/bootstrap.min.js"></script>
+﻿
+@{
+    ViewBag.Title = "_Layout";
+}
 
-    @RenderSection("scripts", required: false)
+<h2>_Layout</h2>
 
-</body>
-</html>
