@@ -1,55 +1,66 @@
-﻿// Models/Implementations/ResultRepository.cs
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using QUIZ_GAME_WEB.Data;
 using QUIZ_GAME_WEB.Models.Interfaces;
 using QUIZ_GAME_WEB.Models.ResultsModels;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks; // Cần thiết
-using System; // 👈 ĐÃ THÊM: Cần cho DateTime
-using System.Collections.Generic; // Cần cho IEnumerable
+using System.Threading.Tasks;
 
 namespace QUIZ_GAME_WEB.Models.Implementations
 {
-    // Kế thừa GenericRepository<KetQua> và triển khai IResultRepository
     public class ResultRepository : GenericRepository<KetQua>, IResultRepository
     {
-        // Truy cập Context thông qua thuộc tính Context của lớp cơ sở hoặc thuộc tính riêng
         private readonly QuizGameContext _context;
 
-        // Constructor
         public ResultRepository(QuizGameContext context) : base(context)
         {
-            // Gán context nếu GenericRepository không tự gán hoặc cần truy cập DbSet khác
             _context = context;
         }
 
+        // ===================== Chuỗi ngày (Streak) =====================
         public async Task<ChuoiNgay?> GetUserStreakAsync(int userId)
         {
-            // SỬA TÊN DbSet: ChuoiNgay -> ChuoiNgays
             return await _context.ChuoiNgays.FirstOrDefaultAsync(c => c.UserID == userId);
         }
 
-        // CHỈ CẦN KHAI BÁO CÁC HÀM CƠ BẢN ĐỂ LẤY HOẶC THÊM ENTITY, 
-        // Logic Update (tăng streak) NÊN NẰM Ở Service.
-        // Tuy nhiên, nếu hàm này là yêu cầu của IResultRepository, ta chỉ giữ lại logic thao tác DB:
-        // Đã bỏ hàm UpdateUserStreakAsync khỏi Repository vì nó chứa logic nghiệp vụ.
-
-        public async Task AddWrongAnswerAsync(int userId, int cauHoiId)
+        public void AddStreak(ChuoiNgay streak)
         {
-            var wrongAnswer = new CauSai
-            {
-                UserID = userId,
-                CauHoiID = cauHoiId,
-                NgaySai = DateTime.Now.Date
-            };
-            // SỬA TÊN DbSet: CauSai -> CauSais
-            await _context.CauSais.AddAsync(wrongAnswer);
-            // Lưu ý: Không gọi SaveChangesAsync ở đây; để UnitOfWork (Service) gọi CompleteAsync()
+            _context.ChuoiNgays.Add(streak);
+        }
+
+        public void Update(ChuoiNgay streak)
+        {
+            _context.ChuoiNgays.Update(streak);
+        }
+
+        // ===================== Kết quả (KetQua) =====================
+        public void AddKetQua(KetQua ketQua)
+        {
+            _context.KetQuas.Add(ketQua);
+        }
+
+        // ===================== Câu sai (CauSai) =====================
+
+        /// <summary>
+        /// Triển khai phương thức chính để lưu một câu trả lời sai vào DB.
+        /// </summary>
+        public async Task AddCauSaiAsync(CauSai cauSai)
+        {
+            await _context.CauSais.AddAsync(cauSai);
+        }
+
+        /// <summary>
+        /// Triển khai phương thức cũ/trùng lặp AddWrongAnswerAsync để khớp IResultRepository.
+        /// (Chỉ cần gọi lại AddCauSaiAsync để tránh trùng lặp logic).
+        /// </summary>
+        public async Task AddWrongAnswerAsync(CauSai cauSai)
+        {
+            await AddCauSaiAsync(cauSai);
         }
 
         public async Task<IEnumerable<CauSai>> GetRecentWrongAnswersAsync(int userId, int limit = 10)
         {
-            // SỬA TÊN DbSet: CauSai -> CauSais
             return await _context.CauSais
                                  .Where(c => c.UserID == userId)
                                  .OrderByDescending(c => c.NgaySai)
@@ -57,78 +68,40 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                                  .ToListAsync();
         }
 
-        public async Task<IEnumerable<ThongKeNguoiDung>> GetUserDailyStatsAsync(int userId, DateTime startDate, DateTime endDate)
+        public async Task<int> CountWrongAnswersAsync(int userId, int attemptId)
         {
-            // SỬA TÊN DbSet: ThongKeNguoiDung -> ThongKeNguoiDungs
+            return await _context.CauSais.CountAsync(c => c.UserID == userId && c.QuizAttemptID == attemptId);
+        }
+
+        // ===================== Thưởng hàng ngày (ThuongNgay) =====================
+        public async Task<ThuongNgay?> GetDailyRewardByDateAsync(int userId, DateTime today)
+        {
+            return await _context.ThuongNgays.FirstOrDefaultAsync(t => t.UserID == userId && t.NgayNhan.Date == today.Date);
+        }
+
+        public void AddDailyReward(ThuongNgay newReward)
+        {
+            _context.ThuongNgays.Add(newReward);
+        }
+
+        // ===================== Thống kê/achievement (ThongKeNguoiDung & ThanhTuu) =====================
+        public async Task<IEnumerable<ThongKeNguoiDung>> GetUserDailyStatsAsync(int userId, DateTime? startDate, DateTime? endDate)
+        {
+            DateTime start = startDate ?? DateTime.Today.AddDays(-30);
+            DateTime end = endDate ?? DateTime.Today;
+
             return await _context.ThongKeNguoiDungs
-                                 .Where(t => t.UserID == userId && t.Ngay >= startDate.Date && t.Ngay <= endDate.Date)
+                                 // Giữ nguyên logic Where để lọc theo ngày
+                                 .Where(t => t.UserID == userId && t.Ngay >= start.Date && t.Ngay <= end.Date)
                                  .OrderBy(t => t.Ngay)
                                  .ToListAsync();
         }
 
-        // Cần thêm triển khai cho hàm IResultRepository thứ hai có tham số nullable nếu nó có trong Interface
-        // Nếu không có, hàm này là trùng lặp và nên bị loại bỏ khỏi Interface.
-        public Task<IEnumerable<ThongKeNguoiDung>> GetUserDailyStatsAsync(int userID, DateTime? ngayBatDau, DateTime? ngayKetThuc)
+        public async Task<IEnumerable<ThanhTuu>> GetUserAchievementsAsync(int userId)
         {
-            // Triển khai hàm này bằng cách kiểm tra giá trị null và gọi hàm trên
-            if (ngayBatDau.HasValue && ngayKetThuc.HasValue)
-            {
-                return GetUserDailyStatsAsync(userID, ngayBatDau.Value, ngayKetThuc.Value);
-            }
-            // Logic mặc định nếu không có ngày (ví dụ: lấy 30 ngày gần nhất)
-            DateTime defaultStart = DateTime.Today.AddDays(-30);
-            DateTime defaultEnd = DateTime.Today;
-            return GetUserDailyStatsAsync(userID, defaultStart, defaultEnd);
-        }
-
-        public Task<IEnumerable<ThanhTuu>> GetUserAchievementsAsync(int userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ChuoiNgay?> IResultRepository.GetUserStreakAsync(int userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task IResultRepository.AddWrongAnswerAsync(int userId, int cauHoiId)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<IEnumerable<CauSai>> IResultRepository.GetRecentWrongAnswersAsync(int userId, int limit)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<IEnumerable<ThongKeNguoiDung>> IResultRepository.GetUserDailyStatsAsync(int userId, DateTime? startDate, DateTime? endDate)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<IEnumerable<ThanhTuu>> IResultRepository.GetUserAchievementsAsync(int userId)
-        {
-            throw new NotImplementedException();
-        }
-
-        Task<ThuongNgay?> IResultRepository.GetDailyRewardByDateAsync(int userId, DateTime today)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IResultRepository.AddDailyReward(ThuongNgay newReward)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IResultRepository.AddStreak(ChuoiNgay chuoiNgay)
-        {
-            throw new NotImplementedException();
-        }
-
-        void IResultRepository.Update(ChuoiNgay streak)
-        {
-            throw new NotImplementedException();
+            return await _context.ThanhTuus
+                                 .Where(t => t.NguoiDungID == userId)
+                                 .ToListAsync();
         }
     }
 }

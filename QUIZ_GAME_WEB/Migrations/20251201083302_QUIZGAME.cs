@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace QUIZ_GAME_WEB.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class QUIZGAME : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -259,30 +259,6 @@ namespace QUIZ_GAME_WEB.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "KetQua",
-                columns: table => new
-                {
-                    KetQuaID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserID = table.Column<int>(type: "int", nullable: false),
-                    Diem = table.Column<int>(type: "int", nullable: false),
-                    SoCauDung = table.Column<int>(type: "int", nullable: false),
-                    TongCauHoi = table.Column<int>(type: "int", nullable: false),
-                    TrangThaiKetQua = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ThoiGian = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_KetQua", x => x.KetQuaID);
-                    table.ForeignKey(
-                        name: "FK_KetQua_NguoiDung_UserID",
-                        column: x => x.UserID,
-                        principalTable: "NguoiDung",
-                        principalColumn: "UserID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "NguoiDungOnline",
                 columns: table => new
                 {
@@ -471,33 +447,6 @@ namespace QUIZ_GAME_WEB.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CauSai",
-                columns: table => new
-                {
-                    CauSaiID = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserID = table.Column<int>(type: "int", nullable: false),
-                    CauHoiID = table.Column<int>(type: "int", nullable: false),
-                    NgaySai = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CauSai", x => x.CauSaiID);
-                    table.ForeignKey(
-                        name: "FK_CauSai_CauHoi_CauHoiID",
-                        column: x => x.CauHoiID,
-                        principalTable: "CauHoi",
-                        principalColumn: "CauHoiID",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CauSai_NguoiDung_UserID",
-                        column: x => x.UserID,
-                        principalTable: "NguoiDung",
-                        principalColumn: "UserID",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "QuizNgay",
                 columns: table => new
                 {
@@ -514,6 +463,38 @@ namespace QUIZ_GAME_WEB.Migrations
                         column: x => x.CauHoiID,
                         principalTable: "CauHoi",
                         principalColumn: "CauHoiID");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuizAttempt",
+                columns: table => new
+                {
+                    QuizAttemptID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    QuizTuyChinhID = table.Column<int>(type: "int", nullable: false),
+                    NgayBatDau = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NgayKetThuc = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SoCauHoiLam = table.Column<int>(type: "int", nullable: false),
+                    SoCauDung = table.Column<int>(type: "int", nullable: false),
+                    Diem = table.Column<int>(type: "int", nullable: false),
+                    TrangThai = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuizAttempt", x => x.QuizAttemptID);
+                    table.ForeignKey(
+                        name: "FK_QuizAttempt_NguoiDung_UserID",
+                        column: x => x.UserID,
+                        principalTable: "NguoiDung",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_QuizAttempt_QuizTuyChinh_QuizTuyChinhID",
+                        column: x => x.QuizTuyChinhID,
+                        principalTable: "QuizTuyChinh",
+                        principalColumn: "QuizTuyChinhID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -550,6 +531,71 @@ namespace QUIZ_GAME_WEB.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CauSai",
+                columns: table => new
+                {
+                    CauSaiID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    CauHoiID = table.Column<int>(type: "int", nullable: false),
+                    QuizAttemptID = table.Column<int>(type: "int", nullable: false),
+                    NgaySai = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CauSai", x => x.CauSaiID);
+                    table.ForeignKey(
+                        name: "FK_CauSai_CauHoi_CauHoiID",
+                        column: x => x.CauHoiID,
+                        principalTable: "CauHoi",
+                        principalColumn: "CauHoiID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CauSai_NguoiDung_UserID",
+                        column: x => x.UserID,
+                        principalTable: "NguoiDung",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CauSai_QuizAttempt_QuizAttemptID",
+                        column: x => x.QuizAttemptID,
+                        principalTable: "QuizAttempt",
+                        principalColumn: "QuizAttemptID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "KetQua",
+                columns: table => new
+                {
+                    KetQuaID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    QuizAttemptID = table.Column<int>(type: "int", nullable: false),
+                    Diem = table.Column<int>(type: "int", nullable: false),
+                    SoCauDung = table.Column<int>(type: "int", nullable: false),
+                    TongCauHoi = table.Column<int>(type: "int", nullable: false),
+                    TrangThaiKetQua = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ThoiGian = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_KetQua", x => x.KetQuaID);
+                    table.ForeignKey(
+                        name: "FK_KetQua_NguoiDung_UserID",
+                        column: x => x.UserID,
+                        principalTable: "NguoiDung",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_KetQua_QuizAttempt_QuizAttemptID",
+                        column: x => x.QuizAttemptID,
+                        principalTable: "QuizAttempt",
+                        principalColumn: "QuizAttemptID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "ChuDe",
                 columns: new[] { "ChuDeID", "MoTa", "TenChuDe", "TrangThai" },
@@ -575,9 +621,9 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "UserID", "AnhDaiDien", "Email", "HoTen", "LanDangNhapCuoi", "MatKhau", "NgayDangKy", "TenDangNhap", "TrangThai" },
                 values: new object[,]
                 {
-                    { 1, null, "superadmin@quiz.com", "Nguyễn Super Admin", null, "hashed_sa_password", new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6578), "admin_sa", true },
-                    { 2, null, "player01@quiz.com", "Trần Văn A", null, "hashed_p1_password", new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6603), "player01", true },
-                    { 3, null, "player02@quiz.com", "Lê Thị B", null, "hashed_p2_password", new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6607), "player02", true }
+                    { 1, null, "superadmin@quiz.com", "Nguyễn Super Admin", null, "hashed_sa_password", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4103), "admin_sa", true },
+                    { 2, null, "player01@quiz.com", "Trần Văn A", null, "hashed_p1_password", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4124), "player01", true },
+                    { 3, null, "player02@quiz.com", "Lê Thị B", null, "hashed_p2_password", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4166), "player02", true }
                 });
 
             migrationBuilder.InsertData(
@@ -613,7 +659,7 @@ namespace QUIZ_GAME_WEB.Migrations
             migrationBuilder.InsertData(
                 table: "Admin",
                 columns: new[] { "AdminID", "NgayTao", "TrangThai", "UserID", "VaiTroID" },
-                values: new object[] { 1, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6636), true, 1, 1 });
+                values: new object[] { 1, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4192), true, 1, 1 });
 
             migrationBuilder.InsertData(
                 table: "BXH",
@@ -638,10 +684,10 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "CauHoiID", "ChuDeID", "DapAnA", "DapAnB", "DapAnC", "DapAnD", "DapAnDung", "DoKhoID", "HinhAnh", "NgayTao", "NoiDung" },
                 values: new object[,]
                 {
-                    { 1, 1, "Phan Đình Phùng", "Trần Văn Thời", "Trương Định", "Nguyễn Trung Trực", "C", 1, null, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6761), "Ai là người phất cờ khởi nghĩa đầu tiên chống Pháp?" },
-                    { 2, 1, "1953", "1954", "1975", "1950", "B", 2, null, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6766), "Chiến dịch Điện Biên Phủ diễn ra năm nào?" },
-                    { 3, 2, "3", "9", "3 và -3", "Không có", "C", 1, null, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6768), "Căn bậc hai của 9 là bao nhiêu?" },
-                    { 4, 3, "Đồng", "Vàng", "Nhựa", "Bạc", "C", 2, null, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6770), "Chất nào sau đây không dẫn điện?" }
+                    { 1, 1, "Phan Đình Phùng", "Trần Văn Thời", "Trương Định", "Nguyễn Trung Trực", "C", 1, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4300), "Ai là người phất cờ khởi nghĩa đầu tiên chống Pháp?" },
+                    { 2, 1, "1953", "1954", "1975", "1950", "B", 2, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4304), "Chiến dịch Điện Biên Phủ diễn ra năm nào?" },
+                    { 3, 2, "3", "9", "3 và -3", "Không có", "C", 1, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4306), "Căn bậc hai của 9 là bao nhiêu?" },
+                    { 4, 3, "Đồng", "Vàng", "Nhựa", "Bạc", "C", 2, null, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4308), "Chất nào sau đây không dẫn điện?" }
                 });
 
             migrationBuilder.InsertData(
@@ -649,24 +695,14 @@ namespace QUIZ_GAME_WEB.Migrations
                 columns: new[] { "ChuoiID", "NgayCapNhatCuoi", "SoNgayLienTiep", "UserID" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6923), 5, 2 },
-                    { 2, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6925), 2, 3 }
-                });
-
-            migrationBuilder.InsertData(
-                table: "KetQua",
-                columns: new[] { "KetQuaID", "Diem", "SoCauDung", "ThoiGian", "TongCauHoi", "TrangThaiKetQua", "UserID" },
-                values: new object[,]
-                {
-                    { 1, 50, 2, new DateTime(2025, 11, 30, 14, 9, 0, 402, DateTimeKind.Local).AddTicks(6797), 2, "Hoàn thành", 2 },
-                    { 2, 75, 3, new DateTime(2025, 11, 30, 17, 9, 0, 402, DateTimeKind.Local).AddTicks(6805), 4, "Hoàn thành", 2 },
-                    { 3, 25, 1, new DateTime(2025, 11, 30, 18, 9, 0, 402, DateTimeKind.Local).AddTicks(6807), 2, "Hoàn thành", 3 }
+                    { 1, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4450), 5, 2 },
+                    { 2, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4453), 2, 3 }
                 });
 
             migrationBuilder.InsertData(
                 table: "QuizTuyChinh",
                 columns: new[] { "QuizTuyChinhID", "MoTa", "NgayTao", "TenQuiz", "UserID" },
-                values: new object[] { 1, "Các câu hỏi tôi thích nhất.", new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6954), "Quiz Của Tôi", 2 });
+                values: new object[] { 1, "Các câu hỏi tôi thích nhất.", new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4330), "Quiz Của Tôi", 2 });
 
             migrationBuilder.InsertData(
                 table: "VaiTro_Quyen",
@@ -683,19 +719,37 @@ namespace QUIZ_GAME_WEB.Migrations
                 });
 
             migrationBuilder.InsertData(
-                table: "CauSai",
-                columns: new[] { "CauSaiID", "CauHoiID", "NgaySai", "UserID" },
-                values: new object[] { 1, 2, new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Local), 3 });
+                table: "QuizAttempt",
+                columns: new[] { "QuizAttemptID", "Diem", "NgayBatDau", "NgayKetThuc", "QuizTuyChinhID", "SoCauDung", "SoCauHoiLam", "TrangThai", "UserID" },
+                values: new object[,]
+                {
+                    { 1, 0, new DateTime(2025, 12, 1, 14, 33, 2, 325, DateTimeKind.Local).AddTicks(4352), new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4359), 1, 0, 0, "Hoàn thành", 2 },
+                    { 2, 0, new DateTime(2025, 12, 1, 13, 33, 2, 325, DateTimeKind.Local).AddTicks(4364), new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4365), 1, 0, 0, "Hoàn thành", 3 }
+                });
 
             migrationBuilder.InsertData(
                 table: "QuizChiaSe",
                 columns: new[] { "QuizChiaSeID", "NgayChiaSe", "QuizTuyChinhID", "UserGuiID", "UserNhanID" },
-                values: new object[] { 1, new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(7029), 1, 2, 3 });
+                values: new object[] { 1, new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4496), 1, 2, 3 });
 
             migrationBuilder.InsertData(
                 table: "QuizNgay",
                 columns: new[] { "QuizNgayID", "CauHoiID", "Ngay" },
-                values: new object[] { 1, 1, new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Local) });
+                values: new object[] { 1, 1, new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Local) });
+
+            migrationBuilder.InsertData(
+                table: "CauSai",
+                columns: new[] { "CauSaiID", "CauHoiID", "NgaySai", "QuizAttemptID", "UserID" },
+                values: new object[] { 1, 2, new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Local), 2, 3 });
+
+            migrationBuilder.InsertData(
+                table: "KetQua",
+                columns: new[] { "KetQuaID", "Diem", "QuizAttemptID", "SoCauDung", "ThoiGian", "TongCauHoi", "TrangThaiKetQua", "UserID" },
+                values: new object[,]
+                {
+                    { 1, 50, 1, 2, new DateTime(2025, 12, 1, 10, 33, 2, 325, DateTimeKind.Local).AddTicks(4387), 2, "Hoàn thành", 2 },
+                    { 2, 25, 2, 1, new DateTime(2025, 12, 1, 14, 33, 2, 325, DateTimeKind.Local).AddTicks(4390), 2, "Hoàn thành", 3 }
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Admin_UserID",
@@ -735,6 +789,11 @@ namespace QUIZ_GAME_WEB.Migrations
                 column: "CauHoiID");
 
             migrationBuilder.CreateIndex(
+                name: "IX_CauSai_QuizAttemptID",
+                table: "CauSai",
+                column: "QuizAttemptID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CauSai_UserID",
                 table: "CauSai",
                 column: "UserID");
@@ -748,6 +807,12 @@ namespace QUIZ_GAME_WEB.Migrations
                 name: "IX_Comment_UserID",
                 table: "Comment",
                 column: "UserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_KetQua_QuizAttemptID",
+                table: "KetQua",
+                column: "QuizAttemptID",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_KetQua_UserID",
@@ -775,6 +840,16 @@ namespace QUIZ_GAME_WEB.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_PhienDangNhap_UserID",
                 table: "PhienDangNhap",
+                column: "UserID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuizAttempt_QuizTuyChinhID",
+                table: "QuizAttempt",
+                column: "QuizTuyChinhID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuizAttempt_UserID",
+                table: "QuizAttempt",
                 column: "UserID");
 
             migrationBuilder.CreateIndex(
@@ -881,7 +956,7 @@ namespace QUIZ_GAME_WEB.Migrations
                 name: "VaiTro_Quyen");
 
             migrationBuilder.DropTable(
-                name: "QuizTuyChinh");
+                name: "QuizAttempt");
 
             migrationBuilder.DropTable(
                 name: "CauHoi");
@@ -893,13 +968,16 @@ namespace QUIZ_GAME_WEB.Migrations
                 name: "VaiTro");
 
             migrationBuilder.DropTable(
-                name: "NguoiDung");
+                name: "QuizTuyChinh");
 
             migrationBuilder.DropTable(
                 name: "ChuDe");
 
             migrationBuilder.DropTable(
                 name: "DoKho");
+
+            migrationBuilder.DropTable(
+                name: "NguoiDung");
         }
     }
 }

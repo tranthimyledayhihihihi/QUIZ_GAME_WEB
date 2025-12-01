@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QUIZ_GAME_WEB.Data;
+using QUIZ_GAME_WEB.Models.Implementations;
+using QUIZ_GAME_WEB.Models.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -76,6 +78,17 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// === Dependency Injection ===
+// Repositories
+builder.Services.AddScoped<IQuizRepository, QuizRepository>();
+builder.Services.AddScoped<IResultRepository, ResultRepository>();
+
+// UnitOfWork
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+// Services
+builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
+
 var app = builder.Build();
 
 // === Migration tự động khi chạy ===
@@ -85,7 +98,6 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<QuizGameContext>();
-        // Tạo/migrate database và seed trực tiếp trong OnModelCreating
         context.Database.Migrate();
     }
     catch (Exception ex)

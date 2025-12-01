@@ -1,23 +1,44 @@
-﻿// Models/Interfaces/IQuizAttemptService.cs
-using QUIZ_GAME_WEB.Models.InputModels;
+﻿using QUIZ_GAME_WEB.Models.InputModels;
+using QUIZ_GAME_WEB.Models.QuizModels;
+using QUIZ_GAME_WEB.Models.ResultsModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
 using System.Threading.Tasks;
 
 namespace QUIZ_GAME_WEB.Models.Interfaces
 {
-    // Đặt trong thư mục Interfaces/QuizServices (hoặc Interfaces nếu bạn không dùng thư mục con)
     public interface IQuizAttemptService
     {
-        // Bắt đầu một lần làm bài Quiz mới
+        /// <summary>
+        /// Bắt đầu một phiên làm bài Quiz mới
+        /// </summary>
+        /// <param name="userId">ID người chơi</param>
+        /// <param name="options">Tùy chọn khi bắt đầu</param>
+        /// <returns>ID của phiên làm bài mới</returns>
         Task<int> StartNewQuizAttemptAsync(int userId, GameStartOptions options);
 
-        // Xử lý nộp đáp án cho một câu hỏi
+        /// <summary>
+        /// Nộp đáp án cho một câu hỏi trong phiên Quiz
+        /// </summary>
+        /// <param name="answer">Thông tin câu hỏi và đáp án</param>
+        /// <returns>True nếu lưu thành công</returns>
         Task<bool> SubmitAnswerAsync(AnswerSubmitModel answer);
 
-        // Kết thúc Quiz và tính toán kết quả cuối cùng
-        Task<KetQuaViewModel> EndAttemptAndCalculateResultAsync(int attemptId);
+        /// <summary>
+        /// Kết thúc phiên làm bài và lưu kết quả vào database
+        /// </summary>
+        /// <param name="attemptId">ID phiên làm bài</param>
+        /// <param name="userId">ID người chơi</param>
+        /// <returns>Entity KetQua đã lưu</returns>
+        Task<KetQua> EndAttemptAndCalculateResultAsync(int attemptId, int userId);
 
-        // Lấy câu hỏi tiếp theo trong phiên làm bài
-        Task<CauHoiViewModel?> GetNextQuestionAsync(int attemptId);
+        /// <summary>
+        /// Lấy câu hỏi tiếp theo trong phiên làm bài
+        /// </summary>
+        /// <param name="attemptId">ID phiên làm bài</param>
+        /// <returns>Câu hỏi tiếp theo</returns>
+        Task<CauHoiPlayDto?> GetNextQuestionAsync(int attemptId);
+
+        // Dòng lỗi đã bị xóa:
+        // Task EndAttemptAndCalculateResultAsync(int attemptId, object userId); 
     }
 }

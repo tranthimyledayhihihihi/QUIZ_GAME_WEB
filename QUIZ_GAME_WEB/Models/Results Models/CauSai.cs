@@ -17,6 +17,9 @@ namespace QUIZ_GAME_WEB.Models.ResultsModels
         [Required]
         public int CauHoiID { get; set; }
 
+        [Required]
+        public int QuizAttemptID { get; set; }
+
         public DateTime NgaySai { get; set; } = DateTime.Now;
 
         [ForeignKey("UserID")]
@@ -24,5 +27,8 @@ namespace QUIZ_GAME_WEB.Models.ResultsModels
 
         [ForeignKey("CauHoiID")]
         public virtual CauHoi CauHoi { get; set; } = null!;
+
+        [ForeignKey("QuizAttemptID")]
+        public virtual QuizAttempt QuizAttempt { get; set; } = null!;
     }
 }

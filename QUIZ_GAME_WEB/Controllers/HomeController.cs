@@ -2,7 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using QUIZ_GAME_WEB.Data;
 using System.Threading.Tasks;
-using System; // 👈 ĐÃ THÊM: Cần thiết cho việc bắt lỗi Exception
+using System;
+using System.Linq; // ✅ Cần cho AnyAsync
 
 // Namespace đã được đặt về QUIZ_GAME_WEB.Controllers
 namespace QUIZ_GAME_WEB.Controllers
@@ -18,9 +19,9 @@ namespace QUIZ_GAME_WEB.Controllers
             _context = context;
         }
 
-        // ===============================================
+        // ----------------------------------------------------
         // 1. KIỂM TRA TRẠNG THÁI API (Smoke Test)
-        // ===============================================
+        // ----------------------------------------------------
         // GET: api/Home
         [HttpGet]
         public IActionResult GetStatus()
@@ -29,52 +30,57 @@ namespace QUIZ_GAME_WEB.Controllers
             {
                 Status = "Running",
                 Service = "QuizGame API",
-                Version = "1.0"
+                Version = "1.0",
+                Time = DateTime.UtcNow
             });
         }
 
-        // ===============================================
+        // ----------------------------------------------------
         // 2. KIỂM TRA KẾT NỐI DATABASE (Health Check)
-        // ===============================================
+        // ----------------------------------------------------
         // GET: api/Home/HealthCheck
         [HttpGet("HealthCheck")]
         public async Task<IActionResult> DatabaseHealthCheck()
         {
             try
             {
-                // Tùy chọn 1: Dùng CanConnectAsync() - cách hiện đại và an toàn hơn.
-                // Tránh mở và đóng kết nối thủ công như OpenConnectionAsync/CloseConnectionAsync
-                if (await _context.Database.CanConnectAsync())
+                // Bước 1: Kiểm tra kết nối cơ bản (CanConnectAsync)
+                if (!await _context.Database.CanConnectAsync())
                 {
-                    return Ok(new
+                    return StatusCode(503, new // 503 Service Unavailable
                     {
-                        DatabaseStatus = "OK",
-                        Message = "API và Database đều hoạt động."
+                        DatabaseStatus = "Connection Error",
+                        Message = "Database không phản hồi hoặc không khả dụng."
                     });
                 }
 
-                // Nếu CanConnectAsync trả về false
-                return StatusCode(503, new // 503 Service Unavailable
+                // ✅ Bước 2: Thực hiện truy vấn nhẹ để kiểm tra tính toàn vẹn (Lightweight Query)
+                // Kiểm tra xem bảng NguoiDungs có thể được truy vấn không.
+                // Điều này mạnh mẽ hơn CanConnectAsync() đơn thuần.
+                await _context.NguoiDungs.AnyAsync();
+
+                return Ok(new
                 {
-                    DatabaseStatus = "Error",
-                    Message = "Database không phản hồi hoặc không khả dụng."
+                    DatabaseStatus = "OK",
+                    Message = "API và Database đều hoạt động và có thể truy cập."
                 });
             }
-            catch (Exception ex) // Đã sửa lỗi thiếu 'using System;'
+            catch (Exception ex)
             {
-                // Trả về lỗi 500 nếu có exception khi cố gắng kết nối
+                // Lỗi có thể là timeout, lỗi kết nối SQL, hoặc lỗi schema EF Core
                 return StatusCode(500, new
                 {
                     DatabaseStatus = "Fatal Error",
-                    Message = "Lỗi nghiêm trọng khi kiểm tra kết nối database.",
-                    Detail = ex.Message
+                    Message = "Lỗi nghiêm trọng khi kiểm tra Database Health.",
+                    Detail = ex.Message,
+                    Type = ex.GetType().Name
                 });
             }
         }
 
-        // ===============================================
+        // ----------------------------------------------------
         // 3. ENDPOINT MẶC ĐỊNH CHO ROOT PATH
-        // ===============================================
+        // ----------------------------------------------------
         // GET: /
         [HttpGet("/")]
         public IActionResult GetRoot()

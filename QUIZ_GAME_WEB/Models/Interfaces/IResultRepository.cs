@@ -1,5 +1,4 @@
-﻿// Models/Interfaces/IResultRepository.cs
-using QUIZ_GAME_WEB.Models.ResultsModels;
+﻿using QUIZ_GAME_WEB.Models.ResultsModels;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,28 +7,27 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
 {
     public interface IResultRepository : IGenericRepository<KetQua>
     {
-        // Logic cho Chuỗi Ngày (Streak)
+        // Chuỗi ngày (streak)
         Task<ChuoiNgay?> GetUserStreakAsync(int userId);
+        void AddStreak(ChuoiNgay streak);
+        void Update(ChuoiNgay streak);
+        void AddKetQua(KetQua ketQua);
 
-        // Logic cho Câu Sai (Mistake Log)
-        Task AddWrongAnswerAsync(int userId, int cauHoiId);
+        // ✅ THÊM MỚI:
+        Task AddCauSaiAsync(CauSai cauSai);
+
+        // Thưởng hàng ngày
+        Task<ThuongNgay?> GetDailyRewardByDateAsync(int userId, DateTime today);
+        void AddDailyReward(ThuongNgay newReward);
+
+        // Câu sai
+        Task AddWrongAnswerAsync(CauSai cauSai); // Bổ sung QuizAttemptID
         Task<IEnumerable<CauSai>> GetRecentWrongAnswersAsync(int userId, int limit = 10);
 
-        // Logic Thống kê/Báo cáo
+        Task<int> CountWrongAnswersAsync(int userId, int attemptId);
+
+        // Thống kê/achievement
         Task<IEnumerable<ThongKeNguoiDung>> GetUserDailyStatsAsync(int userId, DateTime? startDate, DateTime? endDate);
         Task<IEnumerable<ThanhTuu>> GetUserAchievementsAsync(int userId);
-
-        // ----------------------------------------------------
-        // SỬA LỖI NẶNG NHẤT: Bổ sung kiểu trả về ThuongNgay?
-        // ----------------------------------------------------
-        /// <summary>
-        /// Lấy bản ghi thưởng hàng ngày theo UserID và ngày.
-        /// </summary>
-        Task<ThuongNgay?> GetDailyRewardByDateAsync(int userId, DateTime today); // 👈 ĐÃ SỬA KIỂU TRẢ VỀ
-
-        // Các hàm không phải async nên là void:
-        void AddDailyReward(ThuongNgay newReward);
-        void AddStreak(ChuoiNgay chuoiNgay);
-        void Update(ChuoiNgay streak);
     }
 }

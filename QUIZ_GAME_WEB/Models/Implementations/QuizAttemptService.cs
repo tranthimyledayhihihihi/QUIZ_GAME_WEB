@@ -1,9 +1,10 @@
-﻿// Models/Implementations/QuizAttemptService.cs
+﻿using QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.Interfaces;
-using QUIZ_GAME_WEB.Models.InputModels;
-using QUIZ_GAME_WEB.Models.ViewModels;
-using QUIZ_GAME_WEB.Models.ResultsModels;
 using QUIZ_GAME_WEB.Models.QuizModels;
+using QUIZ_GAME_WEB.Models.ResultsModels;
+using QUIZ_GAME_WEB.Models.ViewModels;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -13,60 +14,181 @@ namespace QUIZ_GAME_WEB.Models.Implementations
     {
         private readonly IUnitOfWork _unitOfWork;
 
+        // BỎ ID TẠM THỜI: ID sẽ được DB tự động tạo
+        private static readonly Dictionary<int, QuizSessionData> _activeSessions = new();
+        // private static int _attemptIdCounter = 1000; // ĐÃ BỎ
+
         public QuizAttemptService(IUnitOfWork unitOfWork) => _unitOfWork = unitOfWork;
 
-        // #1. Bắt đầu phiên làm bài
-        public Task<int> StartNewQuizAttemptAsync(int userId, GameStartOptions options)
+        // 1. Bắt đầu làm bài
+        public async Task<int> StartNewQuizAttemptAsync(int userId, GameStartOptions options)
         {
-            // Logic: Dùng IQuizRepository để lấy câu hỏi ngẫu nhiên và tạo phiên mới
-            return Task.FromResult(1001); // Giả lập ID phiên làm bài mới
+            var questions = (await _unitOfWork.Quiz.GetRandomQuestionsAsync(
+                                 options.SoLuongCauHoi, options.ChuDeID, options.DoKhoID))
+                                .ToList();
+
+            if (!questions.Any())
+                throw new Exception("Không có câu hỏi phù hợp.");
+
+            // ✅ TẠO QuizTuyChinh mặc định trước và LƯU
+            var defaultQuiz = new QuizTuyChinh
+            {
+                UserID = userId,
+                TenQuiz = "Quiz Ngẫu Nhiên - " + DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
+                MoTa = "Quiz tự động tạo",
+                NgayTao = DateTime.Now
+            };
+
+            await _unitOfWork.Quiz.AddQuizTuyChinhAsync(defaultQuiz);
+            await _unitOfWork.CompleteAsync(); // Lưu QuizTuyChinh để lấy QuizTuyChinhID
+
+            // ✅ TẠO QuizAttempt (ĐỂ ID = 0 để DB tự gán)
+            var quizAttempt = new QuizAttempt
+            {
+                // BỎ QuizAttemptID = _attemptIdCounter++,
+                UserID = userId,
+                QuizTuyChinhID = defaultQuiz.QuizTuyChinhID, // Sử dụng ID vừa lưu
+                NgayBatDau = DateTime.Now,
+                NgayKetThuc = null,
+                TrangThai = "Đang làm",
+                SoCauHoiLam = 0,
+                SoCauDung = 0,
+                Diem = 0
+            };
+
+            // ✅ LƯU VÀO DB LẦN ĐẦU TIÊN ĐỂ LẤY ID THẬT
+            // YÊU CẦU: IQuizRepository phải có hàm AddQuizAttemptAsync
+            await _unitOfWork.Quiz.AddQuizAttemptAsync(quizAttempt);
+            await _unitOfWork.CompleteAsync();
+
+            // SAU DÒNG NÀY: quizAttempt.QuizAttemptID đã là ID thật từ DB
+
+            // ✅ Lưu session vào memory bằng ID THẬT
+            _activeSessions[quizAttempt.QuizAttemptID] = new QuizSessionData
+            {
+                QuizAttempt = quizAttempt,
+                Questions = new Queue<CauHoi>(questions),
+                TotalQuestions = questions.Count,
+                CorrectAnswers = 0,
+                UserId = userId
+            };
+
+            return quizAttempt.QuizAttemptID;
         }
 
-        // #2. Gửi câu trả lời
+        // ... (Các hàm GetNextQuestionAsync và SubmitAnswerAsync giữ nguyên)
+
+        // 3. Nộp đáp án (Không đổi, vì nó chỉ cập nhật session trong memory và thêm CauSai vào DB)
         public async Task<bool> SubmitAnswerAsync(AnswerSubmitModel answer)
         {
-            var correctAnswer = await _unitOfWork.Quiz.GetCorrectAnswerAsync(answer.CauHoiID);
-            bool isCorrect = correctAnswer?.Equals(answer.DapAnDaChon, StringComparison.OrdinalIgnoreCase) ?? false;
+            if (!_activeSessions.ContainsKey(answer.QuizAttemptID))
+                throw new Exception("Phiên làm bài không tồn tại.");
 
-            if (!isCorrect)
+            var session = _activeSessions[answer.QuizAttemptID];
+
+            var correct = await _unitOfWork.Quiz.GetCorrectAnswerAsync(answer.CauHoiID);
+            bool isCorrect = correct?.Equals(answer.DapAnDaChon, StringComparison.OrdinalIgnoreCase) ?? false;
+
+            if (isCorrect)
             {
-                // Logic: Ghi nhận câu trả lời sai
-                await _unitOfWork.Results.AddWrongAnswerAsync(1, answer.CauHoiID); // Giả định userId=1
+                session.CorrectAnswers++;
+            }
+            else
+            {
+                var cauSai = new CauSai
+                {
+                    UserID = answer.UserID,
+                    CauHoiID = answer.CauHoiID,
+                    QuizAttemptID = answer.QuizAttemptID,
+                    NgaySai = DateTime.Now
+                };
+
+                await _unitOfWork.Results.AddCauSaiAsync(cauSai);
+                await _unitOfWork.CompleteAsync();
             }
 
-            // Logic: Ghi nhận câu trả lời đã nộp
-            // ...
+            session.QuizAttempt.SoCauHoiLam++;
+            session.QuizAttempt.SoCauDung = session.CorrectAnswers;
 
-            await _unitOfWork.CompleteAsync();
-            return true;
+            return isCorrect;
         }
 
-        // #3. Kết thúc và tính điểm
-        public Task<KetQuaViewModel> EndAttemptAndCalculateResultAsync(int attemptId)
+        // 4. Kết thúc bài
+        public async Task<KetQua> EndAttemptAndCalculateResultAsync(int attemptId, int userId)
         {
-            // Logic 1: Tính toán kết quả thực tế
-            int correctAnswers = 7;
-            int totalQuestions = 10;
+            if (!_activeSessions.ContainsKey(attemptId))
+                throw new Exception("Phiên làm bài không tồn tại.");
 
-            // Logic 2: Lưu KetQua Entity (qua IResultRepository)
-            // ...
+            var session = _activeSessions[attemptId];
+            int total = session.TotalQuestions;
+            int correctCount = session.CorrectAnswers;
 
-            // Logic 3: Trả về ViewModel
-            return Task.FromResult(new KetQuaViewModel
+            int diem = correctCount * 10;
+
+            // ✅ CẬP NHẬT QuizAttempt
+            session.QuizAttempt.NgayKetThuc = DateTime.Now;
+            session.QuizAttempt.TrangThai = "Hoàn thành";
+            session.QuizAttempt.SoCauHoiLam = total;
+            session.QuizAttempt.SoCauDung = correctCount;
+            session.QuizAttempt.Diem = diem;
+
+            // ✅ LƯU QuizAttempt vào database (Lúc này là Update bản ghi đã tồn tại)
+            await _unitOfWork.Quiz.SaveQuizAttemptAsync(session.QuizAttempt); // Sẽ là UPDATE
+
+            // ✅ TẠO KetQua
+            var ketQua = new KetQua
             {
-                KetQuaID = attemptId,
-                DiemDatDuoc = 150,
-                SoCauTraLoiDung = correctAnswers,
-                TongCauHoi = totalQuestions,
-                TenNguoiDung = "User ABC"
-            });
+                UserID = userId,
+                QuizAttemptID = attemptId,
+                Diem = diem,
+                SoCauDung = correctCount,
+                TongCauHoi = total,
+                TrangThaiKetQua = "Hoàn thành",
+                ThoiGian = DateTime.Now
+            };
+
+            _unitOfWork.Results.AddKetQua(ketQua);
+            await _unitOfWork.CompleteAsync();
+
+            // ✅ XÓA session
+            _activeSessions.Remove(attemptId);
+
+            return ketQua;
         }
 
-        // #4. Lấy câu hỏi tiếp theo (PHƯƠNG THỨC NÀY KHẮC PHỤC LỖI)
-        public Task<CauHoiViewModel?> GetNextQuestionAsync(int attemptId)
+        // ... (QuizSessionData giữ nguyên)
+        internal class QuizSessionData
         {
-            // Logic: Lấy câu hỏi tiếp theo trong phiên làm bài 
-            return Task.FromResult<CauHoiViewModel?>(null);
+            public QuizAttempt QuizAttempt { get; set; } = null!;
+            public Queue<CauHoi> Questions { get; set; } = new Queue<CauHoi>();
+            public int TotalQuestions { get; set; }
+            public int CorrectAnswers { get; set; }
+            public int UserId { get; set; }
+        }
+
+        // 2. Lấy câu hỏi tiếp theo (Giữ nguyên)
+        public Task<CauHoiPlayDto?> GetNextQuestionAsync(int attemptId)
+        {
+            if (!_activeSessions.ContainsKey(attemptId))
+                return Task.FromResult<CauHoiPlayDto?>(null);
+
+            var session = _activeSessions[attemptId];
+
+            if (session.Questions.Count == 0)
+                return Task.FromResult<CauHoiPlayDto?>(null);
+
+            var next = session.Questions.Dequeue();
+
+            return Task.FromResult<CauHoiPlayDto?>(new CauHoiPlayDto
+            {
+                CauHoiID = next.CauHoiID,
+                NoiDung = next.NoiDung,
+                DapAnA = next.DapAnA,
+                DapAnB = next.DapAnB,
+                DapAnC = next.DapAnC,
+                DapAnD = next.DapAnD,
+                HinhAnh = next.HinhAnh
+            });
         }
     }
 }

@@ -1,36 +1,39 @@
-﻿// Models/ViewModels/KetQuaViewModel.cs
-using System;
+﻿using System;
 using System.Collections.Generic;
+using QUIZ_GAME_WEB.Models.ResultsModels;
+using QUIZ_GAME_WEB.Models.QuizModels;
 
 namespace QUIZ_GAME_WEB.Models.ViewModels
 {
-    // Model này dùng để hiển thị kết quả sau khi chơi
+    /// <summary>
+    /// Model hiển thị kết quả sau khi chơi Quiz
+    /// Chuẩn theo database: KetQua + CauSai
+    /// </summary>
     public class KetQuaViewModel
     {
         public int KetQuaID { get; set; }
         public int UserID { get; set; }
         public string TenNguoiDung { get; set; } = null!;
 
-        // KHẮC PHỤC LỖI SERVICE: Dùng tên đồng nghĩa hoặc bổ sung
-        public int DiemDatDuoc { get; set; } // Bổ sung để khớp với Service
-        public int SoCauTraLoiDung { get; set; } // Bổ sung để khớp với Service
+        public int Diem { get; set; }               // Điểm thực tế
+        public int SoCauDung { get; set; }         // Số câu trả lời đúng
+        public int TongCauHoi { get; set; }        // Tổng số câu hỏi
+        public DateTime ThoiGian { get; set; }     // Thời gian kết thúc
+        public string TrangThaiKetQua { get; set; } = "Hoàn thành"; // trạng thái
 
-        // Thuộc tính cơ sở (có thể dùng thay thế)
-        public int Diem { get; set; }
-        public int SoCauDung { get; set; }
-        public int TongCauHoi { get; set; }
-        public DateTime ThoiGian { get; set; }
-        public string ThongBao { get; set; } = null!; // "Chúc mừng bạn đã thắng!"
-
-        // Có thể thêm chi tiết các câu trả lời sai
+        // Danh sách chi tiết các câu trả lời sai
         public List<CauSaiChiTietModel> ChiTietSai { get; set; } = new List<CauSaiChiTietModel>();
     }
 
-    // Model phụ trợ cho chi tiết câu sai (nếu chưa có)
+    /// <summary>
+    /// Chi tiết từng câu trả lời sai
+    /// Chuẩn theo bảng CauSai + CauHoi
+    /// </summary>
     public class CauSaiChiTietModel
     {
+        public int CauHoiID { get; set; }
         public string NoiDungCauHoi { get; set; } = null!;
-        public string DapAnChinhXac { get; set; } = null!;
+        public string DapAnDung { get; set; } = null!;
         public string DapAnDaChon { get; set; } = null!;
     }
 }

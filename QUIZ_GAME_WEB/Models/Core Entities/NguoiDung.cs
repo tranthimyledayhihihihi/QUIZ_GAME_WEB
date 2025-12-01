@@ -39,6 +39,9 @@ namespace QUIZ_GAME_WEB.Models.CoreEntities
         public bool TrangThai { get; set; } = true;
 
         // Navigation Properties
+        // Navigation property trong NguoiDung
+public virtual ICollection<QuizAttempt> QuizAttempts { get; set; } = new List<QuizAttempt>();
+
         public virtual Admin? Admin { get; set; } // 1:1
         public virtual CaiDatNguoiDung? CaiDat { get; set; } // 1:1
         public virtual ICollection<PhienDangNhap> PhienDangNhaps { get; set; } = new List<PhienDangNhap>();

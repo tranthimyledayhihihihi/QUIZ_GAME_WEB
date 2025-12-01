@@ -12,8 +12,8 @@ using QUIZ_GAME_WEB.Data;
 namespace QUIZ_GAME_WEB.Migrations
 {
     [DbContext(typeof(QuizGameContext))]
-    [Migration("20251130120902_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251201083302_QUIZGAME")]
+    partial class QUIZGAME
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,7 +58,7 @@ namespace QUIZ_GAME_WEB.Migrations
                         new
                         {
                             AdminID = 1,
-                            NgayTao = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6636),
+                            NgayTao = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4192),
                             TrangThai = true,
                             UserID = 1,
                             VaiTroID = 1
@@ -207,7 +207,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             Email = "superadmin@quiz.com",
                             HoTen = "Nguyễn Super Admin",
                             MatKhau = "hashed_sa_password",
-                            NgayDangKy = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6578),
+                            NgayDangKy = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4103),
                             TenDangNhap = "admin_sa",
                             TrangThai = true
                         },
@@ -217,7 +217,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             Email = "player01@quiz.com",
                             HoTen = "Trần Văn A",
                             MatKhau = "hashed_p1_password",
-                            NgayDangKy = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6603),
+                            NgayDangKy = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4124),
                             TenDangNhap = "player01",
                             TrangThai = true
                         },
@@ -227,7 +227,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             Email = "player02@quiz.com",
                             HoTen = "Lê Thị B",
                             MatKhau = "hashed_p2_password",
-                            NgayDangKy = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6607),
+                            NgayDangKy = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4166),
                             TenDangNhap = "player02",
                             TrangThai = true
                         });
@@ -495,7 +495,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             DapAnD = "Nguyễn Trung Trực",
                             DapAnDung = "C",
                             DoKhoID = 1,
-                            NgayTao = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6761),
+                            NgayTao = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4300),
                             NoiDung = "Ai là người phất cờ khởi nghĩa đầu tiên chống Pháp?"
                         },
                         new
@@ -508,7 +508,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             DapAnD = "1950",
                             DapAnDung = "B",
                             DoKhoID = 2,
-                            NgayTao = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6766),
+                            NgayTao = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4304),
                             NoiDung = "Chiến dịch Điện Biên Phủ diễn ra năm nào?"
                         },
                         new
@@ -521,7 +521,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             DapAnD = "Không có",
                             DapAnDung = "C",
                             DoKhoID = 1,
-                            NgayTao = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6768),
+                            NgayTao = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4306),
                             NoiDung = "Căn bậc hai của 9 là bao nhiêu?"
                         },
                         new
@@ -534,7 +534,7 @@ namespace QUIZ_GAME_WEB.Migrations
                             DapAnD = "Bạc",
                             DapAnDung = "C",
                             DoKhoID = 2,
-                            NgayTao = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6770),
+                            NgayTao = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4308),
                             NoiDung = "Chất nào sau đây không dẫn điện?"
                         });
                 });
@@ -662,7 +662,7 @@ namespace QUIZ_GAME_WEB.Migrations
                         new
                         {
                             QuizChiaSeID = 1,
-                            NgayChiaSe = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(7029),
+                            NgayChiaSe = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4496),
                             QuizTuyChinhID = 1,
                             UserGuiID = 2,
                             UserNhanID = 3
@@ -694,7 +694,7 @@ namespace QUIZ_GAME_WEB.Migrations
                         {
                             QuizNgayID = 1,
                             CauHoiID = 1,
-                            Ngay = new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Local)
+                            Ngay = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Local)
                         });
                 });
 
@@ -732,7 +732,7 @@ namespace QUIZ_GAME_WEB.Migrations
                         {
                             QuizTuyChinhID = 1,
                             MoTa = "Các câu hỏi tôi thích nhất.",
-                            NgayTao = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6954),
+                            NgayTao = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4330),
                             TenQuiz = "Quiz Của Tôi",
                             UserID = 2
                         });
@@ -788,12 +788,17 @@ namespace QUIZ_GAME_WEB.Migrations
                     b.Property<DateTime>("NgaySai")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("QuizAttemptID")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserID")
                         .HasColumnType("int");
 
                     b.HasKey("CauSaiID");
 
                     b.HasIndex("CauHoiID");
+
+                    b.HasIndex("QuizAttemptID");
 
                     b.HasIndex("UserID");
 
@@ -804,7 +809,8 @@ namespace QUIZ_GAME_WEB.Migrations
                         {
                             CauSaiID = 1,
                             CauHoiID = 2,
-                            NgaySai = new DateTime(2025, 11, 30, 0, 0, 0, 0, DateTimeKind.Local),
+                            NgaySai = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Local),
+                            QuizAttemptID = 2,
                             UserID = 3
                         });
                 });
@@ -836,14 +842,14 @@ namespace QUIZ_GAME_WEB.Migrations
                         new
                         {
                             ChuoiID = 1,
-                            NgayCapNhatCuoi = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6923),
+                            NgayCapNhatCuoi = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4450),
                             SoNgayLienTiep = 5,
                             UserID = 2
                         },
                         new
                         {
                             ChuoiID = 2,
-                            NgayCapNhatCuoi = new DateTime(2025, 11, 30, 19, 9, 0, 402, DateTimeKind.Local).AddTicks(6925),
+                            NgayCapNhatCuoi = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4453),
                             SoNgayLienTiep = 2,
                             UserID = 3
                         });
@@ -858,6 +864,9 @@ namespace QUIZ_GAME_WEB.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("KetQuaID"));
 
                     b.Property<int>("Diem")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuizAttemptID")
                         .HasColumnType("int");
 
                     b.Property<int>("SoCauDung")
@@ -878,6 +887,9 @@ namespace QUIZ_GAME_WEB.Migrations
 
                     b.HasKey("KetQuaID");
 
+                    b.HasIndex("QuizAttemptID")
+                        .IsUnique();
+
                     b.HasIndex("UserID");
 
                     b.ToTable("KetQua", (string)null);
@@ -887,8 +899,9 @@ namespace QUIZ_GAME_WEB.Migrations
                         {
                             KetQuaID = 1,
                             Diem = 50,
+                            QuizAttemptID = 1,
                             SoCauDung = 2,
-                            ThoiGian = new DateTime(2025, 11, 30, 14, 9, 0, 402, DateTimeKind.Local).AddTicks(6797),
+                            ThoiGian = new DateTime(2025, 12, 1, 10, 33, 2, 325, DateTimeKind.Local).AddTicks(4387),
                             TongCauHoi = 2,
                             TrangThaiKetQua = "Hoàn thành",
                             UserID = 2
@@ -896,21 +909,80 @@ namespace QUIZ_GAME_WEB.Migrations
                         new
                         {
                             KetQuaID = 2,
-                            Diem = 75,
-                            SoCauDung = 3,
-                            ThoiGian = new DateTime(2025, 11, 30, 17, 9, 0, 402, DateTimeKind.Local).AddTicks(6805),
-                            TongCauHoi = 4,
+                            Diem = 25,
+                            QuizAttemptID = 2,
+                            SoCauDung = 1,
+                            ThoiGian = new DateTime(2025, 12, 1, 14, 33, 2, 325, DateTimeKind.Local).AddTicks(4390),
+                            TongCauHoi = 2,
                             TrangThaiKetQua = "Hoàn thành",
+                            UserID = 3
+                        });
+                });
+
+            modelBuilder.Entity("QUIZ_GAME_WEB.Models.ResultsModels.QuizAttempt", b =>
+                {
+                    b.Property<int>("QuizAttemptID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("QuizAttemptID"));
+
+                    b.Property<int>("Diem")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("NgayBatDau")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("NgayKetThuc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuizTuyChinhID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoCauDung")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SoCauHoiLam")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TrangThai")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.HasKey("QuizAttemptID");
+
+                    b.HasIndex("QuizTuyChinhID");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("QuizAttempt", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            QuizAttemptID = 1,
+                            Diem = 0,
+                            NgayBatDau = new DateTime(2025, 12, 1, 14, 33, 2, 325, DateTimeKind.Local).AddTicks(4352),
+                            NgayKetThuc = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4359),
+                            QuizTuyChinhID = 1,
+                            SoCauDung = 0,
+                            SoCauHoiLam = 0,
+                            TrangThai = "Hoàn thành",
                             UserID = 2
                         },
                         new
                         {
-                            KetQuaID = 3,
-                            Diem = 25,
-                            SoCauDung = 1,
-                            ThoiGian = new DateTime(2025, 11, 30, 18, 9, 0, 402, DateTimeKind.Local).AddTicks(6807),
-                            TongCauHoi = 2,
-                            TrangThaiKetQua = "Hoàn thành",
+                            QuizAttemptID = 2,
+                            Diem = 0,
+                            NgayBatDau = new DateTime(2025, 12, 1, 13, 33, 2, 325, DateTimeKind.Local).AddTicks(4364),
+                            NgayKetThuc = new DateTime(2025, 12, 1, 15, 33, 2, 325, DateTimeKind.Local).AddTicks(4365),
+                            QuizTuyChinhID = 1,
+                            SoCauDung = 0,
+                            SoCauHoiLam = 0,
+                            TrangThai = "Hoàn thành",
                             UserID = 3
                         });
                 });
@@ -1253,6 +1325,12 @@ namespace QUIZ_GAME_WEB.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("QUIZ_GAME_WEB.Models.ResultsModels.QuizAttempt", "QuizAttempt")
+                        .WithMany("CauSais")
+                        .HasForeignKey("QuizAttemptID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("QUIZ_GAME_WEB.Models.CoreEntities.NguoiDung", "NguoiDung")
                         .WithMany("CauSais")
                         .HasForeignKey("UserID")
@@ -1262,6 +1340,8 @@ namespace QUIZ_GAME_WEB.Migrations
                     b.Navigation("CauHoi");
 
                     b.Navigation("NguoiDung");
+
+                    b.Navigation("QuizAttempt");
                 });
 
             modelBuilder.Entity("QUIZ_GAME_WEB.Models.ResultsModels.ChuoiNgay", b =>
@@ -1277,13 +1357,40 @@ namespace QUIZ_GAME_WEB.Migrations
 
             modelBuilder.Entity("QUIZ_GAME_WEB.Models.ResultsModels.KetQua", b =>
                 {
-                    b.HasOne("QUIZ_GAME_WEB.Models.CoreEntities.NguoiDung", "User")
+                    b.HasOne("QUIZ_GAME_WEB.Models.ResultsModels.QuizAttempt", "QuizAttempt")
+                        .WithOne("KetQua")
+                        .HasForeignKey("QUIZ_GAME_WEB.Models.ResultsModels.KetQua", "QuizAttemptID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("QUIZ_GAME_WEB.Models.CoreEntities.NguoiDung", "NguoiDung")
                         .WithMany("KetQuas")
                         .HasForeignKey("UserID")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("NguoiDung");
+
+                    b.Navigation("QuizAttempt");
+                });
+
+            modelBuilder.Entity("QUIZ_GAME_WEB.Models.ResultsModels.QuizAttempt", b =>
+                {
+                    b.HasOne("QUIZ_GAME_WEB.Models.QuizModels.QuizTuyChinh", "QuizTuyChinh")
+                        .WithMany("QuizAttempts")
+                        .HasForeignKey("QuizTuyChinhID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("QUIZ_GAME_WEB.Models.CoreEntities.NguoiDung", "NguoiDung")
+                        .WithMany("QuizAttempts")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("NguoiDung");
+
+                    b.Navigation("QuizTuyChinh");
                 });
 
             modelBuilder.Entity("QUIZ_GAME_WEB.Models.ResultsModels.ThanhTuu", b =>
@@ -1372,6 +1479,8 @@ namespace QUIZ_GAME_WEB.Migrations
 
                     b.Navigation("PhienDangNhaps");
 
+                    b.Navigation("QuizAttempts");
+
                     b.Navigation("QuizChiaSesGui");
 
                     b.Navigation("QuizChiaSesNhan");
@@ -1404,6 +1513,18 @@ namespace QUIZ_GAME_WEB.Migrations
             modelBuilder.Entity("QUIZ_GAME_WEB.Models.QuizModels.DoKho", b =>
                 {
                     b.Navigation("CauHois");
+                });
+
+            modelBuilder.Entity("QUIZ_GAME_WEB.Models.QuizModels.QuizTuyChinh", b =>
+                {
+                    b.Navigation("QuizAttempts");
+                });
+
+            modelBuilder.Entity("QUIZ_GAME_WEB.Models.ResultsModels.QuizAttempt", b =>
+                {
+                    b.Navigation("CauSais");
+
+                    b.Navigation("KetQua");
                 });
 #pragma warning restore 612, 618
         }

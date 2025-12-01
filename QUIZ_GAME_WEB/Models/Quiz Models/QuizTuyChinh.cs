@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using QUIZ_GAME_WEB.Models.CoreEntities;
+using QUIZ_GAME_WEB.Models.ResultsModels;
 
 namespace QUIZ_GAME_WEB.Models.QuizModels
 {
@@ -24,5 +26,8 @@ namespace QUIZ_GAME_WEB.Models.QuizModels
 
         [ForeignKey("UserID")]
         public virtual NguoiDung NguoiDung { get; set; } = null!;
+
+        // Navigation property: 1 QuizTuyChinh có thể có nhiều QuizAttempt
+        public virtual ICollection<QuizAttempt> QuizAttempts { get; set; } = new List<QuizAttempt>();
     }
 }

@@ -5,14 +5,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using QUIZ_GAME_WEB.Data;
 using QUIZ_GAME_WEB.Models.CoreEntities;
-using QUIZ_GAME_WEB.Models.InputModels; // Chứa DangNhapModel, DangKyModel, ChangePasswordModel
+using QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
 using System;
-using System.Collections.Generic; // Cần cho List<Claim>
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq; // Cần cho FirstOrDefaultAsync, AnyAsync
+using System.Linq;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,6 +28,17 @@ public class AccountController : ControllerBase
         _configuration = configuration;
     }
 
+    // Hàm hỗ trợ lấy UserID từ JWT
+    private int GetUserIdFromClaim()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(claim) || !int.TryParse(claim, out int userId))
+        {
+            throw new UnauthorizedAccessException("User ID không hợp lệ trong token.");
+        }
+        return userId;
+    }
+
     // ===============================================
     // 🔑 API 1: ĐĂNG NHẬP (LOGIN)
     // ===============================================
@@ -37,7 +47,6 @@ public class AccountController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        // SỬA: NguoiDung -> NguoiDungs
         var user = await _context.NguoiDungs.FirstOrDefaultAsync(u => u.TenDangNhap == model.TenDangNhap);
 
         if (user == null || !user.TrangThai)
@@ -52,6 +61,17 @@ public class AccountController : ControllerBase
 
         string userRole = await GetUserRoleFromDatabase(user.UserID);
         string token = GenerateJwtToken(user, userRole);
+
+        // ✅ BỔ SUNG: LƯU PHIÊN ĐĂNG NHẬP MỚI
+        var newSession = new PhienDangNhap
+        {
+            UserID = user.UserID,
+            ThoiGianDangNhap = DateTime.Now,
+            Token = token,
+            ThoiGianHetHan = DateTime.UtcNow.AddHours(2), // Giả định thời gian hết hạn
+            TrangThai = true // Đang hoạt động
+        };
+        await _context.PhienDangNhaps.AddAsync(newSession);
 
         user.LanDangNhapCuoi = DateTime.Now;
         await _context.SaveChangesAsync();
@@ -72,11 +92,14 @@ public class AccountController : ControllerBase
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        // SỬA: NguoiDung -> NguoiDungs
         if (await _context.NguoiDungs.AnyAsync(u => u.TenDangNhap == model.TenDangNhap || u.Email == model.Email))
         {
             return Conflict(new { message = "Tên đăng nhập hoặc Email đã được sử dụng." });
         }
+
+        // Cần đảm bảo VaiTroID được gán trong Register (Giả định ID 3 là Player)
+        var playerRole = await _context.VaiTros.FirstOrDefaultAsync(r => r.TenVaiTro == "Player");
+        int vaiTroId = playerRole?.VaiTroID ?? 3;
 
         var newUser = new NguoiDung
         {
@@ -88,7 +111,6 @@ public class AccountController : ControllerBase
             TrangThai = true
         };
 
-        // SỬA: NguoiDung -> NguoiDungs
         await _context.NguoiDungs.AddAsync(newUser);
         await _context.SaveChangesAsync();
 
@@ -99,16 +121,21 @@ public class AccountController : ControllerBase
     // 🔑 API 3: ĐỔI MẬT KHẨU (CHANGE PASSWORD)
     // ===============================================
     [HttpPost("change-password")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordModel model)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState); // Kiểm tra validation của Model
+        if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim == null) return Unauthorized();
-        int userId = int.Parse(userIdClaim.Value);
+        int userId;
+        try
+        {
+            userId = GetUserIdFromClaim();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Unauthorized("Token không hợp lệ.");
+        }
 
-        // SỬA: NguoiDung -> NguoiDungs
         var user = await _context.NguoiDungs.FindAsync(userId);
         if (user == null) return NotFound("Người dùng không tồn tại.");
 
@@ -117,15 +144,51 @@ public class AccountController : ControllerBase
             return Unauthorized("Mật khẩu hiện tại không đúng.");
         }
 
-        // Cập nhật mật khẩu mới
         user.MatKhau = HashPassword(model.NewPassword);
-        // SỬA: NguoiDung -> NguoiDungs
         _context.NguoiDungs.Update(user);
         await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Đổi mật khẩu thành công." });
     }
 
+    // ===============================================
+    // 🔑 API 4: ĐĂNG XUẤT (LOGOUT)
+    // ===============================================
+    [HttpPost("logout")]
+    [Authorize(AuthenticationSchemes = "Bearer")]
+    public async Task<IActionResult> Logout()
+    {
+        int userId;
+        try
+        {
+            userId = GetUserIdFromClaim();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Ok(new { message = "Đăng xuất thành công." });
+        }
+
+        // Lấy Token hiện tại từ Header
+        string token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+
+        // Tìm và vô hiệu hóa phiên đăng nhập đang hoạt động
+        var activeSession = await _context.PhienDangNhaps
+                                          .Where(s => s.UserID == userId && s.Token == token && s.TrangThai == true)
+                                          .OrderByDescending(s => s.ThoiGianDangNhap)
+                                          .FirstOrDefaultAsync();
+
+        if (activeSession != null)
+        {
+            // Đánh dấu là đã logout và thiết lập thời gian hết hạn là bây giờ
+            activeSession.TrangThai = false;
+            activeSession.ThoiGianHetHan = DateTime.UtcNow;
+
+            _context.PhienDangNhaps.Update(activeSession);
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok(new { message = "Đăng xuất thành công." });
+    }
 
     // ===============================================
     // 🛠️ HÀM HỖ TRỢ (SECURITY & DATA ACCESS)
@@ -145,13 +208,15 @@ public class AccountController : ControllerBase
 
     private async Task<string> GetUserRoleFromDatabase(int userId)
     {
-        // SỬA: Admin -> Admins, VaiTro -> VaiTros
+        // Sử dụng truy vấn trực tiếp bảng Admin (giống như mã gốc bạn cung cấp)
+        // Đây là cách lấy Vai trò Admin/Moderator.
         var role = await (from a in _context.Admins
                           join r in _context.VaiTros on a.VaiTroID equals r.VaiTroID
                           where a.UserID == userId
                           select r.TenVaiTro)
                           .FirstOrDefaultAsync();
 
+        // Nếu không phải Admin/Moderator, mặc định là Player.
         return role ?? "Player";
     }
 

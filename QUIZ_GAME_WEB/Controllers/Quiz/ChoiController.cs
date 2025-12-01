@@ -1,115 +1,124 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using QUIZ_GAME_WEB.Data;
-using QUIZ_GAME_WEB.Models;
-using QUIZ_GAME_WEB.Models.QuizModels;
-using QUIZ_GAME_WEB.Models.ResultsModels;
-using System.Text.Json.Serialization;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using QUIZ_GAME_WEB.Models.InputModels;
+using QUIZ_GAME_WEB.Models.Interfaces;
+using QUIZ_GAME_WEB.Models.ViewModels;
+using System;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace QUIZ_GAME_WEB.Controllers.Quiz
 {
-    [Route("api/quiz/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = "Bearer")]
     public class ChoiController : ControllerBase
     {
-        private readonly QuizGameContext _context;
+        private readonly IQuizAttemptService _quizService;
+        // Loại bỏ trường cấp lớp này, vì nó không được sử dụng đúng cách
+        // private int userId; 
 
-        public ChoiController(QuizGameContext context)
+        public ChoiController(IQuizAttemptService quizService)
         {
-            _context = context;
+            _quizService = quizService;
         }
 
-        // GET: api/quiz/Choi/Start?count=5&chuDeIds=1,2&doKhoIds=1,2
-        // SỬA LỖI: Đặt tham số tùy chọn ở cuối cùng hoặc làm cho các tham số sau nó cũng là tùy chọn.
-        [HttpGet("Start")]
-        public async Task<ActionResult<IEnumerable<CauHoi>>> StartQuiz(
-            [FromQuery] string? chuDeIds = null,  // <-- Đã làm tùy chọn
-            [FromQuery] string? doKhoIds = null,  // <-- Đã làm tùy chọn
-            [FromQuery] int count = 5)            // <-- Đặt tham số tùy chọn cuối cùng
+        // Lấy UserID từ JWT
+        private int GetUserId()
         {
-            // Logic Nghiệp vụ: Phân tích điều kiện lọc
-            var cIds = chuDeIds?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(id => int.Parse(id)).ToList() ?? new List<int>();
-            var dIds = doKhoIds?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(id => int.Parse(id)).ToList() ?? new List<int>();
-
-            // Logic kiểm tra điều kiện
-            if (count <= 0 || !cIds.Any() || !dIds.Any())
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(claim) || !int.TryParse(claim, out int userId))
             {
-                // Logic nghiệp vụ: Nếu thiếu ID, coi như là thiếu điều kiện chơi hợp lệ
-                return BadRequest("Vui lòng cung cấp ChuDeIds và DoKhoIds hợp lệ.");
+                throw new UnauthorizedAccessException("User ID không hợp lệ.");
             }
-
-            // Truy vấn DAL (Lấy ngẫu nhiên)
-            var quiz = await _context.CauHois
-                .Where(ch => cIds.Contains(ch.ChuDeID) && dIds.Contains(ch.DoKhoID))
-                .OrderBy(ch => Guid.NewGuid())
-                .Take(count)
-                .ToListAsync();
-
-            // Logic bảo mật: ẨN đáp án đúng
-            quiz.ForEach(q => q.DapAnDung = null);
-
-            return Ok(quiz);
+            return userId;
         }
 
-        // POST: api/quiz/Choi/Submit
-        [HttpPost("Submit")]
-        public async Task<ActionResult<KetQua>> SubmitAnswer([FromBody] SubmitAnswerDto model)
+        // --- 1. Bắt đầu làm bài (POST /api/choi/start) ---
+        [HttpPost("start")]
+        public async Task<IActionResult> Start([FromBody] GameStartOptions options)
         {
-            if (model == null || model.UserID <= 0 || model.CauHoiID <= 0 || string.IsNullOrEmpty(model.UserDapAn))
+            try
             {
-                return BadRequest("Dữ liệu gửi lên không hợp lệ.");
+                int userId = GetUserId();
+                int attemptId = await _quizService.StartNewQuizAttemptAsync(userId, options);
+                var firstQuestion = await _quizService.GetNextQuestionAsync(attemptId);
+
+                if (firstQuestion == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy câu hỏi để bắt đầu." });
+                }
+
+                return Ok(new
+                {
+                    attemptID = attemptId,
+                    question = firstQuestion
+                });
             }
-
-            var cauHoi = await _context.CauHois.FindAsync(model.CauHoiID);
-            if (cauHoi == null) return NotFound("Câu hỏi không tồn tại.");
-
-            // Logic Nghiệp vụ: Kiểm tra và tính điểm
-            bool isCorrect = string.Equals(cauHoi.DapAnDung, model.UserDapAn, StringComparison.OrdinalIgnoreCase);
-            int diemThuong = 0;
-
-            if (isCorrect)
+            catch (Exception ex)
             {
-                var doKho = await _context.DoKhos.FindAsync(cauHoi.DoKhoID);
-                diemThuong = doKho?.DiemThuong ?? 0;
+                return BadRequest(new { message = ex.Message });
             }
-
-            // Ghi nhận kết quả
-            var ketQua = new KetQua
-            {
-                UserID = model.UserID,
-                Diem = diemThuong,
-                SoCauDung = isCorrect ? 1 : 0,
-                TongCauHoi = 1,
-                ThoiGian = DateTime.Now
-            };
-            _context.KetQuas.Add(ketQua);
-
-            // Cập nhật Thống kê người dùng (Logic nghiệp vụ BUS)
-            var today = DateTime.Today;
-            var thongKe = await _context.ThongKeNguoiDungs.FirstOrDefaultAsync(t => t.UserID == model.UserID && t.Ngay == today);
-
-            if (thongKe == null)
-            {
-                thongKe = new ThongKeNguoiDung { UserID = model.UserID, Ngay = today, SoTran = 1, SoCauDung = ketQua.SoCauDung, DiemTrungBinh = diemThuong };
-                _context.ThongKeNguoiDungs.Add(thongKe);
-            }
-            else
-            {
-                thongKe.SoTran += 1;
-                thongKe.SoCauDung += ketQua.SoCauDung;
-                thongKe.DiemTrungBinh = ((thongKe.DiemTrungBinh * (thongKe.SoTran - 1)) + diemThuong) / thongKe.SoTran;
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(ketQua);
         }
-    }
 
-    // DTO cho đầu vào SubmitAnswer
-    public class SubmitAnswerDto
-    {
-        public int UserID { get; set; }
-        public int CauHoiID { get; set; }
-        public string UserDapAn { get; set; } // A, B, C, D
+        // --- 2. Nộp đáp án (POST /api/choi/submit) ---
+        [HttpPost("submit")]
+        public async Task<IActionResult> SubmitAnswer([FromBody] AnswerSubmitModel answer)
+        {
+            try
+            {
+                answer.UserID = GetUserId();
+                bool isCorrect = await _quizService.SubmitAnswerAsync(answer);
+                return Ok(new { isCorrect = isCorrect, message = "Đáp án đã được ghi nhận." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // --- 3. Kết thúc và xem kết quả (POST /api/choi/end/{attemptId}) ---
+        [HttpPost("end/{attemptId}")]
+        public async Task<IActionResult> End(int attemptId)
+        {
+            try
+            {
+                // ✅ Lấy UserID từ JWT (Như trong hàm Start)
+                int userId = GetUserId();
+
+                // Service trả về KetQua Entity (giả định đã khắc phục lỗi JSON Cycle)
+                var result = await _quizService.EndAttemptAndCalculateResultAsync(attemptId, userId);
+
+                // ✅ Sử dụng AutoMapper hoặc Map thủ công sang DTO trước khi trả về
+                // Giả định KetQuaDto là một ViewModel đã được định nghĩa
+                var resultDto = new KetQuaDto
+                {
+                    QuizAttemptID = result.QuizAttemptID,
+                    Diem = result.Diem,
+                    SoCauDung = result.SoCauDung,
+                    TongCauHoi = result.TongCauHoi,
+                    TrangThaiKetQua = result.TrangThaiKetQua
+                };
+
+                return Ok(resultDto);
+            }
+            catch (Exception ex)
+            {
+                // ✅ Thêm khối try-catch để xử lý lỗi session/DB
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        // --- 4. Lấy câu hỏi tiếp theo (GET /api/choi/next/{attemptId}) ---
+        [HttpGet("next/{attemptId}")]
+        public async Task<IActionResult> GetNextQuestion(int attemptId)
+        {
+            var question = await _quizService.GetNextQuestionAsync(attemptId);
+
+            if (question == null)
+                return NotFound(new { message = "Không còn câu hỏi nào để trả lời. Vui lòng kết thúc phiên làm bài." });
+
+            return Ok(question);
+        }
     }
 }

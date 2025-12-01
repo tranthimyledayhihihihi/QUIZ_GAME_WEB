@@ -1,15 +1,13 @@
-﻿namespace QUIZ_GAME_WEB.Models
+﻿namespace QUIZ_GAME_WEB.Models.ViewModels
 {
-    // Model này chỉ chứa thông tin an toàn để hiển thị
-    public class CauHoiViewModel
+    public class CauHoiPlayDto
     {
         public int CauHoiID { get; set; }
-        public int ChuDeID { get; set; }
-        public int DoKhoID { get; set; }
-        public string? NoiDung { get; set; }
-        public string? DapAnA { get; set; }
-        public string? DapAnB { get; set; }
-        public string? DapAnC { get; set; }
-        public string? DapAnD { get; set; }
+        public string NoiDung { get; set; } = null!;
+        public string DapAnA { get; set; } = null!;
+        public string DapAnB { get; set; } = null!;
+        public string DapAnC { get; set; } = null!;
+        public string DapAnD { get; set; } = null!;
+        public string? HinhAnh { get; set; }
     }
 }
