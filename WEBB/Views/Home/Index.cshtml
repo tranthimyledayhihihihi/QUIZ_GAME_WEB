@@ -1,8 +1,78 @@
 ﻿@{
-    ViewBag.Title = "Trang chủ";
-    // Nếu chưa có layout thì comment dòng dưới:
-    // Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Smash Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Trang chủ Quiz Game</h2>
-<p>Đăng nhập thành công rồi 🎉</p>
+
+<!-- Sidebar Trái -->
+<div class="left-sidebar">
+    <a href="#" class="feature-card card-gift">
+        <span>Quà Tặng</span>
+        <i class="fa-solid fa-gift"></i>
+    </a>
+    <a href="#" class="feature-card card-rank">
+        <span>Xếp Hạng</span>
+        <i class="fa-solid fa-trophy"></i>
+    </a>
+    <a href="#" class="feature-card card-stats">
+        <span>Thống Kê</span>
+        <i class="fa-solid fa-chart-simple"></i>
+    </a>
+    <a href="#" class="feature-card card-streak">
+        <span>Chuỗi Ngày</span>
+        <i class="fa-solid fa-fire"></i>
+    </a>
+    <a href="#" class="feature-card card-pvp">
+        <span>Đối Kháng</span>
+        <i class="fa-solid fa-swords"></i>
+    </a>
+    <a href="#" class="feature-card card-arena">
+        <span>Đấu Trường</span>
+        <i class="fa-solid fa-skull"></i>
+    </a>
+</div>
+
+<!-- Màn hình chính -->
+<div class="game-container">
+    <!-- Ảnh Xe Kart -->
+    <img src="https://cdn-icons-png.flaticon.com/512/3253/3253220.png"
+         alt="Kart"
+         class="center-illustration" />
+
+    <!-- Khu vực nút bấm -->
+    <div class="buttons-wrapper">
+        <!-- Nút PLAY -->
+        <a href="@Url.Action("Index", "Play", new { area = "Quiz" })"
+           class="text-decoration-none w-100">
+            <button class="btn-play-big">
+                <i class="fa-solid fa-play me-3"></i> PLAY
+            </button>
+        </a>
+
+        <!-- 2 Nút Create và Join -->
+        <div class="sub-buttons">
+            <button class="btn-action-3d">
+                Create
+            </button>
+            <button class="btn-action-3d">
+                Join
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <!-- Nếu cần CSS riêng cho trang này, bạn có thể thêm vào đây.
+         Hoặc để trống, miễn là Layout đã RenderSection("Styles", required: false) -->
+    <style>
+        /* Ví dụ:
+        .top-left-logo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 60px;
+            z-index: 1000;
+        }
+        */
+    </style>
+}

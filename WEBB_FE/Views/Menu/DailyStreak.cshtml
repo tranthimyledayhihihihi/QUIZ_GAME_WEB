@@ -1,0 +1,79 @@
+﻿@model WEBB.Models.ViewModels.DailyStreakViewModel
+@{
+    ViewBag.Title = "Chuỗi Ngày";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="game-container">
+    <div class="card p-4 shadow-lg" style="max-width: 480px; margin: 0 auto;">
+        <h3 class="fw-bold mb-3 text-center">
+            <i class="fa-solid fa-fire me-2"></i> Chuỗi Ngày Liên Tiếp
+        </h3>
+
+        <p class="text-muted text-center">
+            @Model.Message
+        </p>
+
+        <div class="text-center my-3">
+            <div class="display-4 fw-bold text-warning">
+                🔥 @Model.SoNgayLienTiep ngày
+            </div>
+
+            @if (Model.NgayCapNhatCuoi.HasValue)
+            {
+                <div class="text-secondary mt-2">
+                    Cập nhật lần cuối:
+                    @Model.NgayCapNhatCuoi.Value.ToString("dd/MM/yyyy")
+                </div>
+            }
+            else
+            {
+                <div class="text-secondary mt-2">
+                    Bạn chưa có chuỗi ngày nào, hãy bắt đầu chơi hôm nay!
+                </div>
+            }
+        </div>
+
+        <!-- Có thể vẽ thêm timeline đơn giản -->
+        @if (Model.SoNgayLienTiep > 0)
+        {
+            <div class="d-flex justify-content-center flex-wrap mt-3">
+                @for (int i = Model.SoNgayLienTiep; i >= 1 && i >= Model.SoNgayLienTiep - 6; i--)
+                {
+                    <div class="streak-day">
+                        <div class="streak-circle">@i</div>
+                        <div class="streak-label">Ngày</div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .streak-day {
+            margin: 6px;
+            text-align: center;
+        }
+
+        .streak-circle {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #ff922b;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin: 0 auto 4px;
+            box-shadow: 0 4px 10px rgba(255, 146, 43, 0.5);
+        }
+
+        .streak-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+}

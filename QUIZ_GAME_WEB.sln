@@ -5,7 +5,7 @@ VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QUIZ_GAME_WEB", "QUIZ_GAME_WEB\QUIZ_GAME_WEB.csproj", "{5AD117E6-61C5-4559-91AF-7F051657655B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WEBB", "WEBB\WEBB.csproj", "{FEEEB8C6-4B78-47F5-B3DA-36FC167C6A4F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WEBB", "WEBB_FE\WEBB.csproj", "{BFC81716-481F-4CF0-9B26-F40D18D9E262}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{5AD117E6-61C5-4559-91AF-7F051657655B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AD117E6-61C5-4559-91AF-7F051657655B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AD117E6-61C5-4559-91AF-7F051657655B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FEEEB8C6-4B78-47F5-B3DA-36FC167C6A4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FEEEB8C6-4B78-47F5-B3DA-36FC167C6A4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FEEEB8C6-4B78-47F5-B3DA-36FC167C6A4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FEEEB8C6-4B78-47F5-B3DA-36FC167C6A4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
