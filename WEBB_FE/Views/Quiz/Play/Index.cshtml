@@ -1,0 +1,191 @@
+﻿@{
+    ViewBag.Title = "Chơi Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- CONTAINER CHÍNH CỦA GAME -->
+<div class="container mt-5" id="game-container">
+
+    <!-- 1. MÀN HÌNH BẮT ĐẦU -->
+    <div id="start-screen" class="text-center py-5">
+        <div class="mb-4">
+            <i class="fas fa-gamepad fa-5x text-warning mb-3"></i>
+            <h1 class="display-3 fw-black text-uppercase text-primary" style="font-family: 'Orbitron', sans-serif;">
+                Đấu Trường Tri Thứcb
+            </h1>
+        </div>
+        <p class="lead mb-5 fs-4">Bạn đã sẵn sàng chinh phục đỉnh cao chưa?</p>
+
+        <button onclick="startGame()" class="btn btn-danger btn-lg px-5 py-4 rounded-pill shadow-lg hover-scale fw-bold fs-3">
+            <i class="fas fa-rocket me-2"></i> CHIẾN THÔI!
+        </button>
+    </div>
+
+    <!-- 2. MÀN HÌNH CHƠI -->
+    <div id="play-screen" style="display:none;">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <!-- Header câu hỏi -->
+            <div class="card-header bg-gradient bg-dark text-white text-center py-4">
+                <span class="badge bg-warning text-dark mb-2">CÂU HỎI</span>
+                <h3 class="m-0 fw-bold" id="question-text">Đang tải dữ liệu...</h3>
+            </div>
+
+            <!-- Khu vực đáp án -->
+            <div class="card-body p-5 bg-light">
+                <div class="row g-4" id="answers-area">
+                    <!-- Các nút đáp án -->
+                </div>
+            </div>
+
+            <!-- Footer thông tin -->
+            <div class="card-footer bg-dark text-white text-center py-3">
+                <small class="text-white-50">Mã trận đấu: <span id="attempt-id" class="fw-bold text-warning">...</span></small>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- PHẦN JAVASCRIPT XỬ LÝ GAME -->
+@section Scripts {
+    <script>
+        // Biến toàn cục để lưu trạng thái
+        let currentAttemptId = 0;
+        let currentQuestionId = 0;
+
+        // --- HÀM 1: BẮT ĐẦU GAME ---
+        function startGame() {
+            // Cấu hình game
+            const options = {
+                ChuDeID: 1,
+                DoKhoID: 1,
+                SoLuongCauHoi: 10
+            };
+
+            // Chuyển màn hình
+            $('#start-screen').fadeOut(300, function () {
+                $('#play-screen').fadeIn(300);
+            });
+            $('#question-text').text("Đang khởi tạo bài thi...");
+
+            // Gọi API
+            $.ajax({
+                url: '/Play/StartGame',
+                type: 'POST',
+                data: options, // Gửi data thường (Form Data) để Controller dễ nhận
+                success: function (response) {
+                    console.log("Start Response:", response);
+
+                    if (response.attemptID) {
+                        currentAttemptId = response.attemptID;
+                        $('#attempt-id').text(currentAttemptId);
+                        renderQuestion(response.question);
+                    } else {
+                        alert("Lỗi: Server không trả về ID lượt chơi.");
+                        resetGame();
+                    }
+                },
+                error: function (xhr) {
+                    console.error("Lỗi StartGame:", xhr);
+                    alert("Không thể bắt đầu game.");
+                    resetGame();
+                }
+            });
+        }
+
+        // --- HÀM 2: HIỂN THỊ CÂU HỎI (RENDER) ---
+        function renderQuestion(question) {
+            if (!question) return;
+
+            // Xử lý hoa thường
+            const qId = question.cauHoiID || question.CauHoiID;
+            const content = question.noiDung || question.NoiDung;
+            const ansA = question.dapAnA || question.DapAnA;
+            const ansB = question.dapAnB || question.DapAnB;
+            const ansC = question.dapAnC || question.DapAnC;
+            const ansD = question.dapAnD || question.DapAnD;
+
+            currentQuestionId = qId;
+            $('#question-text').text(content);
+
+            // Tạo nút bấm
+            const answersHtml = `
+                    <div class="col-md-6"><button onclick="submitAnswer('A')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">A. ${ansA}</button></div>
+                    <div class="col-md-6"><button onclick="submitAnswer('B')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">B. ${ansB}</button></div>
+                    <div class="col-md-6"><button onclick="submitAnswer('C')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">C. ${ansC}</button></div>
+                    <div class="col-md-6"><button onclick="submitAnswer('D')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">D. ${ansD}</button></div>
+                `;
+            $('#answers-area').html(answersHtml);
+        }
+
+        // --- HÀM 3: NỘP ĐÁP ÁN ---
+        function submitAnswer(answer) {
+            const data = {
+                QuizAttemptID: currentAttemptId,
+                CauHoiID: currentQuestionId,
+                DapAnDaChon: answer
+            };
+
+            // Khóa nút
+            $('#answers-area button').prop('disabled', true);
+
+            $.ajax({
+                url: '/Play/SubmitAnswer',
+                type: 'POST',
+                data: data,
+                success: function (response) {
+                    console.log("Submit Response:", response);
+
+                    if (response.isCorrect) {
+                        // Có thể thêm hiệu ứng màu xanh ở đây
+                        // alert("🎉 CHÍNH XÁC!");
+                    } else {
+                        // Có thể thêm hiệu ứng màu đỏ ở đây
+                        // alert("😢 SAI RỒI!");
+                    }
+
+                    // Tự động chuyển câu sau 1 chút (hoặc ngay lập tức)
+                    // setTimeout(loadNextQuestion, 1000); // Đợi 1 giây rồi chuyển
+                    loadNextQuestion();
+                },
+                error: function (xhr) {
+                    console.error("Lỗi Submit:", xhr);
+                    alert("Lỗi kết nối khi nộp bài.");
+                    $('#answers-area button').prop('disabled', false);
+                }
+            });
+        }
+
+        // --- HÀM 4: TẢI CÂU TIẾP THEO ---
+        function loadNextQuestion() {
+            $('#question-text').text("Đang tải câu tiếp theo...");
+            $('#answers-area').empty(); // Xóa đáp án cũ
+
+            $.ajax({
+                url: '/Play/NextQuestion',
+                type: 'POST',
+                data: { attemptId: currentAttemptId },
+                success: function (response) {
+                    console.log("Next Question:", response);
+
+                    if (response.isFinished) {
+                        alert("🏁 CHÚC MỪNG! BẠN ĐÃ HOÀN THÀNH BÀI THI.");
+                        location.reload();
+                    } else {
+                        renderQuestion(response);
+                    }
+                },
+                error: function (xhr) {
+                    console.error("Lỗi NextQuestion:", xhr);
+                    alert("Không thể tải câu hỏi tiếp theo.");
+                }
+            });
+        }
+
+        // Hàm phụ trợ: Reset game về màn hình đầu
+        function resetGame() {
+            $('#play-screen').hide();
+            $('#start-screen').show();
+        }
+    </script>
+}
