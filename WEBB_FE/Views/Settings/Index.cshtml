@@ -1,0 +1,365 @@
+﻿@model WEBB.Models.User.SettingDto
+@{
+    ViewBag.Title = "Cài đặt - iQuiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .settings-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .settings-header {
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+    .settings-header::before {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+
+    .settings-header h2 {
+        color: #2d3748;
+        font-size: 32px;
+        font-weight: 700;
+        margin: 20px 0 10px;
+    }
+
+    .settings-subtitle {
+        color: #718096;
+        font-size: 16px;
+    }
+
+    .settings-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 10px 20px rgba(0, 0, 0, 0.05);
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+
+    .alert-custom {
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        border: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @@keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert-success-custom {
+        background: linear-gradient(135deg, #d4f4dd 0%, #c3f0cf 100%);
+        color: #155724;
+    }
+
+    .alert-danger-custom {
+        background: linear-gradient(135deg, #fde2e4 0%, #fbc4c9 100%);
+        color: #721c24;
+    }
+
+    .setting-item {
+        margin-bottom: 32px;
+        padding-bottom: 32px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .setting-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .setting-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 16px;
+    }
+
+    .setting-icon {
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 16px;
+    }
+
+    .setting-description {
+        color: #718096;
+        font-size: 14px;
+        margin-bottom: 16px;
+        padding-left: 44px;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 56px;
+        height: 28px;
+        margin-left: 44px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e0;
+        transition: 0.3s;
+        border-radius: 28px;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .toggle-slider {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(28px);
+    }
+
+    .toggle-label {
+        display: inline-block;
+        margin-left: 12px;
+        color: #4a5568;
+        font-weight: 500;
+        vertical-align: middle;
+    }
+
+    .select-wrapper {
+        position: relative;
+        margin-left: 44px;
+    }
+
+    .select-wrapper select {
+        width: 100%;
+        max-width: 300px;
+        padding: 12px 40px 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        font-size: 15px;
+        color: #2d3748;
+        background-color: white;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        appearance: none;
+    }
+
+    .select-wrapper::after {
+        content: '▼';
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+        color: #667eea;
+        font-size: 12px;
+    }
+
+    .select-wrapper select:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .select-wrapper select:hover {
+        border-color: #a0aec0;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 14px 40px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+        display: block;
+        margin: 40px auto 0;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-save:active {
+        transform: translateY(0);
+    }
+
+    @@media (max-width: 768px) {
+        .settings-card {
+            padding: 24px;
+        }
+
+        .settings-header h2 {
+            font-size: 24px;
+        }
+
+        .setting-label,
+        .setting-description,
+        .toggle-switch,
+        .select-wrapper {
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        .setting-item {
+            margin-bottom: 24px;
+            padding-bottom: 24px;
+        }
+    }
+</style>
+
+<div class="settings-container">
+    <div class="settings-header">
+        <h2>⚙️ Cài đặt</h2>
+        <p class="settings-subtitle">Tùy chỉnh trải nghiệm của bạn tại Đấu trường Tri thức</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert-custom alert-success-custom">
+            <span style="font-size: 20px;">✓</span>
+            <span>@TempData["Success"]</span>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert-custom alert-danger-custom">
+            <span style="font-size: 20px;">⚠</span>
+            <span>@TempData["Error"]</span>
+        </div>
+    }
+
+    <div class="settings-card">
+        @using (Html.BeginForm("Index", "Settings", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-icon">🔊</div>
+                    <span>Âm thanh</span>
+                </div>
+                <div class="setting-description">
+                    Bật/tắt hiệu ứng âm thanh trong trò chơi
+                </div>
+                <label class="toggle-switch">
+                    @Html.CheckBoxFor(m => m.AmThanh)
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Kích hoạt âm thanh</span>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-icon">🎵</div>
+                    <span>Nhạc nền</span>
+                </div>
+                <div class="setting-description">
+                    Phát nhạc nền trong khi chơi
+                </div>
+                <label class="toggle-switch">
+                    @Html.CheckBoxFor(m => m.NhacNen)
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Bật nhạc nền</span>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-icon">🔔</div>
+                    <span>Thông báo</span>
+                </div>
+                <div class="setting-description">
+                    Nhận thông báo về thách đấu và sự kiện mới
+                </div>
+                <label class="toggle-switch">
+                    @Html.CheckBoxFor(m => m.ThongBao)
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Cho phép thông báo</span>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-label">
+                    <div class="setting-icon">🌐</div>
+                    <span>Ngôn ngữ</span>
+                </div>
+                <div class="setting-description">
+                    Chọn ngôn ngữ hiển thị giao diện
+                </div>
+                <div class="select-wrapper">
+                    @Html.DropDownListFor(m => m.NgonNgu,
+                        new List<SelectListItem>
+                        {
+                            new SelectListItem { Text = "🇻🇳 Tiếng Việt", Value = "vi" },
+                            new SelectListItem { Text = "🇬🇧 English", Value = "en" }
+                        },
+                        "Chọn ngôn ngữ",
+                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(m => m.NgonNgu, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <button type="submit" class="btn-save">
+                💾 Lưu cài đặt
+            </button>
+        }
+    </div>
+</div>

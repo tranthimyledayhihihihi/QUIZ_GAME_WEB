@@ -1,0 +1,165 @@
+﻿@{
+    ViewBag.Title = "Smash Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Sidebar Trái -->
+<div class="left-sidebar">
+    <a href="@Url.Action("Gifts", "Menu")" class="feature-card card-gift">
+        <span>Thưởng Ngày</span>
+        <i class="fa-solid fa-gift"></i>
+    </a>
+
+    <a href="@Url.Action("Leaderboard", "Menu")" class="feature-card card-rank">
+        <span>Xếp Hạng</span>
+        <i class="fa-solid fa-trophy"></i>
+    </a>
+
+    <a href="@Url.Action("Statistics", "Menu")" class="feature-card card-stats">
+        <span>Thống Kê</span>
+        <i class="fa-solid fa-chart-simple"></i>
+    </a>
+
+    <a href="@Url.Action("DailyStreak", "Menu")" class="feature-card card-streak">
+        <span>Chuỗi Ngày</span>
+        <i class="fa-solid fa-fire"></i>
+    </a>
+
+    <a href="@Url.Action("DoiKhang", "Menu")" class="feature-card card-pvp">
+        <span>Đối Kháng</span>
+        <i class="fa-solid fa-swords"></i>
+    </a>
+
+    <a href="@Url.Action("DauTruong", "Menu")" class="feature-card card-arena">
+        <span>Đấu Trường</span>
+        <i class="fa-solid fa-skull"></i>
+    </a>
+</div>
+
+<!-- Màn hình chính -->
+<div class="game-container">
+    <img src="https://cdn-icons-png.flaticon.com/512/3253/3253220.png"
+         alt="Kart"
+         class="center-illustration" />
+
+    <div class="buttons-wrapper">
+        <!-- Nút PLAY -->
+        <a href="@Url.Action("Index", "Play")"
+           class="text-decoration-none w-100">
+            <button class="btn-play-big">
+                <i class="fa-solid fa-play me-3"></i> PLAY
+            </button>
+        </a>
+
+        <!-- 2 Nút Create và Join -->
+        <div class="sub-buttons">
+            <button id="btnCreateRoom" class="btn-action-3d">
+                Create
+            </button>
+            <button id="btnJoinRoom" class="btn-action-3d">
+                Join
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal nhập mã phòng để Join -->
+<div class="modal fade" id="joinRoomModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tham gia phòng</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="joinRoomCode" class="form-label">Nhập mã phòng:</label>
+                <input type="text" id="joinRoomCode" class="form-control"
+                       placeholder="ABC123" />
+                <div class="text-danger mt-2" id="joinError" style="display:none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Hủy
+                </button>
+                <button type="button" id="btnConfirmJoin"
+                        class="btn btn-primary">
+                    Tham gia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* CSS riêng nếu cần */
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(function () {
+
+            // ===== NÚT CREATE PHÒNG =====
+            $("#btnCreateRoom").on("click", function () {
+                $.ajax({
+                    url: "@Url.Action("CreateRoom", "Arena")",
+                    type: "POST",
+                    success: function (res) {
+                        // BE trả JSON: { roomId, code, name, ... } (tuỳ bạn thiết kế)
+                        // Hiện mã phòng cho user
+                        alert("Tạo phòng thành công!\nMã phòng: " + (res.code || res.roomCode || "N/A"));
+
+                        // Nếu muốn chuyển luôn sang màn Đấu Trường:
+                        window.location.href = "@Url.Action("DauTruong", "Menu")";
+                    },
+                    error: function (xhr) {
+                        alert("Tạo phòng thất bại: " + xhr.responseText);
+                    }
+                });
+            });
+
+            // ===== NÚT JOIN: mở modal =====
+            $("#btnJoinRoom").on("click", function () {
+                $("#joinError").hide();
+                $("#joinRoomCode").val("");
+                var modal = new bootstrap.Modal(document.getElementById("joinRoomModal"));
+                modal.show();
+            });
+
+            // ===== CONFIRM JOIN: gọi API =====
+            $("#btnConfirmJoin").on("click", function () {
+                var code = $("#joinRoomCode").val().trim();
+                if (!code) {
+                    $("#joinError").text("Vui lòng nhập mã phòng.").show();
+                    return;
+                }
+
+                $.ajax({
+                    url: "@Url.Action("Join", "Arena")",
+                    type: "POST",
+                    data: { code: code },
+                    success: function (res) {
+                        // Nếu BE trả luôn JSON { success, message, roomId, ... }
+                        if (res.success === false) {
+                            $("#joinError").text(res.message || "Tham gia thất bại.").show();
+                            return;
+                        }
+
+                        alert("Tham gia phòng thành công!");
+
+                        // Chuyển sang màn đấu trường / phòng
+                        window.location.href = "@Url.Action("DauTruong", "Menu")";
+                    },
+                    error: function (xhr) {
+                        $("#joinError").text("Lỗi gọi server: " + xhr.responseText).show();
+                    }
+                });
+            });
+
+        });
+    </script>
+}

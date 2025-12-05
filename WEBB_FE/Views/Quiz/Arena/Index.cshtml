@@ -1,0 +1,111 @@
+﻿@model WEBB.Models.ViewModels.ArenaViewModel
+
+@{
+    ViewBag.Title = "Đấu Trường Tri Thức";
+    Layout = "~/Views/Shared/_Layout.cshtml"; // layout game của bạn
+}
+
+<div class="arena-container">
+    <h1 class="text-center mb-4">ĐẤU TRƯỜNG TRI THỨC</h1>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Danh sách phòng đấu</h4>
+        <div>
+            <input type="text" id="roomName" class="form-control d-inline-block" style="width:200px" placeholder="Tên phòng" />
+            <button id="btnCreateRoom" class="btn btn-warning ms-2">
+                <i class="fa fa-plus"></i> Tạo phòng
+            </button>
+        </div>
+    </div>
+
+    <table class="table table-hover table-striped bg-light rounded">
+        <thead>
+            <tr>
+                <th>Tên phòng</th>
+                <th>Người chơi</th>
+                <th>Trạng thái</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="roomTableBody">
+            @if (Model != null && Model.Rooms != null && Model.Rooms.Any())
+            {
+                foreach (var r in Model.Rooms)
+                {
+                    <tr data-room-id="@r.RoomId">
+                        <td>@r.Name</td>
+                        <td>@r.CurrentPlayers / @r.MaxPlayers</td>
+                        <td>@r.Status</td>
+                        <td>
+                            <button class="btn btn-primary btn-join-room">
+                                Tham gia
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center">
+                        Chưa có phòng nào, hãy tạo phòng đầu tiên!
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // TẠO PHÒNG
+            $("#btnCreateRoom").click(function () {
+                var name = $("#roomName").val() || "Phòng đấu mới";
+
+                $.post('@Url.Action("CreateRoom", "Arena")',
+                    { roomName: name },
+                    function (res) {
+                        if (res.success) {
+                            // tạo xong reload lại để thấy phòng
+                            location.reload();
+                        } else {
+                            alert(res.message || "Tạo phòng thất bại.");
+                        }
+                    }
+                ).fail(function (xhr) {
+                    alert("Lỗi server: " + xhr.responseText);
+                });
+            });
+
+            // THAM GIA PHÒNG THEO roomId
+            $(".btn-join-room").click(function () {
+                var roomId = $(this).closest("tr").data("room-id");
+
+                $.post('@Url.Action("Join", "Arena")',
+                    { roomId: roomId },
+                    function (res) {
+                        if (res.success) {
+                            alert("Tham gia phòng thành công! (TODO: redirect tới màn chơi)");
+                            // ví dụ:
+                            // window.location.href = "@Url.Action("Index", "Play")" + "?roomId=" + roomId;
+                        } else {
+                            alert(res.message || "Không tham gia được phòng.");
+                        }
+                    }
+                ).fail(function (xhr) {
+                    alert("Lỗi server: " + xhr.responseText);
+                });
+            });
+        });
+    </script>
+}

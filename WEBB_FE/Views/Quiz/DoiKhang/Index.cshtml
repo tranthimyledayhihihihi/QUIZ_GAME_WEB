@@ -1,0 +1,64 @@
+﻿@model WEBB.Models.ViewModels.DuelLobbyViewModel
+        
+
+@{
+    ViewBag.Title = "Đối Kháng 1v1";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="duel-container text-center">
+    <h1 class="mb-4">ĐỐI KHÁNG 1v1</h1>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <p class="lead">Nhấn nút bên dưới để tìm đối thủ ngẫu nhiên và vào phòng đấu tay đôi.</p>
+
+    <button id="btnFindMatch" class="btn btn-lg btn-warning px-5 py-3 mb-4">
+        <i class="fa fa-bolt"></i> TÌM ĐỐI THỦ
+    </button>
+
+    <div id="matchStatus" class="mt-3">
+        Trạng thái: <span class="badge bg-info" id="statusText">@Model.CurrentMatch.Status</span>
+    </div>
+
+    <div id="opponentInfo" class="mt-4" style="display:none;">
+        <h4>Đối thủ của bạn:</h4>
+        <p id="opponentName" class="fs-4 fw-bold"></p>
+        <p>Mã trận: <span id="matchId"></span></p>
+        <button id="btnStartMatch" class="btn btn-success mt-3">
+            Vào trận
+        </button>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $("#btnFindMatch").click(function () {
+                $("#statusText").text("Đang tìm đối thủ...");
+                $("#opponentInfo").hide();
+
+                $.post('@Url.Action("FindMatch", "DoiKhang", new { area = "" })', {}, function (res) {
+                    if (!res.success) {
+                        alert(res.message || "Không tìm được trận.");
+                        $("#statusText").text("Idle");
+                        return;
+                    }
+
+                    $("#statusText").text("Đã tìm thấy đối thủ!");
+                    $("#opponentInfo").show();
+                    $("#opponentName").text(res.data.OpponentName || "???");
+                    $("#matchId").text(res.data.MatchId || "");
+                });
+            });
+
+            $("#btnStartMatch").click(function () {
+                // TODO: chuyển sang màn hình chơi quiz 1v1
+                alert("Vào trận! (TODO: redirect tới trang chơi)");
+            });
+        });
+    </script>
+}
