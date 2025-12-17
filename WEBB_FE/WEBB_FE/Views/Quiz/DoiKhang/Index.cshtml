@@ -1,0 +1,60 @@
+﻿@model WEBB.Models.ViewModels.DuelLobbyViewModel
+
+@{
+    ViewBag.Title = "Đối Kháng 1v1";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="arena-container">
+    <h1 class="text-center mb-4">ĐỐI KHÁNG 1v1</h1>
+
+    <div class="text-center mb-3">
+        <button id="btnFindMatch" class="btn btn-warning btn-lg">
+            <i class="fa-solid fa-bolt me-2"></i> Tìm đối thủ
+        </button>
+    </div>
+
+    <div class="text-center">
+        <p>
+            Trạng thái:
+            <span id="statusText" class="badge bg-info">
+                @Model.CurrentMatch.Status
+            </span>
+        </p>
+        <div id="opponentInfo" style="display:none;">
+            <p>
+                Đối thủ của bạn:
+                <strong id="opponentName"></strong>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            $("#btnFindMatch").on("click", function () {
+                $("#statusText").text("Matching...");
+                $("#opponentInfo").hide();
+
+                $.post('@Url.Action("FindMatch", "DoiKhang")', {}, function (res) {
+                    if (!res.success) {
+                        alert(res.message || "Không tìm được đối thủ.");
+                        $("#statusText").text("Idle");
+                        return;
+                    }
+
+                    $("#statusText").text(res.status || "Ready");
+                    $("#opponentName").text(res.opponentName || "???");
+                    $("#opponentInfo").show();
+
+                    // TODO: redirect sang màn quiz 1v1:
+                    // window.location.href = "@Url.Action("Index", "Play")" + "?matchId=" + res.matchId;
+                }).fail(function (xhr) {
+                    alert("Lỗi server: " + xhr.responseText);
+                    $("#statusText").text("Idle");
+                });
+            });
+        });
+    </script>
+}
