@@ -448,5 +448,34 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                 // Bổ sung các trường DapAnA, B, C, D nếu DTO QuizNgayDetailsDto yêu cầu
             };
         }
+        // ================================
+        // QUIZ TÙY CHỈNH – ADMIN
+        // ================================
+
+        public IQueryable<QuizTuyChinh> GetQuizTuyChinhQueryable()
+        {
+            return _context.QuizTuyChinhs
+                .Include(q => q.NguoiDung)
+                .Include(q => q.CauHois);
+        }
+
+        public async Task<QuizTuyChinh?> GetQuizTuyChinhByIdAsync(int id)
+        {
+            return await _context.QuizTuyChinhs
+                .Include(q => q.NguoiDung)
+                .Include(q => q.CauHois)
+                .FirstOrDefaultAsync(q => q.QuizTuyChinhID == id);
+        }
+
+        public void UpdateQuizTuyChinh(QuizTuyChinh quiz)
+        {
+            _context.QuizTuyChinhs.Update(quiz);
+        }
+
+        public void DeleteQuizTuyChinh(QuizTuyChinh quiz)
+        {
+            _context.QuizTuyChinhs.Remove(quiz);
+        }
+
     }
 }

@@ -85,5 +85,12 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         Task<QuizTuyChinh> SubmitNewQuizAsync(int userId, QuizSubmissionModel submission);
 
         Task<bool> DeleteQuizSubmissionAsync(int quizId, int userId);
+        IQueryable<QuizTuyChinh> GetQuizTuyChinhQueryable();
+
+        Task<QuizTuyChinh?> GetQuizTuyChinhByIdAsync(int id);
+
+        void UpdateQuizTuyChinh(QuizTuyChinh quiz);
+
+        void DeleteQuizTuyChinh(QuizTuyChinh quiz);
     }
 }
