@@ -9,10 +9,13 @@
 
 <div class="container mt-5" id="game-container">
 
+    <!-- ================= START SCREEN ================= -->
     <div id="start-screen" class="text-center py-5">
+
         <div class="mb-4">
             <i class="fas fa-gamepad fa-5x text-warning mb-3"></i>
-            <h1 class="display-3 fw-black text-uppercase text-primary" style="font-family: 'Orbitron', sans-serif;">
+            <h1 class="display-3 fw-black text-uppercase text-primary"
+                style="font-family: 'Orbitron', sans-serif;">
                 Đấu Trường Tri Thức
             </h1>
         </div>
@@ -24,13 +27,36 @@
             </p>
         }
 
-        <p class="lead mb-5 fs-4">Bạn đã sẵn sàng chinh phục đỉnh cao chưa?</p>
+        <p class="lead mb-4 fs-4">Bạn đã sẵn sàng chinh phục đỉnh cao chưa?</p>
 
-        <button onclick="startGame()" class="btn btn-danger btn-lg px-5 py-4 rounded-pill shadow-lg hover-scale fw-bold fs-3">
+        <!-- ===== CHỌN CHỦ ĐỀ + ĐỘ KHÓ ===== -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-4 mb-3">
+                <label class="fw-bold mb-1">Chủ đề</label>
+                <select id="chuDeSelect" class="form-select form-select-lg">
+                    <option value="1">Lịch sử Việt Nam</option>
+                    <option value="2">Toán học</option>
+                    <option value="3">Khoa học</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 mb-3">
+                <label class="fw-bold mb-1">Độ khó</label>
+                <select id="doKhoSelect" class="form-select form-select-lg">
+                    <option value="1">Dễ</option>
+                    <option value="2">Trung bình</option>
+                    <option value="3">Khó</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="startGame()"
+                class="btn btn-danger btn-lg px-5 py-4 rounded-pill shadow-lg fw-bold fs-3">
             <i class="fas fa-rocket me-2"></i> CHIẾN THÔI!
         </button>
     </div>
 
+    <!-- ================= PLAY SCREEN ================= -->
     <div id="play-screen" style="display:none;">
         <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
 
@@ -53,31 +79,27 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script>
 
 let currentAttemptId = 0;
 let currentQuestionId = 0;
-
-// ===== FIX 1: KHÔNG BAO GIỜ VÒNG LẶP NỮA =====
 let isLoadingNext = false;
 
-// ===== START GAME =====
+// ================= START GAME =================
 function startGame() {
 
     const options = {
-        ChuDeID: 1,
-        DoKhoID: 1,
+        ChuDeID: $('#chuDeSelect').val(),
+        DoKhoID: $('#doKhoSelect').val(),
         SoLuongCauHoi: 10
     };
 
     $('#start-screen').fadeOut(300, () => $('#play-screen').fadeIn(300));
-
     $('#question-text').text("Đang khởi tạo...");
 
     $.ajax({
-        url: '@Url.Action("StartGame", "Play")',
+        url: '@Url.Action("StartGame", "Play", new { area = "Quiz" })',
         type: 'POST',
         data: options,
         success: function (res) {
@@ -100,63 +122,52 @@ function startGame() {
             renderQuestion(res.question);
         },
         error: function (xhr) {
-            console.log(xhr);
             alert("Lỗi: " + xhr.responseText);
             resetGame();
         }
     });
 }
 
-
-// ===== HIỂN THỊ CÂU HỎI =====
+// ================= RENDER QUESTION =================
 function renderQuestion(q) {
 
-    if (!q) {
-        alert("Dữ liệu câu hỏi trống!");
-        return;
-    }
+    const qId = q.CauHoiID || q.cauHoiID;
+    const content = q.NoiDung || q.noiDung;
 
-    const qId = q.cauHoiID || q.CauHoiID;
-    const content = q.noiDung || q.NoiDung;
-
-    const A = q.dapAnA || q.DapAnA;
-    const B = q.dapAnB || q.DapAnB;
-    const C = q.dapAnC || q.DapAnC;
-    const D = q.dapAnD || q.DapAnD;
+    const A = q.DapAnA || q.dapAnA;
+    const B = q.DapAnB || q.dapAnB;
+    const C = q.DapAnC || q.dapAnC;
+    const D = q.DapAnD || q.dapAnD;
 
     if (!qId || !content) {
-        alert("Lỗi dữ liệu câu hỏi không hợp lệ!");
+        alert("Dữ liệu câu hỏi không hợp lệ!");
         return;
     }
 
     currentQuestionId = qId;
-
     $('#question-text').text(content);
 
     $('#answers-area').html(`
-        <div class="col-md-6"><button onclick="submitAnswer('A')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start shadow-sm">A. ${A}</button></div>
-        <div class="col-md-6"><button onclick="submitAnswer('B')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start shadow-sm">B. ${B}</button></div>
-        <div class="col-md-6"><button onclick="submitAnswer('C')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start shadow-sm">C. ${C}</button></div>
-        <div class="col-md-6"><button onclick="submitAnswer('D')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start shadow-sm">D. ${D}</button></div>
+        <div class="col-md-6"><button onclick="submitAnswer('A')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start">A. ${A}</button></div>
+        <div class="col-md-6"><button onclick="submitAnswer('B')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start">B. ${B}</button></div>
+        <div class="col-md-6"><button onclick="submitAnswer('C')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start">C. ${C}</button></div>
+        <div class="col-md-6"><button onclick="submitAnswer('D')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start">D. ${D}</button></div>
     `);
 }
 
-
-// ===== SUBMIT ANSWER =====
+// ================= SUBMIT ANSWER =================
 function submitAnswer(ans) {
-
-    const data = {
-        QuizAttemptID: currentAttemptId,
-        CauHoiID: currentQuestionId,
-        DapAnDaChon: ans
-    };
 
     $('#answers-area button').prop("disabled", true);
 
     $.ajax({
-        url: '@Url.Action("SubmitAnswer", "Play")',
+        url: '@Url.Action("SubmitAnswer", "Play", new { area = "Quiz" })',
         type: 'POST',
-        data: data,
+        data: {
+            QuizAttemptID: currentAttemptId,
+            CauHoiID: currentQuestionId,
+            DapAnDaChon: ans
+        },
         success: function () {
             loadNextQuestion();
         },
@@ -167,18 +178,17 @@ function submitAnswer(ans) {
     });
 }
 
-
-// ===== LOAD NEXT QUESTION =====
+// ================= NEXT QUESTION =================
 function loadNextQuestion() {
 
-    if (isLoadingNext) return;  // FIX vòng lặp vô hạn
+    if (isLoadingNext) return;
     isLoadingNext = true;
 
     $('#question-text').text("Đang tải câu tiếp theo...");
     $('#answers-area').empty();
 
     $.ajax({
-        url: '@Url.Action("NextQuestion", "Play")',
+        url: '@Url.Action("NextQuestion", "Play", new { area = "Quiz" })',
         type: 'POST',
         data: { attemptId: currentAttemptId },
         success: function (res) {
@@ -192,12 +202,7 @@ function loadNextQuestion() {
 
             if (res.isFinished === true) {
                 alert("Bạn đã hoàn thành!");
-                location.href = '@Url.Action("Index","Home")';
-                return;
-            }
-
-            if (!res.CauHoiID && !res.cauHoiID) {
-                alert("Không có câu hỏi tiếp theo!");
+                location.href = '@Url.Action("Index", "Home")';
                 return;
             }
 

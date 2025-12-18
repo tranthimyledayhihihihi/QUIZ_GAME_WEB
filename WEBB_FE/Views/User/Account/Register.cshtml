@@ -5,143 +5,1688 @@
     ViewBag.Title = "Đăng ký IQuiz";
 }
 
-<div class="auth-page">
-    <div class="auth-card">
-        <div class="auth-logo">IQ</div>
-
-        <h2 class="auth-title">Đăng ký IQuiz</h2>
-        <p class="auth-subtitle">
-            Tạo tài khoản mới để bắt đầu tham gia quiz.
-        </p>
-
-        @* Lỗi từ server/API *@
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="alert alert-danger">
-                @Model.ErrorMessage
+<div class="auth-container">
+    <!-- Left Panel - Background & Welcome -->
+    <div class="auth-left-panel">
+        <div class="overlay"></div>
+        <div class="welcome-content">
+            <div class="brand-logo">
+                <i class="fas fa-brain"></i>
+                <span>IQuiz</span>
             </div>
-        }
-
-        @using (Html.BeginForm("Register", "Account", FormMethod.Post))
-        {
-            @Html.AntiForgeryToken()
-
-            <div class="form-group">
-                @Html.LabelFor(m => m.UserName, "Tên đăng nhập")
-                @Html.TextBoxFor(m => m.UserName,
-                    new { @class = "form-control auth-input", placeholder = "Nhập tên đăng nhập..." })
-                @Html.ValidationMessageFor(m => m.UserName, null, new { @class = "text-danger" })
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(m => m.Email, "Email")
-                @Html.TextBoxFor(m => m.Email,
-                    new { @class = "form-control auth-input", placeholder = "Nhập email..." })
-                @Html.ValidationMessageFor(m => m.Email, null, new { @class = "text-danger" })
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(m => m.Password, "Mật khẩu")
-                @Html.PasswordFor(m => m.Password,
-                    new { @class = "form-control auth-input", placeholder = "Nhập mật khẩu..." })
-                @Html.ValidationMessageFor(m => m.Password, null, new { @class = "text-danger" })
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(m => m.ConfirmPassword, "Xác nhận mật khẩu")
-                @Html.PasswordFor(m => m.ConfirmPassword,
-                    new { @class = "form-control auth-input", placeholder = "Nhập lại mật khẩu..." })
-                @Html.ValidationMessageFor(m => m.ConfirmPassword, null, new { @class = "text-danger" })
-            </div>
-
-            <button type="submit" class="btn btn-primary auth-btn">
-                Đăng ký
-            </button>
-
-            <p class="mt-3 text-center">
-                Đã có tài khoản?
-                <a href="@Url.Action("Login", "Account")" class="auth-link">
-                    Đăng nhập ngay
-                </a>
+            <h1 class="welcome-title">Tham gia cộng đồng tri thức!</h1>
+            <p class="welcome-subtitle">
+                Đăng ký ngay để khám phá thế giới quiz, thách thức bản thân và kết nối với những người cùng đam mê.
             </p>
-        }
+            <div class="features-list">
+                <div class="feature-item">
+                    <i class="fas fa-star"></i>
+                    <span>Truy cập hàng nghìn câu hỏi hấp dẫn</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-users"></i>
+                    <span>Thi đấu với cộng đồng người chơi</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Theo dõi tiến độ và thành tích</span>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-award"></i>
+                    <span>Nhận huy hiệu và phần thưởng</span>
+                </div>
+            </div>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-number">10,000+</div>
+                    <div class="stat-label">Người chơi</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">50,000+</div>
+                    <div class="stat-label">Câu hỏi</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">100+</div>
+                    <div class="stat-label">Chủ đề</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Panel - Register Form -->
+    <div class="auth-right-panel">
+        <div class="auth-form-container">
+            <!-- Back to Home -->
+            <a href="@Url.Action("Index", "Home")" class="back-home">
+                <i class="fas fa-arrow-left"></i> Trang chủ
+            </a>
+
+            <!-- Logo Mobile -->
+            <div class="mobile-logo">
+                <i class="fas fa-brain"></i>
+                <span>IQuiz</span>
+            </div>
+
+            <!-- Header -->
+            <div class="form-header">
+                <h2>Tạo tài khoản mới</h2>
+                <p class="form-subtitle">
+                    Điền thông tin bên dưới để bắt đầu hành trình khám phá tri thức.
+                </p>
+            </div>
+
+            <!-- Error Message -->
+            @if (!string.IsNullOrEmpty(Model?.ErrorMessage))
+            {
+                <div class="alert alert-danger-custom">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Đăng ký thất bại!</strong>
+                        <p class="mb-0">@Model.ErrorMessage</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Success Message from TempData -->
+            @if (TempData["RegisterSuccess"] != null)
+            {
+                <div class="alert alert-success-custom">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <strong>Đăng ký thành công!</strong>
+                        <p class="mb-0">@TempData["RegisterSuccess"]</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Register Form -->
+            @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "register-form", id = "registerForm" }))
+            {
+                @Html.AntiForgeryToken()
+
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Thông tin cơ bản</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Mật khẩu</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Hoàn tất</div>
+                    </div>
+                </div>
+
+                <!-- Step 1: Basic Info -->
+                <div class="form-step step-1 active">
+                    <div class="input-group-custom">
+                        <label for="UserName" class="input-label">
+                            <i class="fas fa-user"></i>
+                            Tên đăng nhập
+                            <span class="required-star">*</span>
+                        </label>
+                        @Html.TextBoxFor(m => m.UserName, new
+                        {
+                            @class = "form-input",
+                            placeholder = "Nhập tên đăng nhập (3-20 ký tự)",
+                            autocomplete = "username",
+                            required = "required",
+                            minlength = "3",
+                            maxlength = "20"
+                        })
+                        <div class="input-hint">Tên đăng nhập phải từ 3-20 ký tự, có thể chứa chữ cái, số và dấu gạch dưới</div>
+                        @Html.ValidationMessageFor(m => m.UserName, null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="input-group-custom">
+                        <label for="Email" class="input-label">
+                            <i class="fas fa-envelope"></i>
+                            Địa chỉ email
+                            <span class="required-star">*</span>
+                        </label>
+                        @Html.TextBoxFor(m => m.Email, new
+                        {
+                            @class = "form-input",
+                            placeholder = "Nhập địa chỉ email",
+                            autocomplete = "email",
+                            required = "required",
+                            type = "email"
+                        })
+                        <div class="input-hint">Chúng tôi sẽ gửi email xác nhận đến địa chỉ này</div>
+                        @Html.ValidationMessageFor(m => m.Email, null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="input-group-custom">
+                        <label for="FullName" class="input-label">
+                            <i class="fas fa-id-card"></i>
+                            Họ và tên
+                        </label>
+                        <input type="text" id="FullName" name="FullName" class="form-input"
+                               placeholder="Nhập họ và tên của bạn (không bắt buộc)"
+                               autocomplete="name">
+                    </div>
+
+                    <button type="button" class="btn-next-step submit-btn">
+                        Tiếp theo
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+                <!-- Step 2: Password -->
+                <div class="form-step step-2">
+                    <div class="input-group-custom">
+                        <label for="Password" class="input-label">
+                            <i class="fas fa-lock"></i>
+                            Mật khẩu
+                            <span class="required-star">*</span>
+                        </label>
+                        <div class="password-input-wrapper">
+                            @Html.PasswordFor(m => m.Password, new
+                            {
+                                @class = "form-input password-input",
+                                placeholder = "Nhập mật khẩu (ít nhất 6 ký tự)",
+                                autocomplete = "new-password",
+                                required = "required",
+                                id = "passwordField",
+                                minlength = "6"
+                            })
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('passwordField')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <!-- Password Strength Meter -->
+                        <div class="password-strength">
+                            <div class="strength-bar" id="passwordStrength"></div>
+                        </div>
+                        <div class="strength-labels">
+                            <span class="strength-label weak">Yếu</span>
+                            <span class="strength-label medium">Trung bình</span>
+                            <span class="strength-label strong">Mạnh</span>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Password, null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="input-group-custom">
+                        <label for="ConfirmPassword" class="input-label">
+                            <i class="fas fa-lock"></i>
+                            Xác nhận mật khẩu
+                            <span class="required-star">*</span>
+                        </label>
+                        <div class="password-input-wrapper">
+                            @Html.PasswordFor(m => m.ConfirmPassword, new
+                            {
+                                @class = "form-input password-input",
+                                placeholder = "Nhập lại mật khẩu",
+                                autocomplete = "new-password",
+                                required = "required",
+                                id = "confirmPasswordField"
+                            })
+                            <button type="button" class="toggle-password" onclick="togglePasswordVisibility('confirmPasswordField')">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div id="passwordMatch" class="input-hint"></div>
+                        @Html.ValidationMessageFor(m => m.ConfirmPassword, null, new { @class = "validation-error" })
+                    </div>
+
+                    <div class="password-requirements">
+                        <p class="requirements-title">Mật khẩu phải có:</p>
+                        <ul class="requirements-list">
+                            <li class="requirement" data-check="length">
+                                <i class="fas fa-check-circle valid"></i>
+                                <i class="fas fa-times-circle invalid"></i>
+                                <span>Ít nhất 6 ký tự</span>
+                            </li>
+                            <li class="requirement" data-check="uppercase">
+                                <i class="fas fa-check-circle valid"></i>
+                                <i class="fas fa-times-circle invalid"></i>
+                                <span>Ít nhất 1 chữ hoa</span>
+                            </li>
+                            <li class="requirement" data-check="number">
+                                <i class="fas fa-check-circle valid"></i>
+                                <i class="fas fa-times-circle invalid"></i>
+                                <span>Ít nhất 1 số</span>
+                            </li>
+                            <li class="requirement" data-check="special">
+                                <i class="fas fa-check-circle valid"></i>
+                                <i class="fas fa-times-circle invalid"></i>
+                                <span>Ít nhất 1 ký tự đặc biệt (!@Html.Raw("@")#$%^&*)</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-prev-step btn-outline">
+                            <i class="fas fa-arrow-left"></i>
+                            Quay lại
+                        </button>
+                        <button type="button" class="btn-next-step submit-btn">
+                            Tiếp theo
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Terms & Submit -->
+                <div class="form-step step-3">
+                    <div class="terms-container">
+                        <div class="terms-header">
+                            <i class="fas fa-file-contract"></i>
+                            <h3>Điều khoản sử dụng</h3>
+                        </div>
+                        <div class="terms-content">
+                            <p>Bằng việc đăng ký tài khoản IQuiz, bạn đồng ý với:</p>
+                            <ul>
+                                <li>Tuân thủ các quy định của cộng đồng</li>
+                                <li>Không sử dụng các hành vi gian lận trong thi đấu</li>
+                                <li>Tôn trọng quyền riêng tư của người khác</li>
+                                <li>Không đăng tải nội dung vi phạm pháp luật</li>
+                                <li>Chịu trách nhiệm về thông tin đăng ký của mình</li>
+                            </ul>
+                            <div class="newsletter-opt">
+                                <label class="checkbox-custom">
+                                    <input type="checkbox" id="newsletter" name="Newsletter" checked>
+                                    <span class="checkmark"></span>
+                                    <span class="checkbox-text">
+                                        Tôi muốn nhận thông tin về cập nhật mới, sự kiện và khuyến mãi từ IQuiz
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-custom">
+                            <input type="checkbox" id="agreeTerms" name="AgreeTerms" required>
+                            <span class="checkmark"></span>
+                            <span class="checkbox-text">
+                                Tôi đã đọc và đồng ý với <a href="#" class="terms-link">Điều khoản sử dụng</a>
+                                và <a href="#" class="terms-link">Chính sách bảo mật</a>
+                            </span>
+                        </label>
+                        <div class="validation-error" id="termsError" style="display: none;">
+                            Bạn phải đồng ý với điều khoản sử dụng
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn-prev-step btn-outline">
+                            <i class="fas fa-arrow-left"></i>
+                            Quay lại
+                        </button>
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            <span class="btn-text">Hoàn tất đăng ký</span>
+                            <span class="btn-loader" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="step-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text">
+                        Bước <span id="currentStep">1</span>/3
+                    </div>
+                </div>
+            }
+
+            <!-- Already have account -->
+            <div class="login-link">
+                Đã có tài khoản?
+                <a href="@Url.Action("Login", "Account")" class="login-cta">
+                    Đăng nhập ngay
+                    <i class="fas fa-sign-in-alt"></i>
+                </a>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider">
+                <span>hoặc đăng ký với</span>
+            </div>
+
+            <!-- Social Register -->
+            <div class="social-register">
+                <button type="button" class="social-btn google-btn">
+                    <i class="fab fa-google"></i>
+                    Google
+                </button>
+                <button type="button" class="social-btn facebook-btn">
+                    <i class="fab fa-facebook-f"></i>
+                    Facebook
+                </button>
+                <button type="button" class="social-btn github-btn">
+                    <i class="fab fa-github"></i>
+                    GitHub
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
-@section Styles {
-    <style>
-        .auth-page {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 24px;
+<style>
+    /* Reset & Base */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    :root {
+        --primary-color: #4f46e5;
+        --primary-hover: #4338ca;
+        --secondary-color: #8b5cf6;
+        --success-color: #10b981;
+        --danger-color: #ef4444;
+        --warning-color: #f59e0b;
+        --text-primary: #1f2937;
+        --text-secondary: #6b7280;
+        --bg-light: #f9fafb;
+        --border-color: #e5e7eb;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+        --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        --radius-sm: 8px;
+        --radius-md: 12px;
+        --radius-lg: 16px;
+        --radius-full: 999px;
+    }
+
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    /* Main Container */
+    .auth-container {
+        display: flex;
+        min-height: 100vh;
+        background: white;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin: 24px;
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Left Panel */
+    .auth-left-panel {
+        flex: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 60px 40px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.3);
+    }
+
+    .welcome-content {
+        position: relative;
+        z-index: 2;
+        max-width: 500px;
+        margin: 0 auto;
+    }
+
+    .brand-logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 40px;
+    }
+
+        .brand-logo i {
+            font-size: 32px;
         }
 
-        .auth-card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 32px 40px;
-            width: 420px;
-            max-width: 100%;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
+    .welcome-title {
+        font-size: 42px;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 16px;
+    }
+
+    .welcome-subtitle {
+        font-size: 18px;
+        opacity: 0.9;
+        margin-bottom: 40px;
+        line-height: 1.6;
+    }
+
+    .features-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 40px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 16px;
+    }
+
+        .feature-item i {
+            font-size: 18px;
+            color: #c7d2fe;
         }
 
-        .auth-logo {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: #eef2ff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+    .stats-container {
+        display: flex;
+        gap: 32px;
+        margin-top: 40px;
+        padding-top: 40px;
+        border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .stat-item {
+        flex: 1;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .stat-label {
+        font-size: 14px;
+        opacity: 0.8;
+    }
+
+    /* Right Panel */
+    .auth-right-panel {
+        flex: 1;
+        background: white;
+        padding: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow-y: auto;
+    }
+
+    .auth-form-container {
+        width: 100%;
+        max-width: 520px;
+    }
+
+    .back-home {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 14px;
+        margin-bottom: 20px;
+        transition: color 0.2s;
+    }
+
+        .back-home:hover {
+            color: var(--primary-color);
+        }
+
+    .mobile-logo {
+        display: none;
+    }
+
+    .form-header {
+        margin-bottom: 32px;
+    }
+
+        .form-header h2 {
+            font-size: 32px;
             font-weight: 700;
-            font-size: 20px;
-            margin: 0 auto 16px;
-            color: #4f46e5;
+            color: var(--text-primary);
+            margin-bottom: 8px;
         }
 
-        .auth-title {
-            text-align: center;
-            font-weight: 700;
-            margin-bottom: 4px;
+    .form-subtitle {
+        color: var(--text-secondary);
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    /* Progress Steps */
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 40px;
+        position: relative;
+    }
+
+        .progress-steps::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 15%;
+            right: 15%;
+            height: 2px;
+            background: var(--border-color);
+            z-index: 1;
         }
 
-        .auth-subtitle {
-            text-align: center;
-            color: #6b7280;
-            margin-bottom: 20px;
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        flex: 1;
+    }
+
+    .step-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--bg-light);
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        transition: all 0.3s;
+    }
+
+    .step.active .step-circle {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .step.completed .step-circle {
+        background: var(--success-color);
+        border-color: var(--success-color);
+        color: white;
+    }
+
+        .step.completed .step-circle::after {
+            content: '✓';
         }
 
-        .auth-input {
-            border-radius: 999px;
-            padding-left: 16px;
-            padding-right: 16px;
+    .step-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .step.active .step-label {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    /* Form Steps */
+    .form-step {
+        display: none;
+        animation: fadeIn 0.5s ease;
+    }
+
+        .form-step.active {
+            display: block;
         }
 
-        .auth-btn {
-            width: 100%;
-            border-radius: 999px;
-            padding: 10px 0;
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Form Elements */
+    .input-group-custom {
+        margin-bottom: 24px;
+    }
+
+    .input-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .required-star {
+        color: var(--danger-color);
+        margin-left: 2px;
+    }
+
+    .input-label i {
+        color: var(--primary-color);
+        font-size: 14px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        transition: all 0.2s;
+        background: white;
+    }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #9ca3af;
+        }
+
+    .input-hint {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+        line-height: 1.4;
+    }
+
+    .password-input-wrapper {
+        position: relative;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 16px;
+    }
+
+        .toggle-password:hover {
+            color: var(--primary-color);
+        }
+
+    .validation-error {
+        color: var(--danger-color);
+        font-size: 13px;
+        margin-top: 4px;
+        display: block;
+    }
+
+    /* Password Strength */
+    .password-strength {
+        margin-top: 8px;
+        height: 6px;
+        background: var(--border-color);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .strength-bar {
+        height: 100%;
+        width: 0;
+        border-radius: 3px;
+        transition: width 0.3s, background-color 0.3s;
+    }
+
+    .strength-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+    }
+
+    .strength-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        transition: color 0.3s;
+    }
+
+        .strength-label.active {
             font-weight: 600;
         }
 
-        .auth-link {
-            color: #4f46e5;
-            text-decoration: none;
+        .strength-label.weak.active {
+            color: var(--danger-color);
         }
 
-            .auth-link:hover {
-                text-decoration: underline;
+        .strength-label.medium.active {
+            color: var(--warning-color);
+        }
+
+        .strength-label.strong.active {
+            color: var(--success-color);
+        }
+
+    /* Password Requirements */
+    .password-requirements {
+        background: var(--bg-light);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        margin: 24px 0;
+        border: 1px solid var(--border-color);
+    }
+
+    .requirements-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+        font-size: 14px;
+    }
+
+    .requirements-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .requirement {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+        .requirement.met {
+            color: var(--success-color);
+        }
+
+        .requirement i {
+            font-size: 14px;
+        }
+
+        .requirement .valid {
+            display: none;
+            color: var(--success-color);
+        }
+
+        .requirement .invalid {
+            display: inline-block;
+            color: var(--text-secondary);
+        }
+
+        .requirement.met .valid {
+            display: inline-block;
+        }
+
+        .requirement.met .invalid {
+            display: none;
+        }
+
+    /* Terms Container */
+    .terms-container {
+        background: var(--bg-light);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid var(--border-color);
+    }
+
+    .terms-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+        .terms-header i {
+            font-size: 24px;
+            color: var(--primary-color);
+        }
+
+        .terms-header h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+    .terms-content {
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-secondary);
+    }
+
+        .terms-content ul {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .terms-content li {
+            margin-bottom: 6px;
+        }
+
+    .newsletter-opt {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .terms-link {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+        .terms-link:hover {
+            text-decoration: underline;
+        }
+
+    /* Checkbox */
+    .checkbox-custom {
+        display: flex;
+        align-items: flex-start;
+        cursor: pointer;
+        position: relative;
+        margin-bottom: 8px;
+    }
+
+        .checkbox-custom input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            width: 0;
+            height: 0;
+        }
+
+    .checkmark {
+        width: 20px;
+        height: 20px;
+        border: 2px solid var(--border-color);
+        border-radius: 4px;
+        margin-right: 10px;
+        position: relative;
+        transition: all 0.2s;
+        flex-shrink: 0;
+        margin-top: 2px;
+    }
+
+    .checkbox-custom input:checked ~ .checkmark {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+
+    .checkmark:after {
+        content: "";
+        position: absolute;
+        display: none;
+        left: 6px;
+        top: 2px;
+        width: 5px;
+        height: 10px;
+        border: solid white;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .checkbox-custom input:checked ~ .checkmark:after {
+        display: block;
+    }
+
+    .checkbox-text {
+        color: var(--text-secondary);
+        font-size: 14px;
+        user-select: none;
+        line-height: 1.5;
+        flex: 1;
+    }
+
+    /* Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 16px;
+        margin-top: 32px;
+    }
+
+    .btn-outline {
+        flex: 1;
+        padding: 14px;
+        background: white;
+        color: var(--primary-color);
+        border: 2px solid var(--primary-color);
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+    /* Submit Button */
+    .submit-btn {
+        flex: 1;
+        padding: 14px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+        .submit-btn:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .submit-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    /* Step Progress Bar */
+    .step-progress {
+        margin-top: 40px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .progress-bar {
+        height: 8px;
+        background: var(--border-color);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: var(--primary-color);
+        width: 33.33%;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    /* Login Link */
+    .login-link {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 15px;
+        margin-top: 32px;
+    }
+
+    .login-cta {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: gap 0.2s;
+    }
+
+        .login-cta:hover {
+            text-decoration: underline;
+            gap: 8px;
+        }
+
+    /* Divider */
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 32px 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+    }
+
+        .divider::before,
+        .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider span {
+            padding: 0 16px;
+        }
+
+    /* Social Register */
+    .social-register {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+
+    .social-btn {
+        flex: 1;
+        padding: 14px;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        background: white;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+        .social-btn:hover {
+            background: var(--bg-light);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .social-btn.google-btn {
+            color: #ea4335;
+            border-color: #ea4335;
+        }
+
+        .social-btn.facebook-btn {
+            color: #1877f2;
+            border-color: #1877f2;
+        }
+
+        .social-btn.github-btn {
+            color: #333;
+            border-color: #333;
+        }
+
+    /* Alerts */
+    .alert {
+        padding: 16px;
+        border-radius: var(--radius-md);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        animation-duration: 0.5s;
+    }
+
+    .alert-success-custom {
+        background: #d1fae5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+    }
+
+    .alert-danger-custom {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+
+    .alert i {
+        font-size: 20px;
+        margin-top: 2px;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 992px) {
+        .auth-container {
+            flex-direction: column;
+            margin: 0;
+            border-radius: 0;
+        }
+
+        .auth-left-panel {
+            padding: 40px 24px;
+            min-height: 300px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+        }
+
+        .stats-container {
+            gap: 24px;
+            margin-top: 32px;
+            padding-top: 32px;
+        }
+
+        .stat-number {
+            font-size: 20px;
+        }
+
+        .mobile-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+            .mobile-logo i {
+                font-size: 28px;
             }
 
-        .form-group {
-            margin-bottom: 12px;
+        .brand-logo {
+            display: none;
         }
-    </style>
-}
+    }
+
+    @@media (max-width: 768px) {
+        .auth-right-panel {
+            padding: 32px 24px;
+        }
+
+        .auth-form-container {
+            padding: 0 4px;
+        }
+
+        .form-header h2 {
+            font-size: 28px;
+        }
+
+        .progress-steps::before {
+            left: 10%;
+            right: 10%;
+        }
+
+        .social-register {
+            flex-direction: column;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .auth-right-panel {
+            padding: 24px 16px;
+        }
+
+        .form-header h2 {
+            font-size: 24px;
+        }
+
+        .step-label {
+            font-size: 11px;
+        }
+
+        .stats-container {
+            flex-direction: column;
+            gap: 16px;
+        }
+    }
+
+    /* Toast Styles */
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: white;
+        padding: 16px 20px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        z-index: 9999;
+        min-width: 300px;
+        border-left: 4px solid;
+        animation-duration: 0.5s;
+    }
+
+    .toast-success {
+        border-left-color: var(--success-color);
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .toast-info {
+        border-left-color: var(--primary-color);
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .toast-error {
+        border-left-color: var(--danger-color);
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .toast i {
+        font-size: 20px;
+    }
+
+    /* Loading spinner animation */
+    .fa-spinner {
+        animation: spin 1s linear infinite;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Focus state for inputs */
+    .focused .form-input {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+</style>
 
 @section Scripts {
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     @Scripts.Render("~/bundles/jqueryval")
+
+    <script>
+        // Current step tracking
+        var currentStep = 1;
+        var totalSteps = 3;
+        var formData = {};
+
+        // Initialize form
+        $(document).ready(function() {
+            updateProgress();
+
+            // Auto-focus first input
+            $('#UserName').focus();
+
+            // Password strength and validation
+            $('#Password').on('input', validatePassword);
+            $('#ConfirmPassword').on('input', validatePasswordConfirmation);
+
+            // Terms validation
+            $('#agreeTerms').change(function() {
+                if (this.checked) {
+                    $('#termsError').hide();
+                }
+            });
+
+            // Handle step navigation
+            $('.btn-next-step').click(nextStep);
+            $('.btn-prev-step').click(prevStep);
+
+            // Form submission
+            $('#registerForm').submit(function(e) {
+                if (!validateFinalStep()) {
+                    e.preventDefault();
+                    return;
+                }
+
+                // Show loading state
+                var submitBtn = $('#submitBtn');
+                var btnText = $('.btn-text');
+                var btnLoader = $('.btn-loader');
+
+                submitBtn.prop('disabled', true);
+                btnText.hide();
+                btnLoader.show();
+            });
+
+            // Social register buttons
+            $('.social-btn').click(function() {
+                showToast('Tính năng đăng ký với mạng xã hội đang được phát triển', 'info');
+            });
+        });
+
+        // Toggle password visibility
+        function togglePasswordVisibility(fieldId) {
+            var passwordField = document.getElementById(fieldId);
+            var toggleIcon = passwordField.nextElementSibling.querySelector('i');
+
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Validate password strength
+        function validatePassword() {
+            var password = $('#Password').val();
+            var strengthBar = $('#passwordStrength');
+            var strengthLabels = $('.strength-label');
+
+            // Reset
+            strengthLabels.removeClass('active');
+            $('.requirement').removeClass('met');
+
+            if (password.length === 0) {
+                strengthBar.css({
+                    'width': '0',
+                    'background-color': 'var(--border-color)'
+                });
+                return;
+            }
+
+            // Check requirements
+            var checks = {
+                length: password.length >= 6,
+                uppercase: /[A-Z]/.test(password),
+                number: /\d/.test(password),
+                special: /[!@@#$%^&*]/.test(password)
+            };
+
+            // Update requirement indicators
+            Object.keys(checks).forEach(function(key) {
+                var $req = $('.requirement[data-check="' + key + '"]');
+                if (checks[key]) {
+                    $req.addClass('met');
+                }
+            });
+
+            // Calculate strength
+            var strength = 0;
+            Object.values(checks).forEach(function(check) {
+                if (check) strength++;
+            });
+
+            // Update strength bar
+            var width, color;
+            if (strength === 1) {
+                width = '25%';
+                color = 'var(--danger-color)';
+                $('.strength-label.weak').addClass('active');
+            } else if (strength <= 2) {
+                width = '50%';
+                color = 'var(--warning-color)';
+                $('.strength-label.medium').addClass('active');
+            } else if (strength === 3) {
+                width = '75%';
+                color = 'var(--warning-color)';
+                $('.strength-label.medium').addClass('active');
+            } else {
+                width = '100%';
+                color = 'var(--success-color)';
+                $('.strength-label.strong').addClass('active');
+            }
+
+            strengthBar.css({
+                'width': width,
+                'background-color': color
+            });
+
+            // Validate password confirmation
+            validatePasswordConfirmation();
+        }
+
+        // Validate password confirmation
+        function validatePasswordConfirmation() {
+            var password = $('#Password').val();
+            var confirmPassword = $('#ConfirmPassword').val();
+            var matchIndicator = $('#passwordMatch');
+
+            if (confirmPassword.length === 0) {
+                matchIndicator.text('').removeClass('match mismatch');
+                return;
+            }
+
+            if (password === confirmPassword) {
+                matchIndicator.text('✓ Mật khẩu khớp').addClass('match').removeClass('mismatch');
+            } else {
+                matchIndicator.text('✗ Mật khẩu không khớp').addClass('mismatch').removeClass('match');
+            }
+        }
+
+        // Navigate to next step
+        function nextStep() {
+            if (!validateCurrentStep()) {
+                return;
+            }
+
+            // Save current step data
+            saveStepData();
+
+            // Hide current step
+            $('.step-' + currentStep).removeClass('active');
+            $('.step[data-step="' + currentStep + '"]').addClass('completed');
+
+            // Show next step
+            currentStep++;
+            $('.step-' + currentStep).addClass('active');
+            $('.step[data-step="' + currentStep + '"]').addClass('active');
+
+            // Update progress
+            updateProgress();
+
+            // Scroll to top of form
+            $('.auth-form-container').animate({ scrollTop: 0 }, 300);
+
+            // Focus first input of new step
+            if (currentStep === 2) {
+                $('#Password').focus();
+            }
+        }
+
+        // Navigate to previous step
+        function prevStep() {
+            // Hide current step
+            $('.step-' + currentStep).removeClass('active');
+            $('.step[data-step="' + currentStep + '"]').removeClass('active').removeClass('completed');
+
+            // Show previous step
+            currentStep--;
+            $('.step-' + currentStep).addClass('active');
+            $('.step[data-step="' + currentStep + '"]').addClass('active');
+
+            // Update progress
+            updateProgress();
+
+            // Scroll to top of form
+            $('.auth-form-container').animate({ scrollTop: 0 }, 300);
+        }
+
+        // Save data from current step
+        function saveStepData() {
+            if (currentStep === 1) {
+                formData.username = $('#UserName').val();
+                formData.email = $('#Email').val();
+                formData.fullName = $('#FullName').val();
+            } else if (currentStep === 2) {
+                formData.password = $('#Password').val();
+            }
+        }
+
+        // Validate current step
+        function validateCurrentStep() {
+            if (currentStep === 1) {
+                return validateStep1();
+            } else if (currentStep === 2) {
+                return validateStep2();
+            }
+            return true;
+        }
+
+        // Validate step 1: Basic info
+        function validateStep1() {
+            var isValid = true;
+
+            // Validate username
+            var username = $('#UserName').val();
+            if (username.length < 3 || username.length > 20) {
+                showError('UserName', 'Tên đăng nhập phải từ 3-20 ký tự');
+                isValid = false;
+            } else if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showError('UserName', 'Tên đăng nhập chỉ được chứa chữ cái, số và dấu gạch dưới');
+                isValid = false;
+            } else {
+                clearError('UserName');
+            }
+
+            // Validate email
+            var email = $('#Email').val();
+            var emailRegex = /^[^\s@]+@@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Email', 'Vui lòng nhập địa chỉ email hợp lệ');
+                isValid = false;
+            } else {
+                clearError('Email');
+            }
+
+            return isValid;
+        }
+
+        // Validate step 2: Password
+        function validateStep2() {
+            var isValid = true;
+
+            // Validate password
+            var password = $('#Password').val();
+            if (password.length < 6) {
+                showError('Password', 'Mật khẩu phải có ít nhất 6 ký tự');
+                isValid = false;
+            } else {
+                clearError('Password');
+            }
+
+            // Validate password confirmation
+            var confirmPassword = $('#ConfirmPassword').val();
+            if (password !== confirmPassword) {
+                showError('ConfirmPassword', 'Mật khẩu xác nhận không khớp');
+                isValid = false;
+            } else {
+                clearError('ConfirmPassword');
+            }
+
+            return isValid;
+        }
+
+        // Validate final step
+        function validateFinalStep() {
+            if (!$('#agreeTerms').is(':checked')) {
+                $('#termsError').show();
+                showToast('Vui lòng đồng ý với điều khoản sử dụng', 'error');
+                return false;
+            }
+
+            // Validate all steps
+            return validateStep1() && validateStep2();
+        }
+
+        // Show error for a field
+        function showError(fieldName, message) {
+            $('[data-valmsg-for="' + fieldName + '"]').text(message).show();
+            $('#' + fieldName).addClass('error').focus();
+            showToast(message, 'error');
+        }
+
+        // Clear error for a field
+        function clearError(fieldName) {
+            $('[data-valmsg-for="' + fieldName + '"]').text('').hide();
+            $('#' + fieldName).removeClass('error');
+        }
+
+        // Update progress bar and step display
+        function updateProgress() {
+            var progressPercent = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            $('#progressFill').css('width', progressPercent + '%');
+            $('#currentStep').text(currentStep);
+        }
+
+        // Show toast notification
+        function showToast(message, type) {
+            type = type || 'info';
+
+            // Remove existing toast
+            $('.toast').remove();
+
+            var icon = type === 'success' ? 'check-circle' :
+                        type === 'error' ? 'exclamation-triangle' : 'info-circle';
+
+            var toast = $('<div class="toast toast-' + type + '">' +
+                '<i class="fas fa-' + icon + '"></i>' +
+                '<span>' + message + '</span>' +
+                '</div>');
+
+            $('body').append(toast);
+
+            // Auto remove after 3 seconds
+            setTimeout(function() {
+                toast.fadeOut(500, function() {
+                    $(this).remove();
+                });
+            }, 3000);
+        }
+
+        // Username availability check (optional)
+        function checkUsernameAvailability() {
+            var username = $('#UserName').val();
+            if (username.length >= 3) {
+                // AJAX call to check username
+                $.get('/Account/CheckUsername', { username: username })
+                    .done(function(response) {
+                        if (response.available) {
+                            showToast('Tên đăng nhập có sẵn', 'success');
+                        } else {
+                            showError('UserName', 'Tên đăng nhập đã được sử dụng');
+                        }
+                    });
+            }
+        }
+
+        // Email format validation
+        function validateEmailFormat() {
+            var email = $('#Email').val();
+            var emailRegex = /^[^\s@]+@@[^\s@]+\.[^\s@]+$/;
+
+            if (email && !emailRegex.test(email)) {
+                showError('Email', 'Vui lòng nhập địa chỉ email hợp lệ');
+                return false;
+            }
+            return true;
+        }
+    </script>
 }
