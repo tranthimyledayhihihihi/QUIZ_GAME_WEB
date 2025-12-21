@@ -1,4 +1,4 @@
-﻿namespace QUIZ_GAME_WEB.Models.InputModels
+﻿namespace QUIZ_GAME_WEB.Models.Input_Models
 {
     // Models/InputModels/DoKhoCreateModel.cs
 

@@ -45,7 +45,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         // Trong Models/Implementations/TranDauRepository.cs
         // (Bổ sung vào class)
 
-
+        
         public async Task<IEnumerable<CauHoi>> GetMatchQuestionsWithDetailsAsync(int tranDauId)
         {
             // Sử dụng LINQ để JOIN bảng TranDauCauHoi và CauHoi

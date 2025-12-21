@@ -1,9 +1,7 @@
-﻿using QUIZ_GAME_WEB.Models.CoreEntities;
-using QUIZ_GAME_WEB.Models.InputModels; // ✅ CẦN THIẾT
-using QUIZ_GAME_WEB.Models.QuizModels;
+﻿using QUIZ_GAME_WEB.Models.QuizModels;
 using QUIZ_GAME_WEB.Models.ResultsModels;
-using QUIZ_GAME_WEB.Models.SocialRankingModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
+using QUIZ_GAME_WEB.Models.InputModels; // ✅ CẦN THIẾT
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -87,20 +85,5 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         Task<QuizTuyChinh> SubmitNewQuizAsync(int userId, QuizSubmissionModel submission);
 
         Task<bool> DeleteQuizSubmissionAsync(int quizId, int userId);
-        IQueryable<QuizTuyChinh> GetQuizTuyChinhQueryable();
-
-        Task<QuizTuyChinh?> GetQuizTuyChinhByIdAsync(int id);
-        IGenericRepository<TroGiup> GetHelperRepository();
-
-        /// <summary>
-        /// Trả về Generic Repository để quản lý các thực thể Cấu hình (SystemSettings).
-        /// </summary>
-        IGenericRepository<SystemSetting> GetSettingsRepository();
-        IGenericRepository<ThuongNgay> GetRewardRepository();
-        IGenericRepository<Comment> GetCommentRepository();
-        // Các hàm GetSharedQuizzes... đã có sẵn trong file bạn gửi
-        void UpdateQuizTuyChinh(QuizTuyChinh quiz);
-
-        void DeleteQuizTuyChinh(QuizTuyChinh quiz);
     }
 }

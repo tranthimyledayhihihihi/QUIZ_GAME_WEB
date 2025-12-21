@@ -4,77 +4,256 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-
-<div class="game-container">
-    <div class="card p-4 shadow-lg" style="max-width: 480px; margin: 0 auto;">
-        <h3 class="fw-bold mb-3 text-center">
-            <i class="fa-solid fa-gift me-2"></i> Thưởng Đăng Nhập Hằng Ngày
-        </h3>
-
-        <p class="text-muted text-center">
-            @Model.Message
-        </p>
-
-        <div class="text-center my-3">
-            <div class="display-4 fw-bold">
-                🔥 @Model.SoNgayLienTiep ngày liên tiếp
+<div class="game-container d-flex align-items-center justify-content-center min-vh-100">
+    <div class="card reward-card p-4 shadow-lg border-0" style="max-width: 500px; width: 100%;">
+        <!-- Header với biểu tượng nổi bật -->
+        <div class="text-center mb-4">
+            <div class="reward-icon mx-auto mb-3">
+                <i class="fa-solid fa-gift"></i>
             </div>
+            <h3 class="fw-bold mb-2 text-primary">Thưởng Đăng Nhập Hằng Ngày</h3>
+            <p class="text-muted mb-0">Đăng nhập mỗi ngày để nhận phần thưởng đặc biệt</p>
+        </div>
+
+        <!-- Thông báo trạng thái -->
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            <i class="fa-solid fa-circle-info me-2"></i>
+            @Model.Message
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Hiển thị số ngày liên tiếp -->
+        <div class="streak-container text-center p-4 mb-4 rounded-3">
+            <div class="streak-label text-uppercase small fw-semibold text-muted mb-2">
+                <i class="fa-solid fa-fire me-1"></i> CHUỖI NGÀY ĐĂNG NHẬP
+            </div>
+            <div class="streak-count display-2 fw-bold text-warning">
+                @Model.SoNgayLienTiep
+            </div>
+            <div class="streak-text text-muted">ngày liên tiếp</div>
+
             @if (Model.NgayCapNhatCuoi.HasValue)
             {
-                <div class="text-secondary mt-2">
-                    Cập nhật lần cuối: @Model.NgayCapNhatCuoi.Value.ToString("dd/MM/yyyy")
+                <div class="last-update mt-3 pt-3 border-top">
+                    <i class="fa-solid fa-clock me-1"></i>
+                    Cập nhật lần cuối: <span class="fw-semibold">@Model.NgayCapNhatCuoi.Value.ToString("dd/MM/yyyy")</span>
                 </div>
             }
         </div>
 
-        <div class="d-grid gap-2 mt-4">
-            <button id="btn-claim" class="btn btn-success btn-lg">
-                <i class="fa-solid fa-sack-dollar me-2"></i> Nhận thưởng hôm nay
+        <!-- Nút nhận thưởng -->
+        <div class="d-grid gap-2">
+            <button id="btn-claim" class="btn btn-claim btn-lg py-3 fw-bold">
+                <i class="fa-solid fa-sack-dollar me-2"></i>
+                <span class="btn-text">Nhận thưởng hôm nay</span>
             </button>
         </div>
 
-        <div id="reward-message" class="alert mt-3 d-none"></div>
+        <!-- Hiển thị phần thưởng có thể nhận -->
+        <div class="reward-preview mt-4 p-3 bg-light rounded-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="fw-semibold mb-1"><i class="fa-solid fa-coins me-2 text-warning"></i>Phần thưởng hôm nay</h6>
+                    <p class="text-muted small mb-0">Xu, vật phẩm và nhiều hơn nữa</p>
+                </div>
+                <div class="reward-amount">
+                    <span class="badge bg-success fs-6">+500</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thông báo kết quả -->
+        <div id="reward-message" class="alert mt-3 d-none alert-dismissible fade show" role="alert">
+            <span class="alert-message"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+
+        <!-- Tiến trình tuần -->
+        <div class="weekly-progress mt-4 pt-4 border-top">
+            <h6 class="fw-semibold mb-3"><i class="fa-solid fa-calendar-week me-2"></i>Tiến trình tuần này</h6>
+            <div class="d-flex justify-content-between">
+                @for (int i = 1; i <= 7; i++)
+                {
+                    <div class="day-progress text-center @(i <= Model.SoNgayLienTiep ? "completed" : "")">
+                        <div class="day-icon @(i <= Model.SoNgayLienTiep ? "bg-success" : "bg-secondary")">
+                            @i
+                        </div>
+                        <small class="d-block mt-1">Ngày @i</small>
+                    </div>
+                }
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .reward-card {
+        border-radius: 20px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    }
+
+    .reward-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+        box-shadow: 0 8px 20px rgba(106, 17, 203, 0.3);
+    }
+
+    .streak-container {
+        background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .streak-container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+        }
+
+    .streak-count {
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        line-height: 1;
+    }
+
+    .btn-claim {
+        background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+        border: none;
+        color: white;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .btn-claim:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 176, 155, 0.4);
+        }
+
+        .btn-claim:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-claim::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(30deg);
+            transition: all 0.5s ease;
+        }
+
+        .btn-claim:hover::after {
+            transform: rotate(30deg) translate(50%, 50%);
+        }
+
+    .day-progress .day-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        margin: 0 auto;
+        font-weight: bold;
+        transition: all 0.3s ease;
+    }
+
+    .day-progress.completed .day-icon {
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .reward-preview {
+        border-left: 4px solid #ffc107;
+        transition: all 0.3s ease;
+    }
+
+        .reward-preview:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+    .last-update {
+        font-size: 0.9rem;
+    }
+</style>
 
 @section Scripts {
     <script>
         $(function () {
             $("#btn-claim").on("click", function () {
                 var $btn = $(this);
-                $btn.prop("disabled", true).text("Đang xử lý...");
+                var $btnText = $btn.find(".btn-text");
+                $btn.prop("disabled", true);
+                $btnText.text("Đang xử lý...");
 
                 $.ajax({
                     url: '@Url.Action("ClaimDailyReward", "Menu")',
                     type: 'POST',
                     success: function (res) {
-                        // res: { awarded: bool, message: "..." }
                         var awarded = res.awarded ?? res.Awarded;
                         var msg = res.message ?? res.Message;
-
                         var $alert = $("#reward-message");
+                        var $alertMessage = $alert.find(".alert-message");
+
                         $alert
-                            .removeClass("d-none alert-success alert-warning")
+                            .removeClass("d-none alert-success alert-warning alert-danger")
                             .addClass(awarded ? "alert-success" : "alert-warning")
-                            .text(msg);
+                            .addClass("show");
+
+                        $alertMessage.html(`<i class="fa-solid ${awarded ? 'fa-circle-check' : 'fa-circle-exclamation'} me-2"></i>${msg}`);
 
                         if (!awarded) {
-                            // đã nhận rồi thì khóa nút
-                            $btn.prop("disabled", true)
-                                .text("Đã nhận thưởng hôm nay");
+                            $btnText.text("Đã nhận thưởng hôm nay");
+                            $btn.removeClass("btn-claim").addClass("btn-secondary");
                         } else {
-                            // nhận thành công: đổi text
-                            $btn.text("Đã nhận thưởng hôm nay");
+                            $btnText.text("Đã nhận thưởng hôm nay");
+                            $btn.removeClass("btn-claim").addClass("btn-secondary");
+
+                            // Cập nhật hiển thị ngày liên tiếp
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
                         }
                     },
                     error: function () {
                         $("#reward-message")
-                            .removeClass("d-none")
-                            .addClass("alert alert-danger")
-                            .text("Có lỗi xảy ra, vui lòng thử lại.");
-                        $btn.prop("disabled", false).text("Nhận thưởng hôm nay");
+                            .removeClass("d-none alert-success alert-warning")
+                            .addClass("alert-danger show")
+                            .find(".alert-message")
+                            .html('<i class="fa-solid fa-circle-xmark me-2"></i>Có lỗi xảy ra, vui lòng thử lại.');
+
+                        $btn.prop("disabled", false);
+                        $btnText.text("Nhận thưởng hôm nay");
                     }
                 });
+            });
+
+            // Tự động đóng thông báo sau 5 giây
+            $(document).on('show.bs.alert', '#reward-message', function () {
+                var $alert = $(this);
+                setTimeout(function () {
+                    $alert.alert('close');
+                }, 5000);
             });
         });
     </script>

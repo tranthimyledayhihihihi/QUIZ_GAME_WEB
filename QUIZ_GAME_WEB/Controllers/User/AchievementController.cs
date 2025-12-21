@@ -117,34 +117,5 @@ namespace QUIZ_GAME_WEB.Controllers.User
                 return BadRequest(new { message = "Lỗi khi yêu cầu nhận thưởng: " + ex.Message });
             }
         }
-        // ======================================================
-        // 4. LẤY DANH SÁCH QUÀ TẶNG CỦA TÔI (GET: api/user/achievement/my-rewards)
-        // ======================================================
-        /// <summary>
-        /// Lấy danh sách các phần thưởng (quà tặng) mà Admin đã gán cho người dùng
-        /// </summary>
-        [HttpGet("my-rewards")]
-        public async Task<IActionResult> GetMyRewards()
-        {
-            try
-            {
-                var userId = GetUserId();
-                if (userId == null)
-                    return Unauthorized(new { message = "Không tìm thấy UserID trong token." });
-
-                // Gọi đến Repository để lấy dữ liệu từ bảng ThuongNgay
-                // Lưu ý: Đảm bảo bạn đã thêm hàm GetUserRewardsAsync vào IResultRepository
-                var rewards = await _resultRepo.GetUserRewardsAsync(userId.Value);
-
-                if (rewards == null || !rewards.Any())
-                    return Ok(new { message = "Bạn chưa có phần thưởng nào.", data = new List<object>() });
-
-                return Ok(rewards);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = "Lỗi khi lấy danh sách quà tặng: " + ex.Message });
-            }
-        }
     }
 }

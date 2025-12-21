@@ -1,138 +1,74 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
-using QUIZ_GAME_WEB.Models.Interfaces;
-using QUIZ_GAME_WEB.Models.QuizModels; // TroGiup
-using QUIZ_GAME_WEB.Models.CoreEntities; // SystemSettings
+using QUIZ_GAME_WEB.Data; // <== SỬA TẠI ĐÂY
+using QUIZ_GAME_WEB.Models.QuizModels; // DoKho, TroGiup
 
-namespace QUIZ_GAME_WEB.Controllers.Admin
+namespace QUIZ_GAME_WEB.Controllers
 {
-    [Route("api/admin/he-thong")]
+    [Route("api/admin/[controller]")]
     [ApiController]
-    [Authorize(AuthenticationSchemes = "Bearer", Roles = "SuperAdmin, Moderator")]
     public class HeThongController : ControllerBase
     {
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly QuizGameContext _context;
 
-        public HeThongController(IUnitOfWork unitOfWork)
+        public HeThongController(QuizGameContext context)
         {
-            _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         // ===============================================
-        // Hàm phụ trợ để lấy Repository (Giống QLDoKhoController)
+        // A. QUẢN LÝ ĐỘ KHÓ (DoKho)
         // ===============================================
 
-        private IGenericRepository<TroGiup> GetHelperRepository()
+        // GET: api/admin/HeThong/DoKho
+        [HttpGet("DoKho")]
+        public async Task<ActionResult<IEnumerable<DoKho>>> GetDoKhos()
         {
-            // Giả định IQuizRepository có hàm trả về Repo cho TroGiup
-            return _unitOfWork.Quiz.GetHelperRepository();
+            return await _context.DoKhos.ToListAsync();
         }
 
-        private IGenericRepository<SystemSetting> GetSettingsRepository()
+        // PUT: api/admin/HeThong/DoKho/{id}
+        [HttpPut("DoKho/{id}")]
+        public async Task<IActionResult> PutDoKho(int id, DoKho doKhoUpdate)
         {
-            // Giả định IQuizRepository hoặc IUnitOfWork có cách lấy Repo cho Settings
-            return _unitOfWork.Quiz.GetSettingsRepository();
-        }
+            if (id != doKhoUpdate.DoKhoID)
+            {
+                return BadRequest();
+            }
 
-        // ===============================================
-        // 1. QUẢN LÝ TRỢ GIÚP (TroGiup)
-        // ===============================================
+            var doKho = await _context.DoKhos.FindAsync(id);
+            if (doKho == null)
+            {
+                return NotFound();
+            }
 
-        [HttpGet("tro-giup")]
-        public async Task<IActionResult> GetTroGiups()
-        {
-            var repo = GetHelperRepository();
-            var list = await repo.GetAllAsync();
-            return Ok(list);
-        }
-        [HttpPost("tro-giup")]
-        public async Task<IActionResult> PostTroGiup([FromBody] TroGiup troGiup)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
+            // Logic nghiệp vụ: Chỉ cho phép cập nhật Điểm Thưởng
+            doKho.DiemThuong = doKhoUpdate.DiemThuong;
 
-            // Đảm bảo ID bằng 0 để SQL Server tự động sinh ID mới
-            troGiup.TroGiupID = 0;
-
-            var repo = GetHelperRepository();
-            repo.Add(troGiup);
-
-            // Lưu xuống database
-            await _unitOfWork.CompleteAsync();
-
-            // Trả về kết quả kèm ID đã được sinh tự động
-            return CreatedAtAction(nameof(GetTroGiups), new { id = troGiup.TroGiupID }, troGiup);
-        }
-
-        [HttpDelete("tro-giup/{id:int}")]
-        [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> DeleteTroGiup(int id)
-        {
-            var repo = GetHelperRepository();
-            var troGiup = await repo.GetByIdAsync(id);
-            if (troGiup == null) return NotFound();
-
-            repo.Delete(troGiup);
-            await _unitOfWork.CompleteAsync();
+            _context.Entry(doKho).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
         // ===============================================
-        // 2. QUẢN LÝ CẤU HÌNH HỆ THỐNG (SystemSettings)
+        // B. QUẢN LÝ TRỢ GIÚP (TroGiup)
         // ===============================================
 
-        [HttpGet("settings")]
-        public async Task<IActionResult> GetAllSettings()
+        // GET: api/admin/HeThong/TroGiup
+        [HttpGet("TroGiup")]
+        public async Task<ActionResult<IEnumerable<TroGiup>>> GetTroGiups()
         {
-            var repo = GetSettingsRepository();
-            var settings = await repo.GetAllAsync();
-            return Ok(settings);
-        }
-        [HttpPost("settings")]
-        [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> PostSetting([FromBody] SystemSetting newSetting)
-        {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var repo = _unitOfWork.Quiz.GetSettingsRepository();
-
-            // Kiểm tra xem Key đã tồn tại chưa
-            var exists = await repo.GetQueryable().AnyAsync(s => s.Key == newSetting.Key);
-            if (exists) return Conflict(new { message = $"Cấu hình '{newSetting.Key}' đã tồn tại." });
-
-            repo.Add(newSetting);
-            await _unitOfWork.CompleteAsync();
-
-            return CreatedAtAction(nameof(GetAllSettings), new { key = newSetting.Key }, newSetting);
+            return await _context.TroGiups.ToListAsync();
         }
 
-        [HttpPut("settings/{key}")]
-        [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> UpdateSetting(string key, [FromBody] SystemSetting updatedSetting)
+        // POST: api/admin/HeThong/TroGiup
+        [HttpPost("TroGiup")]
+        public async Task<ActionResult<TroGiup>> PostTroGiup(TroGiup troGiup)
         {
-            if (key != updatedSetting.Key)
-                return BadRequest(new { message = "Khóa (Key) không khớp." });
-
-            var repo = _unitOfWork.Quiz.GetSettingsRepository();
-
-            // SỬA LỖI: Dùng await và FirstOrDefaultAsync để tìm theo string Key thay vì GetByIdAsync(int)
-            var setting = await repo.GetQueryable()
-                                    .FirstOrDefaultAsync(s => s.Key == key);
-
-            if (setting == null)
-                return NotFound(new { message = $"Không tìm thấy cấu hình: {key}" });
-
-            // Cập nhật giá trị
-            setting.Value = updatedSetting.Value;
-            setting.MoTa = updatedSetting.MoTa;
-
-            repo.Update(setting);
-
-            // Đảm bảo có await tại đây để giải quyết cảnh báo CS1998
-            await _unitOfWork.CompleteAsync();
-
-            return Ok(new { message = $"Cập nhật cấu hình '{key}' thành công." });
+            _context.TroGiups.Add(troGiup);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetTroGiups), new { id = troGiup.TroGiupID }, troGiup);
         }
     }
 }

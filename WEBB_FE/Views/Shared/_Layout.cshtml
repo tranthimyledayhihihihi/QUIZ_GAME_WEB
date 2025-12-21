@@ -23,6 +23,22 @@
     <link href="~/Content/site.css" rel="stylesheet" />
     <link href="~/Content/game-theme.css" rel="stylesheet" />
 
+    <!-- 🔥 FIX SCROLL BỊ KHOÁ -->
+    <style>
+        html, body {
+            height: auto !important;
+            min-height: 100%;
+            overflow-y: auto !important;
+            overflow-x: hidden;
+        }
+
+        /* Container chính */
+        .main-container {
+            min-height: 100vh;
+            overflow-y: auto;
+        }
+    </style>
+
     <!-- CSS riêng từng trang (nếu có) -->
     @RenderSection("Styles", required: false)
 </head>
@@ -30,7 +46,7 @@
     <!-- Top Right Icons (Header mới) -->
     <div class="top-right-nav">
         <!-- Nút Cài đặt -->
-        <a href="#" class="nav-icon-btn">
+        <a href="@Url.Action("Index", "Settings")" class="nav-icon-btn">
             <i class="fa-solid fa-gear"></i>
         </a>
         <a href="@Url.Action("Index", "Home")" class="nav-icon-btn">
@@ -59,6 +75,7 @@
 
     <!-- Script riêng từng trang (nếu có) -->
     @RenderSection("Scripts", required: false)
+
     <!-- Script cua SignalR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
 </body>

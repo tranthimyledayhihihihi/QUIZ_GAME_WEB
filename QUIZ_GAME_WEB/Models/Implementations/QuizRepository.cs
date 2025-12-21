@@ -1,16 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QUIZ_GAME_WEB.Data;
-using QUIZ_GAME_WEB.Models.CoreEntities;
-using QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.Interfaces;
 using QUIZ_GAME_WEB.Models.QuizModels;
 using QUIZ_GAME_WEB.Models.ResultsModels;
-using QUIZ_GAME_WEB.Models.SocialRankingModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
-using System;
-using System.Collections.Generic;
+using QUIZ_GAME_WEB.Models.InputModels;
+using QUIZ_GAME_WEB.Models.CoreEntities;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
+using System;
 
 namespace QUIZ_GAME_WEB.Models.Implementations
 {
@@ -449,53 +448,5 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                 // Bổ sung các trường DapAnA, B, C, D nếu DTO QuizNgayDetailsDto yêu cầu
             };
         }
-        // ================================
-        public IGenericRepository<TroGiup> GetHelperRepository()
-        {
-            return new GenericRepository<TroGiup>(_context);
-        }
-
-        /// <summary>
-        /// Trả về Generic Repository cho thực thể SystemSettings (Cấu hình hệ thống).
-        /// </summary>
-        public IGenericRepository<SystemSetting> GetSettingsRepository()
-        {
-            return new GenericRepository<SystemSetting>(_context);
-        }
-        // QUIZ TÙY CHỈNH – ADMIN
-        // ================================
-
-        public IQueryable<QuizTuyChinh> GetQuizTuyChinhQueryable()
-        {
-            return _context.QuizTuyChinhs
-                .Include(q => q.NguoiDung)
-                .Include(q => q.CauHois);
-        }
-
-        public async Task<QuizTuyChinh?> GetQuizTuyChinhByIdAsync(int id)
-        {
-            return await _context.QuizTuyChinhs
-                .Include(q => q.NguoiDung)
-                .Include(q => q.CauHois)
-                .FirstOrDefaultAsync(q => q.QuizTuyChinhID == id);
-        }
-
-        public void UpdateQuizTuyChinh(QuizTuyChinh quiz)
-        {
-            _context.QuizTuyChinhs.Update(quiz);
-        }
-        public IGenericRepository<ThuongNgay> GetRewardRepository()
-        {
-            return new GenericRepository<ThuongNgay>(_context);
-        }
-        public IGenericRepository<Comment> GetCommentRepository()
-        {
-            return new GenericRepository<Comment>(_context);
-        }
-        public void DeleteQuizTuyChinh(QuizTuyChinh quiz)
-        {
-            _context.QuizTuyChinhs.Remove(quiz);
-        }
-
     }
 }

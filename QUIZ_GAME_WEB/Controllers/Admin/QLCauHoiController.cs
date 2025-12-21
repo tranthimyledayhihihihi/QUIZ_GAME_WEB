@@ -94,75 +94,113 @@ public class QLCauHoiController : ControllerBase
     // =============================================================
     // 3. TẠO CÂU HỎI MỚI
     // =============================================================
-    // =============================================================
-    // 3. TẠO CÂU HỎI MỚI (Dùng DTO để Swagger gọn hơn)
-    // =============================================================
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CauHoiCreateDto dto)
+    public async Task<IActionResult> Create([FromBody] CauHoi model)
     {
+        Console.WriteLine("=== ENDPOINT: Create ===");
+
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
-        // Chuyển đổi từ DTO sang Entity để lưu vào DB
-        var model = new CauHoi
-        {
-            NoiDung = dto.NoiDung,
-            DapAnA = dto.DapAnA,
-            DapAnB = dto.DapAnB,
-            DapAnC = dto.DapAnC,
-            DapAnD = dto.DapAnD,
-            DapAnDung = dto.DapAnDung,
-            ChuDeID = dto.ChuDeID,
-            DoKhoID = dto.DoKhoID,
-            HinhAnh = dto.HinhAnh,
-
-            // Các trường hệ thống tự gán, Admin không cần nhập
-            TrangThaiDuyet = "Approved",
-            NgayTao = DateTime.UtcNow,
-            AdminDuyetID = LayIdAdminHienTai()
-        };
+        model.TrangThaiDuyet = "Approved"; // Admin tạo = tự duyệt
+        model.NgayTao = DateTime.UtcNow;
 
         _unitOfWork.Quiz.Add(model);
         await _unitOfWork.CompleteAsync();
 
-        return CreatedAtAction(nameof(GetCauHoi), new { id = model.CauHoiID }, model);
+        Console.WriteLine($"Created question ID: {model.CauHoiID}");
+
+        return CreatedAtAction(nameof(GetCauHoi), new { id = model.CauHoiID }, new
+        {
+            model.CauHoiID,
+            model.NoiDung,
+            model.ChuDeID,
+            model.DoKhoID
+        });
     }
 
     // =============================================================
     // 4. CẬP NHẬT CÂU HỎI
+    // =============================================================
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] CauHoiUpdateDto dto)
+    public async Task<IActionResult> Update(int id, [FromBody] CauHoi updated)
     {
-        if (id != dto.CauHoiID)
+        Console.WriteLine($"=== ENDPOINT: Update (id={id}) ===");
+
+        if (id != updated.CauHoiID)
             return BadRequest(new { message = "ID không khớp." });
 
         var existing = await _unitOfWork.Quiz.GetByIdAsync(id);
         if (existing == null)
             return NotFound(new { message = "Không tìm thấy câu hỏi." });
 
-        // Cập nhật nội dung từ DTO
-        existing.NoiDung = dto.NoiDung;
-        existing.DapAnA = dto.DapAnA;
-        existing.DapAnB = dto.DapAnB;
-        existing.DapAnC = dto.DapAnC;
-        existing.DapAnD = dto.DapAnD;
-        existing.DapAnDung = dto.DapAnDung;
-        existing.ChuDeID = dto.ChuDeID;
-        existing.DoKhoID = dto.DoKhoID;
-        existing.HinhAnh = dto.HinhAnh;
-
-        // Tự động gán trạng thái Approved và ghi nhận Admin thực hiện
-        existing.TrangThaiDuyet = "Approved";
-        existing.AdminDuyetID = LayIdAdminHienTai();
+        existing.NoiDung = updated.NoiDung;
+        existing.DapAnA = updated.DapAnA;
+        existing.DapAnB = updated.DapAnB;
+        existing.DapAnC = updated.DapAnC;
+        existing.DapAnD = updated.DapAnD;
+        existing.DapAnDung = updated.DapAnDung;
+        existing.ChuDeID = updated.ChuDeID;
+        existing.DoKhoID = updated.DoKhoID;
+        existing.HinhAnh = updated.HinhAnh;
 
         _unitOfWork.Quiz.Update(existing);
         await _unitOfWork.CompleteAsync();
 
-        return Ok(new { message = "Cập nhật câu hỏi thành công!" });
+        Console.WriteLine("Update completed");
+        return NoContent();
     }
 
     // =============================================================
-    // 5. XÓA CÂU HỎI
+    // 5. PHÊ DUYỆT CÂU HỎI UGC
+    // =============================================================
+    [HttpPost("phe-duyet/{id:int}")]
+    public async Task<IActionResult> Approve(int id)
+    {
+        Console.WriteLine($"=== ENDPOINT: Approve (id={id}) ===");
+
+        var adminId = LayIdAdminHienTai();
+        var cauHoi = await _unitOfWork.Quiz.GetByIdAsync(id);
+
+        if (cauHoi == null)
+            return NotFound(new { message = "Không tìm thấy câu hỏi." });
+
+        cauHoi.TrangThaiDuyet = "Approved";
+        cauHoi.AdminDuyetID = adminId;
+
+        _unitOfWork.Quiz.Update(cauHoi);
+        await _unitOfWork.CompleteAsync();
+
+        Console.WriteLine("Question approved");
+        return Ok(new { message = "Đã duyệt câu hỏi." });
+    }
+
+    // =============================================================
+    // 6. TỪ CHỐI CÂU HỎI UGC
+    // =============================================================
+    [HttpPost("tu-choi/{id:int}")]
+    public async Task<IActionResult> Reject(int id)
+    {
+        Console.WriteLine($"=== ENDPOINT: Reject (id={id}) ===");
+
+        var adminId = LayIdAdminHienTai();
+        var cauHoi = await _unitOfWork.Quiz.GetByIdAsync(id);
+
+        if (cauHoi == null)
+            return NotFound(new { message = "Không tìm thấy câu hỏi." });
+
+        cauHoi.TrangThaiDuyet = "Rejected";
+        cauHoi.AdminDuyetID = adminId;
+
+        _unitOfWork.Quiz.Update(cauHoi);
+        await _unitOfWork.CompleteAsync();
+
+        Console.WriteLine("Question rejected");
+        return Ok(new { message = "Đã từ chối câu hỏi." });
+    }
+
+    // =============================================================
+    // 7. XÓA CÂU HỎI
     // =============================================================
     [HttpDelete("{id:int}")]
     [Authorize(Roles = "SuperAdmin")]

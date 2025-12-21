@@ -1,12 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QUIZ_GAME_WEB.Models.QuizModels
 {
     public class TroGiup
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int TroGiupID { get; set; }
 
         [Required]
