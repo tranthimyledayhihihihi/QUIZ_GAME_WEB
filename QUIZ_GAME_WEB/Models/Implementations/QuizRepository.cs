@@ -1,15 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QUIZ_GAME_WEB.Data;
+using QUIZ_GAME_WEB.Models.CoreEntities;
+using QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.Interfaces;
 using QUIZ_GAME_WEB.Models.QuizModels;
 using QUIZ_GAME_WEB.Models.ResultsModels;
+using QUIZ_GAME_WEB.Models.SocialRankingModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
-using QUIZ_GAME_WEB.Models.InputModels;
-using QUIZ_GAME_WEB.Models.CoreEntities;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
 
 namespace QUIZ_GAME_WEB.Models.Implementations
 {
@@ -449,6 +450,18 @@ namespace QUIZ_GAME_WEB.Models.Implementations
             };
         }
         // ================================
+        public IGenericRepository<TroGiup> GetHelperRepository()
+        {
+            return new GenericRepository<TroGiup>(_context);
+        }
+
+        /// <summary>
+        /// Trả về Generic Repository cho thực thể SystemSettings (Cấu hình hệ thống).
+        /// </summary>
+        public IGenericRepository<SystemSetting> GetSettingsRepository()
+        {
+            return new GenericRepository<SystemSetting>(_context);
+        }
         // QUIZ TÙY CHỈNH – ADMIN
         // ================================
 
@@ -471,7 +484,14 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         {
             _context.QuizTuyChinhs.Update(quiz);
         }
-
+        public IGenericRepository<ThuongNgay> GetRewardRepository()
+        {
+            return new GenericRepository<ThuongNgay>(_context);
+        }
+        public IGenericRepository<Comment> GetCommentRepository()
+        {
+            return new GenericRepository<Comment>(_context);
+        }
         public void DeleteQuizTuyChinh(QuizTuyChinh quiz)
         {
             _context.QuizTuyChinhs.Remove(quiz);

@@ -32,7 +32,8 @@ builder.Services.AddCors(options =>
         var origins = new List<string>
         {
             "http://localhost:3000",
-            "http://localhost:4200"
+            "http://localhost:4200",
+            "https://localhost:44353" // ADDED: Frontend URL
         };
 
         var clientBaseUrl = builder.Configuration["Client:BaseUrl"];
@@ -68,6 +69,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/matchmakinghub"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
         };
     });
 

@@ -26,6 +26,21 @@ namespace WEBB.Controllers.Quiz
         }
 
         // ================================
+        // GET: /Quiz/Play/Match?code=...
+        // ================================
+        public ActionResult Match(string code)
+        {
+            if (string.IsNullOrEmpty(code))
+            {
+                // Nếu không có code, quay về trang danh sách phòng hoặc sảnh
+                return RedirectToAction("Index", "DoiKhang"); 
+            }
+
+            ViewBag.MatchCode = code;
+            return View("~/Views/Quiz/Play/Match.cshtml");
+        }
+
+        // ================================
         // POST: StartGame
         // ================================
         [HttpPost]

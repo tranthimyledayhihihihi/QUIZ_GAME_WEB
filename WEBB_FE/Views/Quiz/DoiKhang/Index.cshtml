@@ -1,60 +1,92 @@
-﻿@model WEBB.Models.ViewModels.DuelLobbyViewModel
+﻿@using System.Configuration
 
 @{
-    ViewBag.Title = "Đối Kháng 1v1";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Chế độ Đối kháng";
+
+    // Lấy token từ Session
+    var userToken = Session["JwtToken"] as string ?? Session["JWT_TOKEN"] as string;
+    var apiBase = ConfigurationManager.AppSettings["ApiBaseUrl"];
 }
 
-<div class="arena-container">
-    <h1 class="text-center mb-4">ĐỐI KHÁNG 1v1</h1>
+<div class="container text-center mt-5">
+    <h2>Chế độ Đối kháng</h2>
 
-    <div class="text-center mb-3">
-        <button id="btnFindMatch" class="btn btn-warning btn-lg">
-            <i class="fa-solid fa-bolt me-2"></i> Tìm đối thủ
-        </button>
-    </div>
+    <div id="statusArea" class="alert alert-info" style="display:none;"></div>
 
-    <div class="text-center">
-        <p>
-            Trạng thái:
-            <span id="statusText" class="badge bg-info">
-                @Model.CurrentMatch.Status
-            </span>
-        </p>
-        <div id="opponentInfo" style="display:none;">
-            <p>
-                Đối thủ của bạn:
-                <strong id="opponentName"></strong>
-            </p>
+    <button id="btnFindMatch" class="btn btn-primary btn-lg mb-4">Tìm Trận Ngẫu Nhiên</button>
+
+    <hr />
+
+    <div class="row mt-3">
+        <div class="col-md-6 mb-3">
+            <button id="btnCreateRoom" class="btn btn-success w-100">Tạo Phòng Riêng</button>
+        </div>
+        <div class="col-md-6">
+            <input type="text" id="txtRoomCode" class="form-control" placeholder="Nhập mã phòng..." />
+            <button id="btnJoinRoom" class="btn btn-warning w-100 mt-2">Vào Phòng</button>
         </div>
     </div>
 </div>
 
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script>
-        $(function () {
-            $("#btnFindMatch").on("click", function () {
-                $("#statusText").text("Matching...");
-                $("#opponentInfo").hide();
+        const token = '@userToken';
+        const apiBaseUrl = '@apiBase'.replace(/\/$/, "");
+        const hubUrl = apiBaseUrl + "/matchmakinghub";
 
-                $.post('@Url.Action("FindMatch", "DoiKhang")', {}, function (res) {
-                    if (!res.success) {
-                        alert(res.message || "Không tìm được đối thủ.");
-                        $("#statusText").text("Idle");
-                        return;
-                    }
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl, { accessTokenFactory: () => token })
+            .withAutomaticReconnect()
+            .build();
 
-                    $("#statusText").text(res.status || "Ready");
-                    $("#opponentName").text(res.opponentName || "???");
-                    $("#opponentInfo").show();
+        async function start() {
+            try {
+                await connection.start();
+                console.log("SignalR Connected.");
+            } catch (err) {
+                console.error("SignalR Connect Error: ", err);
+                setTimeout(start, 5000);
+            }
+        }
+        start();
 
-                    // TODO: redirect sang màn quiz 1v1:
-                    // window.location.href = "@Url.Action("Index", "Play")" + "?matchId=" + res.matchId;
-                }).fail(function (xhr) {
-                    alert("Lỗi server: " + xhr.responseText);
-                    $("#statusText").text("Idle");
-                });
-            });
+        connection.on("QueueStatus", (message) => {
+            $('#statusArea').show().text(message);
+        });
+
+        connection.on("MatchFound", (data) => {
+            console.log("MATCH FOUND!", data);
+
+            $('#statusArea')
+                .removeClass('alert-info')
+                .addClass('alert-success')
+                .text("Đã tìm thấy trận! Đang chuyển hướng...");
+
+            window.location.href = `/DoiKhang/Match?code=${data.matchCode}`;
+        });
+
+        connection.on("RoomCreated", (data) => {
+            $('#statusArea').show().text(`Phòng đã tạo! Mã: ${data.matchCode}`);
+        });
+
+        connection.on("JoinFailed", (message) => {
+            alert("Lỗi: " + message);
+        });
+
+        $('#btnFindMatch').click(async () => {
+            $('#statusArea').show().text("Đang tìm đối thủ...");
+            await connection.invoke("JoinQueue");
+        });
+
+        $('#btnCreateRoom').click(async () => {
+            await connection.invoke("CreateRoom");
+        });
+
+        $('#btnJoinRoom').click(async () => {
+            const code = $('#txtRoomCode').val();
+            if (!code) return alert("Vui lòng nhập mã phòng");
+            await connection.invoke("JoinRoom", code);
         });
     </script>
 }

@@ -25,10 +25,27 @@ public class TranDauController : ControllerBase
     [HttpGet("{matchCode}")]
     public async Task<IActionResult> GetMatch(string matchCode)
     {
+        // 1. Lấy thông tin trận
         var match = await _service.GetMatchByCodeAsync(matchCode);
         if (match == null) return NotFound();
+        // 2. Lấy danh sách câu hỏi (đã sửa ở bước trên)
+        var questions = await _service.GetQuestionsByMatchCodeAsync(matchCode);
+        // 3. Trả về đối tượng gộp (Anonymous Object)
+        return Ok(new
+        {
+            // Copy các thuộc tính của match
+            match.TranDauID,
+            match.MatchCode,
+            match.Player1ID,
+            match.Player2ID,
+            match.TrangThai,
+            match.DiemPlayer1,
+            match.DiemPlayer2,
+            match.WinnerUserID,
 
-        return Ok(match);
+            // Kèm thêm danh sách câu hỏi
+            Questions = questions
+        });
     }
 
     [HttpPost("gui-dap-an/{matchCode}")]

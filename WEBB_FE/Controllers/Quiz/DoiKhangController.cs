@@ -76,5 +76,18 @@ namespace WEBB.Controllers.Quiz
                 }
             }
         }
+        public ActionResult Match(string code)
+        {
+            var token = GetToken(); // dùng lại hàm bạn đã có trong controller
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Bạn chưa đăng nhập.";
+                return RedirectToAction("Login", "Account", new { area = "User" });
+            }
+
+            ViewBag.MatchCode = code;
+            return View("~/Views/Quiz/DoiKhang/Match.cshtml");
+        }
+
     }
 }

@@ -49,8 +49,8 @@ namespace QUIZ_GAME_WEB.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Bổ sung: Thiết lập khóa chính phức hợp cho bảng nối TranDau_CauHoi
-            modelBuilder.Entity<TranDauCauHoi>()
-                .HasKey(tc => new { tc.TranDauID, tc.CauHoiID });
+            //modelBuilder.Entity<TranDauCauHoi>()
+            //    .HasKey(tc => new { tc.TranDauID, tc.CauHoiID });
             // Bạn cũng nên thiết lập mối quan hệ:
             /*
             modelBuilder.Entity<TranDauCauHoi>()

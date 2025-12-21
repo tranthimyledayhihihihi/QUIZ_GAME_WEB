@@ -45,7 +45,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         // Trong Models/Implementations/TranDauRepository.cs
         // (Bổ sung vào class)
 
-        
+
         public async Task<IEnumerable<CauHoi>> GetMatchQuestionsWithDetailsAsync(int tranDauId)
         {
             // Sử dụng LINQ để JOIN bảng TranDauCauHoi và CauHoi
@@ -58,8 +58,13 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                                        CauHoiID = ch.CauHoiID,
                                        NoiDung = ch.NoiDung,
                                        CacLuaChon = ch.CacLuaChon,
-                                       // KHÔNG SELECT DapAnDung nếu bạn muốn tránh lấy nó từ đây.
-                                       // Tùy chọn: Thêm các trường khác cần thiết cho logic Service
+                                       // === BỔ SUNG CÁC DÒNG DƯỚI ===
+                                       DapAnA = ch.DapAnA,
+                                       DapAnB = ch.DapAnB,
+                                       DapAnC = ch.DapAnC,
+                                       DapAnD = ch.DapAnD,
+                                       DoKho = ch.DoKho // (Tùy chọn) Để lấy điểm thưởng chính xác
+                                                        // ============================
                                    })
                                    .ToListAsync();
 

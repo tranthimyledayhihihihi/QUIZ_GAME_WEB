@@ -1,0 +1,253 @@
+
+@{
+    ViewBag.Title = "Trận Đấu Đối Kháng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var matchCode = ViewBag.MatchCode as string;
+    var apiBase = System.Configuration.ConfigurationManager.AppSettings["ApiBaseUrl"];
+}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Trận Đấu: <span id="lblMatchCode">@matchCode</span></h4>
+            <div>
+                <span class="badge bg-light text-dark" id="lblTimer">00:00</span>
+            </div>
+        </div>
+        <div class="card-body">
+            <!-- Loading State -->
+            <div id="loadingArea" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Đang tải dữ liệu trận đấu...</p>
+            </div>
+
+            <!-- Game Area -->
+            <div id="gameArea" style="display:none;">
+                <div class="row align-items-center mb-3">
+                    <div class="col-6">
+                        <h5 id="lblQuestionIndex">Câu hỏi 1/10</h5>
+                    </div>
+                    <div class="col-6 text-end">
+                        <span class="badge bg-info">Đối thủ: <span id="lblOpponentStatus">Đang chơi...</span></span>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-light rounded mb-4 text-center">
+                    <h3 id="lblQuestionContent" class="fw-bold">Nội dung câu hỏi sẽ hiển thị ở đây?</h3>
+                </div>
+
+                <div class="row g-3" id="answersArea">
+                    <!-- Answers will be generated here -->
+                </div>
+            </div>
+
+            <!-- Result Area -->
+            <div id="resultArea" style="display:none;" class="text-center py-5">
+                <h2 class="text-success fw-bold">Trận Đấu Kết Thúc!</h2>
+                <div class="my-4">
+                    <h4 id="lblMyScore" class="text-primary">Điểm của bạn: 0</h4>
+                    <p id="lblResultMsg" class="lead text-secondary"></p>
+                </div>
+                <a href="/DoiKhang" class="btn btn-outline-primary mt-3">Quay về Sảnh</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const matchCode = '@matchCode';
+        const apiBase = '@apiBase';
+        const token = '@(Session["JwtToken"] ?? Session["JWT_TOKEN"])';
+
+        let questions = [];
+        let currentIndex = 0;
+
+        $(document).ready(function () {
+            initMatch();
+        });
+
+        async function initMatch() {
+            // 1. Lấy thông tin trận + danh sách câu hỏi từ API
+            try {
+                const info = await $.ajax({
+                    url: `${apiBase}/api/trandau/${matchCode}`,
+                    method: 'GET',
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                console.log("Match info:", info);
+                // Kiểm tra xem mình là Player 1 hay 2
+                const myId = getMyUserId();
+                const p1Id = info.player1ID || info.Player1ID;
+
+                window.isPlayer1 = (myId === p1Id);
+                console.log("Tôi là Player 1?", window.isPlayer1);
+                // ---------------------
+
+                // Nếu API có trả về questions thì dùng
+                if (info.questions && info.questions.length > 0) {
+                    questions = info.questions;
+                } else if (info.Questions && info.Questions.length > 0) {
+                    questions = info.Questions;
+                }
+
+                // Nếu API trả về luôn kết quả (trận đã kết thúc)
+                if (!questions.length && info.ketQua) {
+                    showResult(info);
+                    return;
+                }
+            } catch (err) {
+                console.warn("Không lấy được thông tin trận: ", err);
+            }
+
+            // 2. Không có câu hỏi -> báo lỗi, KHÔNG gọi finishMatch
+            if (!questions || questions.length === 0) {
+                $('#loadingArea').hide();
+                $('#gameArea').hide();
+                $('#resultArea').show();
+                $('#lblMyScore').text("Không tải được danh sách câu hỏi.");
+                $('#lblResultMsg').text("Hãy tạo trận mới hoặc kiểm tra lại API /api/trandau.");
+                return;
+            }
+
+            // 3. Bắt đầu chơi
+            $('#loadingArea').hide();
+            $('#gameArea').fadeIn();
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            if (currentIndex >= questions.length) {
+                finishMatch();
+                return;
+            }
+
+            const q = questions[currentIndex];
+
+            $('#lblQuestionIndex').text(`Câu hỏi ${currentIndex + 1}/${questions.length}`);
+            $('#lblQuestionContent').text(q.noiDung || q.NoiDung);
+
+            // Parse CacLuaChon: JSON { "A": "...", "B": "...", "C": "...", "D": "..." }
+            let opts = q.cacLuaChon || q.CacLuaChon;
+            if (typeof opts === "string") {
+                try {
+                    opts = JSON.parse(opts);
+                } catch (e) {
+                    console.error("Parse choices error: ", e);
+                    return;
+                }
+            }
+
+            const answers = [
+                { id: 'A', text: opts.A },
+                { id: 'B', text: opts.B },
+                { id: 'C', text: opts.C },
+                { id: 'D', text: opts.D }
+            ];
+
+            const html = answers.map(a => `
+                <div class="col-md-6">
+                    <button class="btn btn-outline-dark w-100 p-3 h-100 btn-answer"
+                            onclick="submitAnswer(${q.cauHoiID || q.CauHoiID}, '${a.id}')">
+                        <span class="fw-bold">${a.id}.</span> ${a.text}
+                    </button>
+                </div>
+            `).join('');
+
+            $('#answersArea').html(html);
+        }
+
+        async function submitAnswer(qId, ansId) {
+            $('.btn-answer').prop('disabled', true);
+
+            try {
+                await $.ajax({
+                    url: `${apiBase}/api/trandau/gui-dap-an/${matchCode}`,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: { "Authorization": `Bearer ${token}` },
+                    data: JSON.stringify({
+                        cauHoiId: qId,
+                        dapAnDaChon: ansId
+                    })
+                });
+
+                currentIndex++;
+                $('.btn-answer').prop('disabled', false);
+                renderQuestion();
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi gửi đáp án!");
+                $('.btn-answer').prop('disabled', false);
+            }
+        }
+
+        async function finishMatch() {
+            $('#gameArea').hide();
+            $('#loadingArea').show().find('p').text("Đang đợi đối thủ hoàn thành...");
+            try {
+                const res = await $.ajax({
+                    url: `${apiBase}/api/trandau/ket-thuc/${matchCode}`,
+                    method: 'POST',
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                // === THÊM ĐOẠN NÀY ===
+                if (res.ketQua === "Wait") {
+                    // Nếu Server bảo chờ -> Đợi 2 giây rồi gọi lại chính hàm này (Đệ quy)
+                    setTimeout(finishMatch, 2000);
+                    return;
+                }
+                // =====================
+                showResult(res);
+            } catch (err) {
+                console.error(err);
+                alert("Lỗi kết thúc trận.");
+            }
+        }
+        function showResult(res) {
+            $('#loadingArea').hide();
+            $('#gameArea').hide();
+            $('#resultArea').fadeIn();
+            // 1. Lấy điểm gốc từ API
+            // (Dùng code fix undefined lần trước)
+            let rawS1 = (res.diemPlayer1 !== undefined) ? res.diemPlayer1 : res.DiemPlayer1;
+            let rawS2 = (res.diemPlayer2 !== undefined) ? res.diemPlayer2 : res.DiemPlayer2;
+            // 2. Đảo điểm dựa theo vai trò (QUAN TRỌNG)
+            let myScore = window.isPlayer1 ? rawS1 : rawS2;
+            let oppScore = window.isPlayer1 ? rawS2 : rawS1;
+            $('#lblMyScore').text(`Điểm của bạn: ${myScore} - Đối thủ: ${oppScore}`);
+            // ... (Đoạn hiển thị thắng thua giữ nguyên hoặc sửa tương tự nếu cần) ...
+            let resultStatus = res.ketQua || res.KetQua; // Thang/Thua/Hoa
+            let winnerName = res.winnerHoTen || res.WinnerHoTen || "Unknown";
+
+            // Logic hiển thị lời nhắn
+            // Nếu Hoà
+            if (resultStatus === "Hoa") {
+                $('#lblResultMsg').text("Kết quả: HÒA");
+            } else {
+                // Nếu có người thắng, hiển thị tên
+                $('#lblResultMsg').text(`Người thắng: ${winnerName}`);
+            }
+        }
+        // Hàm lấy UserID từ Token (để biết mình là ai)
+        function getMyUserId() {
+            if (!token) return 0;
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function (c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                const payload = JSON.parse(jsonPayload);
+                // Lấy claim nameid (UserID)
+                return parseInt(payload.nameid || payload.sub || 0);
+            } catch (e) {
+                console.error("Lỗi parse token:", e);
+                return 0;
+            }
+        }
+    </script>
+}
+

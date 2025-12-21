@@ -159,12 +159,36 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                                  .OrderBy(t => t.Ngay)
                                  .ToListAsync();
         }
-
+        public async Task<IEnumerable<object>> GetTopPlayersAsync(int topCount)
+        {
+            return await _context.ThongKeNguoiDungs
+                .GroupBy(tk => tk.UserID) // Nhóm theo từng người dùng
+                .Select(g => new
+                {
+                    UserID = g.Key,
+                    TenDangNhap = g.First().NguoiDung.TenDangNhap,
+                    HoTen = g.First().NguoiDung.HoTen,
+                    TongSoTran = g.Sum(x => x.SoTran), // Cộng dồn số trận
+                    TongSoCauDung = g.Sum(x => x.SoCauDung), // Cộng dồn số câu đúng
+                                                             // Tính trung bình cộng của các điểm trung bình hàng ngày
+                    DiemXepHang = g.Average(x => x.DiemTrungBinh)
+                })
+                .OrderByDescending(res => res.DiemXepHang) // Xếp hạng theo điểm trung bình cao nhất
+                .Take(topCount)
+                .ToListAsync();
+        }
         public async Task<IEnumerable<ThanhTuu>> GetUserAchievementsAsync(int userId)
         {
             return await _context.ThanhTuus
                                  .Where(t => t.NguoiDungID == userId)
                                  .ToListAsync();
+        }
+        public async Task<IEnumerable<ThuongNgay>> GetUserRewardsAsync(int userId)
+        {
+            return await _context.ThuongNgays
+                .Where(t => t.UserID == userId)
+                .OrderByDescending(t => t.NgayNhan)
+                .ToListAsync();
         }
     }
 }
