@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36518.9
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QUIZ_GAME_WEB", "QUIZ_GAME_WEB\QUIZ_GAME_WEB.csproj", "{5AD117E6-61C5-4559-91AF-7F051657655B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WEBB_FE", "WEBB_FE\WEBB_FE.csproj", "{BFC81716-481F-4CF0-9B26-F40D18D9E262}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5AD117E6-61C5-4559-91AF-7F051657655B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AD117E6-61C5-4559-91AF-7F051657655B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AD117E6-61C5-4559-91AF-7F051657655B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AD117E6-61C5-4559-91AF-7F051657655B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BFC81716-481F-4CF0-9B26-F40D18D9E262}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3BECB8BB-3FCC-421D-AD16-1F28D77BB454}
+	EndGlobalSection
+EndGlobal

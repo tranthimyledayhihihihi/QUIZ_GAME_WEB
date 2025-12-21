@@ -1,0 +1,491 @@
+﻿@model WEBB.Models.User.SettingDto
+
+@{
+    ViewBag.Title = "Cài đặt người dùng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="settings-container">
+    <div class="settings-header">
+        <h1><i class="fas fa-cog"></i> Cài đặt người dùng</h1>
+        <p class="subtitle">Quản lý cài đặt cá nhân hóa trải nghiệm của bạn</p>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible">
+            <i class="fas fa-check-circle"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible">
+            <i class="fas fa-exclamation-circle"></i>
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @using (Html.BeginForm("Index", "Settings", FormMethod.Post, new { @class = "settings-form" }))
+    {
+        @Html.AntiForgeryToken()
+
+        <div class="settings-card">
+            <div class="card-header">
+                <h3><i class="fas fa-volume-up"></i> Cài đặt âm thanh</h3>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Âm thanh</h4>
+                        <p class="setting-description">Bật/tắt âm thanh hiệu ứng trong ứng dụng</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            @Html.CheckBoxFor(m => m.AmThanh, new { @class = "toggle-checkbox" })
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-label">@(Model?.AmThanh == true ? "Bật" : "Tắt")</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Nhạc nền</h4>
+                        <p class="setting-description">Bật/tắt nhạc nền trong ứng dụng</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            @Html.CheckBoxFor(m => m.NhacNen, new { @class = "toggle-checkbox" })
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-label">@(Model?.NhacNen == true ? "Bật" : "Tắt")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="card-header">
+                <h3><i class="fas fa-bell"></i> Cài đặt thông báo</h3>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Thông báo</h4>
+                        <p class="setting-description">Nhận thông báo về các hoạt động mới</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="switch">
+                            @Html.CheckBoxFor(m => m.ThongBao, new { @class = "toggle-checkbox" })
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="toggle-label">@(Model?.ThongBao == true ? "Bật" : "Tắt")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <div class="card-header">
+                <h3><i class="fas fa-globe"></i> Cài đặt ngôn ngữ</h3>
+            </div>
+            <div class="card-body">
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Ngôn ngữ hiển thị</h4>
+                        <p class="setting-description">Chọn ngôn ngữ cho giao diện ứng dụng</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="dropdown-language">
+                            @Html.DropDownListFor(m => m.NgonNgu,
+                                new List<SelectListItem>
+                                {
+                                    new SelectListItem { Text = "Tiếng Việt", Value = "vi", Selected = (Model?.NgonNgu == "vi") },
+                                    new SelectListItem { Text = "English", Value = "en", Selected = (Model?.NgonNgu == "en") }
+                                },
+                                "Chọn ngôn ngữ",
+                                new { @class = "form-select language-select" })
+                            <i class="fas fa-chevron-down dropdown-icon"></i>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.NgonNgu, "", new { @class = "validation-error" })
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> Lưu cài đặt
+            </button>
+            <button type="button" class="btn-reset" onclick="resetForm()">
+                <i class="fas fa-undo"></i> Đặt lại
+            </button>
+        </div>
+    }
+</div>
+
+<style>
+    /* Reset và biến màu sắc */
+    :root {
+        --primary-color: #4361ee;
+        --primary-hover: #3a56d4;
+        --success-color: #06d6a0;
+        --danger-color: #ef476f;
+        --light-color: #f8f9fa;
+        --dark-color: #212529;
+        --gray-color: #6c757d;
+        --border-color: #dee2e6;
+        --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --transition: all 0.3s ease;
+    }
+
+    .settings-container {
+        max-width: 800px;
+        margin: 30px auto;
+        padding: 0 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .settings-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .settings-header h1 {
+        color: var(--dark-color);
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .settings-header .subtitle {
+        color: var(--gray-color);
+        font-size: 1.1rem;
+    }
+
+    /* Alert styles */
+    .alert {
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: none;
+        box-shadow: var(--card-shadow);
+    }
+
+    .alert-success {
+        background-color: rgba(6, 214, 160, 0.1);
+        color: #058a65;
+        border-left: 4px solid var(--success-color);
+    }
+
+    .alert-danger {
+        background-color: rgba(239, 71, 111, 0.1);
+        color: #c63b5e;
+        border-left: 4px solid var(--danger-color);
+    }
+
+    .alert-dismissible .btn-close {
+        margin-left: auto;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        opacity: 0.7;
+        cursor: pointer;
+    }
+
+    /* Card styles */
+    .settings-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .settings-card:hover {
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header {
+        background-color: #f8fafc;
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-header h3 {
+        margin: 0;
+        color: var(--dark-color);
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .card-body {
+        padding: 24px;
+    }
+
+    /* Setting item styles */
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .setting-item:last-child {
+        border-bottom: none;
+    }
+
+    .setting-info h4 {
+        margin: 0 0 6px 0;
+        color: var(--dark-color);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .setting-description {
+        margin: 0;
+        color: var(--gray-color);
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* Toggle switch styles */
+    .setting-control {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+    }
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: var(--transition);
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: var(--transition);
+    }
+
+    input:checked + .slider {
+        background-color: var(--primary-color);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(30px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    .toggle-label {
+        font-weight: 500;
+        min-width: 40px;
+    }
+
+    /* Language dropdown styles */
+    .dropdown-language {
+        position: relative;
+        width: 200px;
+    }
+
+    .language-select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background-color: white;
+        font-size: 1rem;
+        appearance: none;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .language-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        outline: none;
+    }
+
+    .dropdown-icon {
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gray-color);
+        pointer-events: none;
+    }
+
+    .validation-error {
+        display: block;
+        color: var(--danger-color);
+        font-size: 0.9rem;
+        margin-top: 6px;
+    }
+
+    /* Form actions */
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 40px;
+        padding-top: 30px;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn-save, .btn-reset {
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border: none;
+    }
+
+    .btn-save {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-save:hover {
+        background-color: var(--primary-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+
+    .btn-reset {
+        background-color: #f1f3f9;
+        color: var(--gray-color);
+    }
+
+    .btn-reset:hover {
+        background-color: #e2e6ee;
+        color: var(--dark-color);
+    }
+
+    /* Responsive design */
+    @@media (max-width: 768px) {
+        .settings-container {
+            padding: 0 15px;
+        }
+
+        .setting-item {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .setting-control {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .dropdown-language {
+            width: 100%;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-save, .btn-reset {
+            width: 100%;
+        }
+
+        .settings-header h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+
+<script>
+    // Cập nhật nhãn toggle khi thay đổi
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleCheckboxes = document.querySelectorAll('.toggle-checkbox');
+
+        toggleCheckboxes.forEach(checkbox => {
+            // Cập nhật trạng thái ban đầu
+            updateToggleLabel(checkbox);
+
+            // Lắng nghe sự kiện thay đổi
+            checkbox.addEventListener('change', function() {
+                updateToggleLabel(this);
+            });
+        });
+
+        function updateToggleLabel(checkbox) {
+            const label = checkbox.parentElement.nextElementSibling;
+            if (label && label.classList.contains('toggle-label')) {
+                label.textContent = checkbox.checked ? 'Bật' : 'Tắt';
+            }
+        }
+
+        // Xử lý nút đặt lại
+        window.resetForm = function() {
+            if (confirm('Bạn có chắc chắn muốn đặt lại tất cả cài đặt về giá trị mặc định?')) {
+                document.querySelector('form').reset();
+
+                // Cập nhật lại tất cả các nhãn
+                document.querySelectorAll('.toggle-checkbox').forEach(checkbox => {
+                    updateToggleLabel(checkbox);
+                });
+
+                // Reset dropdown
+                const languageSelect = document.querySelector('.language-select');
+                if (languageSelect) {
+                    languageSelect.selectedIndex = 0;
+                }
+            }
+        }
+    });
+</script>

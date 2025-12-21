@@ -1,0 +1,386 @@
+﻿@model WEBB.Models.ViewModels.DailyStreakViewModel
+@{
+
+    ViewBag.Title = "Chuỗi Ngày Liên Tiếp";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-3">
+                <!-- Header -->
+                <div class="card-header bg-gradient-warning text-white py-3 rounded-top-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-fire me-2"></i>
+                            CHUỖI NGÀY LIÊN TIẾP
+                        </h4>
+                        @if (!Model.IsLoggedIn)
+                        {
+                            <a href="@Url.Action("Login", "User")" class="btn btn-sm btn-light">
+                                <i class="fas fa-sign-in-alt me-1"></i> Đăng nhập
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="card-body p-4">
+                    @Html.AntiForgeryToken()
+                    <!-- Thông báo động -->
+                    <div id="streakMessage" class="alert @(Model.Message.Contains("🎉") ? "alert-success" : "alert-info") alert-dismissible fade show">
+                        @Model.Message
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
+                    <!-- Thông tin người dùng -->
+                    @if (Model.IsLoggedIn)
+                    {
+                        <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                            <div class="me-3">
+                                <i class="fas fa-user-circle fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Xin chào, @Model.UserName!</h6>
+                                <small class="text-muted">Tổng điểm: <strong>@Model.TongDiemDaNhan</strong></small>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Số ngày liên tiếp -->
+                    <div class="text-center mb-4">
+                        <div class="display-1 fw-bold text-warning mb-2" id="currentStreak">
+                            @Model.SoNgayLienTiep
+                        </div>
+                        <div class="text-muted h5">NGÀY LIÊN TIẾP</div>
+                    </div>
+
+                    <!-- Điểm thưởng -->
+                    <div class="text-center mb-4">
+                        <div class="h3 mb-3">
+                            <i class="fas fa-gem text-primary me-2"></i>
+                            Điểm thưởng hôm nay:
+                            <span class="fw-bold text-success" id="currentReward">@Model.DiemThuong</span>
+                        </div>
+                        @if (Model.BonusMultiplier > 1)
+                        {
+                            <div class="badge bg-danger p-2 px-3 fs-6">
+                                <i class="fas fa-bolt me-1"></i>
+                                NHÂN @Model.BonusMultiplier LẦN
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Nút nhận thưởng -->
+                    <div class="text-center my-4 py-3">
+                        @if (Model.CoTheNhanThuong)
+                        {
+                            <button id="btnNhanThuong" class="btn btn-success btn-lg px-5 py-3">
+                                <i class="fas fa-gift me-2"></i> NHẬN THƯỞNG NGAY
+                            </button>
+                        }
+                        else if (Model.DaNhanThuongHomNay)
+                        {
+                            <button class="btn btn-secondary btn-lg px-5 py-3" disabled>
+                                <i class="fas fa-check-circle me-2"></i> ĐÃ NHẬN THƯỞNG HÔM NAY
+                            </button>
+                            <p class="text-muted mt-2">
+                                Quay lại vào ngày mai để tiếp tục chuỗi!
+                            </p>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary btn-lg px-5 py-3" disabled>
+                                <i class="fas fa-clock me-2"></i> ĐANG CHỜ...
+                            </button>
+                        }
+                    </div>
+
+                    <!-- Timeline 7 ngày -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h5 class="text-center mb-4">
+                            <i class="fas fa-calendar-week me-2"></i> LỊCH SỬ 7 NGÀY
+                        </h5>
+
+                        <div class="d-flex justify-content-between flex-wrap">
+                            @for (int i = 6; i >= 0; i--)
+                            {
+                                var date = DateTime.Today.AddDays(-i);
+                                var isToday = i == 0;
+                                var hasStreak = Model.LichSu7Ngay?.Any(d => d.Date == date.Date) == true;
+                                var dayName = date.ToString("ddd");
+                                var dayNumber = date.ToString("dd");
+
+                                <div class="text-center mb-3" style="width: 14%;">
+                                    <div class="position-relative">
+                                        <div class="day-circle @(hasStreak ? "active" : "inactive") @(isToday ? "today" : "")"
+                                             title="@date.ToString("dd/MM/yyyy")"
+                                             data-bs-toggle="tooltip">
+                                            @if (hasStreak)
+                                            {
+                                                <i class="fas fa-check"></i>
+                                            }
+                                            else if (isToday)
+                                            {
+                                                <span>?</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">○</span>
+                                            }
+                                        </div>
+                                        @if (isToday && !hasStreak && Model.CoTheNhanThuong)
+                                        {
+                                            <div class="position-absolute top-0 start-100 translate-middle">
+                                                <span class="badge bg-warning animate-pulse">!</span>
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="mt-2">
+                                        <div class="fw-bold @(isToday ? "text-primary" : "text-dark")">
+                                            @dayName
+                                        </div>
+                                        <div class="small text-muted">
+                                            @dayNumber/@date.ToString("MM")
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Thống kê -->
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="h3 text-primary" id="totalStreak">@Model.SoNgayLienTiep</div>
+                                <div class="text-muted">Ngày liên tiếp</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="h3 text-success" id="totalPoints">@Model.TongDiemDaNhan</div>
+                                <div class="text-muted">Tổng điểm</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="h3 text-info">@Model.BonusMultiplier<span class="fs-6">x</span></div>
+                                <div class="text-muted">Hệ số nhân</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="card-footer text-center py-3">
+                    <small class="text-muted">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        <strong>Mẹo:</strong> Đăng nhập mỗi ngày để không bị ngắt chuỗi và nhận điểm thưởng cao hơn!
+                    </small>
+                </div>
+            </div>
+
+            <!-- Countdown Timer (nếu cần) -->
+            @if (Model.DaNhanThuongHomNay)
+            {
+                <div class="text-center mt-3">
+                    <div class="badge bg-info p-2">
+                        <i class="fas fa-clock me-1"></i>
+                        Có thể nhận thưởng tiếp sau:
+                        <span id="countdownTimer">24:00:00</span>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Khởi tạo tooltip
+            $('[data-bs-toggle="tooltip"]').tooltip();
+
+            // Xử lý nhận thưởng bằng AJAX
+            $('#btnNhanThuong').click(function() {
+                var btn = $(this);
+                var originalText = btn.html();
+
+                // Vô hiệu hóa nút và hiển thị loading
+                btn.prop('disabled', true);
+                btn.html('<i class="fas fa-spinner fa-spin me-2"></i> ĐANG XỬ LÝ...');
+                btn.removeClass('btn-success').addClass('btn-secondary');
+
+                // Gửi request AJAX
+                $.ajax({
+                    url: '@Url.Action("NhanThuong", "DailyStreak")',
+                    type: 'POST',
+                    data: {
+                        __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Cập nhật UI động
+                            $('#streakMessage')
+                                .removeClass('alert-info')
+                                .addClass('alert-success')
+                                .html(response.message +
+                                    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>');
+
+                            $('#currentStreak').text(response.soNgayLienTiep);
+                            $('#currentReward').text(response.diemThuong);
+                            $('#totalPoints').text(response.tongDiem);
+
+                            // Cập nhật nút
+                            btn.html('<i class="fas fa-check-circle me-2"></i> ĐÃ NHẬN THƯỞNG');
+
+                            // Reload timeline sau 1 giây
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1500);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // Hiển thị thông báo lỗi
+                        $('#streakMessage')
+                            .removeClass('alert-info alert-success')
+                            .addClass('alert-danger')
+                            .html('Có lỗi xảy ra: ' + xhr.responseText +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>');
+
+                        // Khôi phục nút
+                        btn.prop('disabled', false);
+                        btn.html(originalText);
+                        btn.removeClass('btn-secondary').addClass('btn-success');
+                    }
+                });
+            });
+
+            // Kiểm tra trạng thái mỗi 60 giây (nếu cần)
+            @if (!Model.DaNhanThuongHomNay && Model.CoTheNhanThuong)
+            {
+                <text>
+                setInterval(function() {
+                    $.get('@Url.Action("GetStreakStatus", "DailyStreak")', function(data) {
+                        if (data.coTheNhanThuong && !data.daNhanThuongHomNay) {
+                            // Vẫn có thể nhận thưởng
+                            $('#streakMessage').html(data.message);
+                        }
+                    });
+                }, 60000);
+                </text>
+            }
+
+            // Countdown timer (nếu đã nhận thưởng)
+            @if (Model.DaNhanThuongHomNay)
+            {
+                <text>
+                function updateCountdown() {
+                    var now = new Date();
+                    var tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(0, 0, 0, 0);
+
+                    var diff = tomorrow - now;
+
+                    var hours = Math.floor(diff / (1000 * 60 * 60));
+                    var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    $('#countdownTimer').text(
+                        String(hours).padStart(2, '0') + ':' +
+                        String(minutes).padStart(2, '0') + ':' +
+                        String(seconds).padStart(2, '0')
+                    );
+                }
+
+                updateCountdown();
+                setInterval(updateCountdown, 1000);
+                </text>
+            }
+        });
+    </script>
+
+    <style>
+        /* CSS tùy chỉnh */
+        .day-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+            .day-circle.active {
+                background: linear-gradient(135deg, #28a745, #20c997);
+                color: white;
+                box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            }
+
+            .day-circle.inactive {
+                background: #f8f9fa;
+                color: #adb5bd;
+                border: 2px solid #dee2e6;
+            }
+
+            .day-circle.today {
+                border: 3px solid #ffc107;
+                transform: scale(1.1);
+            }
+
+            .day-circle:hover {
+                transform: translateY(-3px);
+            }
+
+        #btnNhanThuong {
+            transition: all 0.3s;
+            min-width: 250px;
+            font-size: 1.1rem;
+        }
+
+            #btnNhanThuong:hover:not(:disabled) {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
+            }
+
+        .animate-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @@keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .card {
+            border: none;
+            overflow: hidden;
+        }
+
+        .bg-gradient-warning {
+            background: linear-gradient(135deg, #ffc107, #fd7e14);
+        }
+
+        .rounded-top-3 {
+            border-top-left-radius: 1rem !important;
+            border-top-right-radius: 1rem !important;
+        }
+
+        .rounded-3 {
+            border-radius: 1rem !important;
+        }
+    </style>
+}

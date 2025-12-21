@@ -1,0 +1,102 @@
+﻿@model WEBB.Models.ViewModels.LeaderboardViewModel
+@{
+    ViewBag.Title = "Xếp Hạng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="game-container">
+    <h2 class="text-center fw-bold mb-4">
+        🏆 Bảng Xếp Hạng @((Model.Type == "weekly") ? "Tuần" : "Tháng")
+    </h2>
+
+    <!-- Tab chọn Weekly / Monthly -->
+    <div class="d-flex justify-content-center mb-4">
+        <a href="@Url.Action("Leaderboard", "Menu", new { type = "weekly" })"
+           class="btn me-2 @(Model.Type == "weekly" ? "btn-success" : "btn-outline-success")">
+            Tuần
+        </a>
+        <a href="@Url.Action("Leaderboard", "Menu", new { type = "monthly" })"
+           class="btn @(Model.Type == "monthly" ? "btn-primary" : "btn-outline-primary")">
+            Tháng
+        </a>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger text-center">@ViewBag.Error</div>
+    }
+
+    <div class="ranking-list">
+        @if (Model.Items == null || !Model.Items.Any())
+        {
+            <p class="text-center text-muted">Chưa có dữ liệu xếp hạng.</p>
+        }
+        else
+        {
+            for (int i = 0; i < Model.Items.Count; i++)
+            {
+                var item = Model.Items[i];
+                var rank = (Model.Type == "weekly") ? item.HangTuan : item.HangThang;
+                var score = (Model.Type == "weekly") ? item.DiemTuan : item.DiemThang;
+
+                <div class="rank-item d-flex align-items-center mb-3 p-3 rounded shadow-sm">
+                    <div class="rank-number me-3">@rank</div>
+
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <img src="@(string.IsNullOrEmpty(item.AnhDaiDien)
+                                    ? Url.Content("~/images/logo-quiz.jpg")
+                                    : item.AnhDaiDien)"
+                             class="rank-avatar me-3" />
+                        <div>
+                            <div class="fw-bold">@item.TenHienThi</div>
+                            @if (item.IsOnline)
+                            {
+                                <span class="badge bg-success">Online</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="rank-score text-end">
+                        <div class="fw-bold">@score pts</div>
+                        <small class="text-muted">
+                            @(Model.Type == "weekly" ? "Điểm tuần" : "Điểm tháng")
+                        </small>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .rank-item {
+            background: #ffffff;
+            border-radius: 20px;
+        }
+
+        .rank-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ffe066;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: #d9480f;
+        }
+
+        .rank-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .rank-score {
+            min-width: 90px;
+        }
+    </style>
+}
