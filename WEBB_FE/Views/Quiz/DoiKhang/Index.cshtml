@@ -1,92 +1,395 @@
-﻿@using System.Configuration
-
-@{
-    ViewBag.Title = "Chế độ Đối kháng";
-
-    // Lấy token từ Session
-    var userToken = Session["JwtToken"] as string ?? Session["JWT_TOKEN"] as string;
-    var apiBase = ConfigurationManager.AppSettings["ApiBaseUrl"];
+﻿@{
+    ViewBag.Title = "Đối Kháng - Tìm Trận";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="container text-center mt-5">
-    <h2>Chế độ Đối kháng</h2>
-
-    <div id="statusArea" class="alert alert-info" style="display:none;"></div>
-
-    <button id="btnFindMatch" class="btn btn-primary btn-lg mb-4">Tìm Trận Ngẫu Nhiên</button>
-
-    <hr />
-
-    <div class="row mt-3">
-        <div class="col-md-6 mb-3">
-            <button id="btnCreateRoom" class="btn btn-success w-100">Tạo Phòng Riêng</button>
+<div class="doi-khang-wrapper">
+    <div class="doi-khang-container">
+        <div class="header">
+            <h1>⚔️ Chế độ Đối Kháng</h1>
         </div>
-        <div class="col-md-6">
-            <input type="text" id="txtRoomCode" class="form-control" placeholder="Nhập mã phòng..." />
-            <button id="btnJoinRoom" class="btn btn-warning w-100 mt-2">Vào Phòng</button>
+
+        <div class="status-box">
+            <div class="hourglass-icon">⏳</div>
+            <h2 id="statusText">Đang kết nối...</h2>
+            <p id="queueInfo"></p>
+        </div>
+
+        <!-- ================= RANDOM MATCH ================= -->
+        <div class="button-group">
+            <button id="btnTimTran" class="btn btn-primary btn-lg">
+                🔍 Tìm Trận Ngẫu Nhiên
+            </button>
+            <button id="btnHuyTimTran" class="btn btn-secondary btn-lg" style="display:none;">
+                ❌ Hủy Tìm Trận
+            </button>
+        </div>
+
+        <!-- ================= PRIVATE ROOM ================= -->
+        <div class="private-room-box">
+            <hr />
+            <h3>🏠 Phòng Riêng</h3>
+
+            <button id="btnCreateRoom" class="btn btn-success btn-lg">
+                ➕ Tạo Phòng
+            </button>
+
+            <div class="join-room">
+                <input id="roomCodeInput"
+                       class="form-control"
+                       placeholder="Nhập mã phòng (VD: ABC123)" />
+
+                <button id="btnJoinRoom" class="btn btn-warning btn-lg">
+                    🔑 Join Phòng
+                </button>
+            </div>
+
+            <div id="roomCodeDisplay" class="room-code"></div>
+        </div>
+
+        <div class="online-count">
+            <span id="onlineCount">0</span> người đang online
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
-    <script>
-        const token = '@userToken';
-        const apiBaseUrl = '@apiBase'.replace(/\/$/, "");
-        const hubUrl = apiBaseUrl + "/matchmakinghub";
+<style>
+    body {
+        overflow: hidden; /* Ngăn body scroll */
+    }
 
-        const connection = new signalR.HubConnectionBuilder()
-            .withUrl(hubUrl, { accessTokenFactory: () => token })
-            .withAutomaticReconnect()
-            .build();
+    .doi-khang-wrapper {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow-y: auto; /* Cho phép scroll */
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding-top: 80px; /* Khoảng trống cho navbar */
+        padding-bottom: 20px;
+    }
 
-        async function start() {
-            try {
-                await connection.start();
-                console.log("SignalR Connected.");
-            } catch (err) {
-                console.error("SignalR Connect Error: ", err);
-                setTimeout(start, 5000);
-            }
+    .doi-khang-container {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header h1 {
+        color: white;
+        margin-bottom: 30px;
+        font-size: clamp(24px, 6vw, 36px);
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .status-box {
+        background: rgba(255, 255, 255, 0.95);
+        color: #2c3e50;
+        padding: 30px 20px;
+        border-radius: 15px;
+        margin-bottom: 20px;
+        min-height: 160px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .hourglass-icon {
+        font-size: clamp(40px, 10vw, 60px);
+        animation: rotate 2s infinite linear;
+        margin-bottom: 10px;
+    }
+
+    #statusText {
+        font-size: clamp(18px, 4vw, 24px);
+        margin: 10px 0;
+    }
+
+    @@keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .button-group {
+        margin: 20px 0;
+    }
+
+    .btn {
+        padding: 14px 30px;
+        font-size: clamp(14px, 3.5vw, 18px);
+        border-radius: 10px;
+        margin: 8px;
+        font-weight: bold;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        width: 90%;
+        max-width: 350px;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+
+    .btn-primary {
+        background: #3498db;
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background: #e74c3c;
+        color: #fff;
+    }
+
+    .btn-success {
+        background: #27ae60;
+        color: #fff;
+    }
+
+    .btn-warning {
+        background: #f39c12;
+        color: #fff;
+    }
+
+    .private-room-box {
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .private-room-box h3 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        font-size: clamp(18px, 4vw, 22px);
+    }
+
+    .private-room-box hr {
+        border: none;
+        border-top: 2px solid rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .join-room {
+        margin-top: 15px;
+    }
+
+    .join-room input {
+        padding: 14px;
+        font-size: clamp(14px, 3.5vw, 16px);
+        margin-bottom: 10px;
+        border-radius: 8px;
+        border: 2px solid #ddd;
+        width: 90%;
+        max-width: 350px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .join-room input:focus {
+        outline: none;
+        border-color: #f39c12;
+    }
+
+    .room-code {
+        margin-top: 15px;
+        font-size: clamp(16px, 4vw, 20px);
+        font-weight: bold;
+        color: #27ae60;
+        background: rgba(39, 174, 96, 0.1);
+        padding: 10px;
+        border-radius: 8px;
+        min-height: 40px;
+    }
+
+    .online-count {
+        margin-top: 25px;
+        margin-bottom: 20px;
+        font-size: clamp(14px, 3.5vw, 16px);
+        background: rgba(255, 255, 255, 0.95);
+        padding: 12px;
+        border-radius: 8px;
+        color: #2c3e50;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    #onlineCount {
+        font-weight: bold;
+        color: #27ae60;
+        font-size: clamp(16px, 4vw, 20px);
+    }
+
+    /* Mobile adjustments */
+    @@media (max-width: 480px) {
+        .doi-khang-wrapper {
+            padding-top: 70px;
         }
-        start();
 
-        connection.on("QueueStatus", (message) => {
-            $('#statusArea').show().text(message);
+        .doi-khang-container {
+            padding: 15px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            width: 95%;
+        }
+
+        .status-box {
+            padding: 20px 15px;
+            min-height: 140px;
+        }
+    }
+
+    /* Desktop */
+    @@media (min-width: 768px) {
+        .doi-khang-wrapper {
+            padding-top: 100px;
+        }
+
+        .btn {
+            width: auto;
+            min-width: 300px;
+        }
+
+        .join-room input {
+            width: auto;
+        }
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let ws;
+    let currentMatchCode = null;
+    let isSearching = false;
+
+    function getToken() {
+        return '@Html.Raw(Session["JWT_TOKEN"])';
+    }
+
+    function connectWebSocket() {
+        const token = getToken();
+        if (!token) {
+            $('#statusText').text('❌ Chưa đăng nhập');
+            return;
+        }
+
+        ws = new WebSocket('wss://localhost:7092/ws/game?access_token=' + encodeURIComponent(token));
+
+        ws.onopen = function () {
+            $('#statusText').text('✅ Đã kết nối');
+            updateOnlineCount();
+        };
+
+        ws.onmessage = function (event) {
+            handleServerMessage(JSON.parse(event.data));
+        };
+
+        ws.onerror = function() {
+            $('#statusText').text('❌ Lỗi kết nối');
+        };
+
+        ws.onclose = function() {
+            $('#statusText').text('🔌 Mất kết nối');
+        };
+    }
+
+    function handleServerMessage(data) {
+        switch (data.Type) {
+
+            case 'WAITING_FOR_MATCH':
+                $('#statusText').text('⏳ Đang tìm đối thủ...');
+                $('#btnTimTran').hide();
+                $('#btnHuyTimTran').show();
+                break;
+
+            case 'QUEUE_CANCELLED':
+                $('#statusText').text('✅ Đã hủy tìm trận');
+                $('#btnTimTran').show();
+                $('#btnHuyTimTran').hide();
+                break;
+
+            case 'ROOM_CREATED':
+                $('#roomCodeDisplay').text('✅ Mã phòng: ' + data.Data.roomCode);
+                $('#statusText').text('⏳ Đang chờ người chơi khác...');
+                break;
+
+            case 'MATCH_FOUND':
+                currentMatchCode = data.Data.matchCode;
+                $('#statusText').text('🎮 Đã tìm thấy đối thủ!');
+                setTimeout(() => {
+                    window.location.href = '/Quiz/DoiKhang/Match?code=' + currentMatchCode;
+                }, 1500);
+                break;
+
+            case 'ERROR':
+                $('#statusText').text('❌ ' + data.Data.message);
+                setTimeout(() => {
+                    $('#statusText').text('✅ Đã kết nối');
+                }, 3000);
+                break;
+        }
+    }
+
+    function updateOnlineCount() {
+        $.get('https://localhost:7092/api/trandau/online-count', function (res) {
+            $('#onlineCount').text(res.onlineUsers || 0);
+        }).fail(function() {
+            $('#onlineCount').text('?');
         });
+    }
 
-        connection.on("MatchFound", (data) => {
-            console.log("MATCH FOUND!", data);
+    $('#btnTimTran').click(function () {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ Type: 'FIND_MATCH' }));
+            $('#statusText').text('⏳ Đang tìm đối thủ...');
+        } else {
+            $('#statusText').text('❌ Chưa kết nối WebSocket');
+        }
+    });
 
-            $('#statusArea')
-                .removeClass('alert-info')
-                .addClass('alert-success')
-                .text("Đã tìm thấy trận! Đang chuyển hướng...");
+    $('#btnHuyTimTran').click(function () {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ Type: 'CANCEL_QUEUE' }));
+        }
+        $('#btnTimTran').show();
+        $('#btnHuyTimTran').hide();
+        $('#statusText').text('✅ Đã kết nối');
+    });
 
-            window.location.href = `/DoiKhang/Match?code=${data.matchCode}`;
-        });
+    $('#btnCreateRoom').click(function () {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ Type: 'CREATE_ROOM' }));
+        } else {
+            $('#statusText').text('❌ Chưa kết nối WebSocket');
+        }
+    });
 
-        connection.on("RoomCreated", (data) => {
-            $('#statusArea').show().text(`Phòng đã tạo! Mã: ${data.matchCode}`);
-        });
+    $('#btnJoinRoom').click(function () {
+        const code = $('#roomCodeInput').val().trim().toUpperCase();
+        if (!code) {
+            alert('⚠️ Vui lòng nhập mã phòng!');
+            return;
+        }
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ Type: 'JOIN_ROOM_CODE', Data: { roomCode: code } }));
+            $('#statusText').text('⏳ Đang vào phòng...');
+        } else {
+            $('#statusText').text('❌ Chưa kết nối WebSocket');
+        }
+    });
 
-        connection.on("JoinFailed", (message) => {
-            alert("Lỗi: " + message);
-        });
+    $(document).ready(function () {
+        connectWebSocket();
+        setInterval(updateOnlineCount, 10000);
+    });
 
-        $('#btnFindMatch').click(async () => {
-            $('#statusArea').show().text("Đang tìm đối thủ...");
-            await connection.invoke("JoinQueue");
-        });
-
-        $('#btnCreateRoom').click(async () => {
-            await connection.invoke("CreateRoom");
-        });
-
-        $('#btnJoinRoom').click(async () => {
-            const code = $('#txtRoomCode').val();
-            if (!code) return alert("Vui lòng nhập mã phòng");
-            await connection.invoke("JoinRoom", code);
-        });
-    </script>
-}
+    $(window).on('beforeunload', function() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.close();
+        }
+    });
+</script>

@@ -98,22 +98,34 @@ public class QLQuizTuyChinhController : ControllerBase
 
     // =================================================
     // 3️⃣ DUYỆT QUIZ
-    // =================================================
     [HttpPost("{id:int}/phe-duyet")]
     public async Task<IActionResult> Approve(int id)
     {
+        // Phải đảm bảo Repository lấy kèm (Include) danh sách CauHois
         var quiz = await _unitOfWork.Quiz.GetQuizTuyChinhByIdAsync(id);
-        if (quiz == null)
-            return NotFound(new { message = "Không tìm thấy Quiz." });
+        if (quiz == null) return NotFound(new { message = "Không tìm thấy Quiz." });
 
+        int adminId = GetCurrentAdminId();
+
+        // 1. Duyệt Bộ đề
         quiz.TrangThai = "Approved";
-        quiz.AdminDuyetID = GetCurrentAdminId();
+        quiz.AdminDuyetID = adminId;
         quiz.NgayDuyet = DateTime.UtcNow;
+
+        // 2. Duyệt TẤT CẢ câu hỏi bên trong do người chơi này tạo
+        if (quiz.CauHois != null)
+        {
+            foreach (var cauHoi in quiz.CauHois)
+            {
+                cauHoi.TrangThaiDuyet = "Approved";
+                cauHoi.AdminDuyetID = adminId;
+            }
+        }
 
         _unitOfWork.Quiz.UpdateQuizTuyChinh(quiz);
         await _unitOfWork.CompleteAsync();
 
-        return Ok(new { message = "Đã duyệt Quiz thành công." });
+        return Ok(new { message = "Đã duyệt bộ đề và toàn bộ câu hỏi bên trong." });
     }
 
     // =================================================

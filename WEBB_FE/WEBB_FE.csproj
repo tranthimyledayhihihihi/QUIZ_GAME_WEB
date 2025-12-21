@@ -374,13 +374,17 @@
     <Content Include="Views\Quiz\DoiKhang\Index.cshtml" />
     <Content Include="Views\Quiz\Arena\Create.cshtml" />
     <Content Include="Views\Quiz\Arena\Join.cshtml" />
+    <Content Include="Views\DoiKhang\Match.cshtml" />
+    <Content Include="Views\DoiKhang\Index.cshtml" />
     <Content Include="Views\Quiz\DoiKhang\Match.cshtml" />
+    <Content Include="Views\Quiz\DoiKhang\Create.cshtml" />
+    <Content Include="Views\Quiz\DoiKhang\Join.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Scripts\lib\" />
     <Folder Include="Views\Arena\" />
     <Folder Include="Views\SettingsControllers\" />
-    <Folder Include="Scripts\lib\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

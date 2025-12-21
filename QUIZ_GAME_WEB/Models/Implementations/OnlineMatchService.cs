@@ -27,6 +27,9 @@ public class OnlineMatchService : IOnlineMatchService
         _quiz = quiz;
     }
 
+    // =====================================================
+    // UTIL
+    // =====================================================
     private string GenerateMatchCode()
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -35,10 +38,13 @@ public class OnlineMatchService : IOnlineMatchService
             .Select(s => s[rnd.Next(s.Length)]).ToArray());
     }
 
-    // ✔ Tạo trận theo MatchCode (Private hoặc Random)
+    // =====================================================
+    // CREATE MATCH
+    // =====================================================
     public async Task<string> CreateMatchAsync(int player1Id, int? player2Id = null)
     {
         string code = GenerateMatchCode();
+
         var match = new TranDauTrucTiep
         {
             MatchCode = code,
@@ -47,10 +53,13 @@ public class OnlineMatchService : IOnlineMatchService
             TrangThai = player2Id == null ? "ChoNguoiChoi" : "DangChoi",
             ThoiGianBatDau = DateTime.Now
         };
+
         _unit.TranDau.Add(match);
-        await _unit.CompleteAsync(); // Lưu trận trước để có ID
-                                     // === PHẦN THÊM MỚI: TẠO VÀ LƯU CÂU HỎI ===
-        var randomQuestions = await _quiz.GetRandomQuestionsAsync(DEFAULT_QUESTION_COUNT, null, null);
+        await _unit.CompleteAsync();
+
+        // tạo danh sách câu hỏi cố định cho trận
+        var randomQuestions =
+            await _quiz.GetRandomQuestionsAsync(DEFAULT_QUESTION_COUNT, null, null);
 
         var matchQuestions = randomQuestions.Select((q, index) => new TranDauCauHoi
         {
@@ -58,12 +67,16 @@ public class OnlineMatchService : IOnlineMatchService
             CauHoiID = q.CauHoiID,
             ThuTu = index + 1
         }).ToList();
+
         _unit.TranDau.AddMatchQuestions(matchQuestions);
         await _unit.CompleteAsync();
-        // ==========================================
+
         return code;
     }
 
+    // =====================================================
+    // GET MATCH
+    // =====================================================
     public Task<TranDauTrucTiep?> GetMatchByCodeAsync(string matchCode)
     {
         return _unit.TranDau.GetQueryable()
@@ -71,12 +84,26 @@ public class OnlineMatchService : IOnlineMatchService
             .FirstOrDefaultAsync();
     }
 
+    // =====================================================
+    // UPDATE MATCH (🔥 THÊM – FIX CONTROLLER)
+    // =====================================================
+    public async Task UpdateMatchAsync(TranDauTrucTiep match)
+    {
+        _unit.TranDau.Update(match);
+        await _unit.CompleteAsync();
+    }
+
+    // =====================================================
+    // GET QUESTIONS
+    // =====================================================
     public async Task<IEnumerable<CauHoiDisplayModel>> GetQuestionsByMatchCodeAsync(string matchCode)
     {
         var match = await GetMatchByCodeAsync(matchCode);
         if (match == null) return Enumerable.Empty<CauHoiDisplayModel>();
-        // SỬA: Lấy từ DB thay vì get random
-        var questions = await _unit.TranDau.GetMatchQuestionsWithDetailsAsync(match.TranDauID);
+
+        var questions =
+            await _unit.TranDau.GetMatchQuestionsWithDetailsAsync(match.TranDauID);
+
         return questions.Select((q, i) => new CauHoiDisplayModel
         {
             CauHoiID = q.CauHoiID,
@@ -93,96 +120,115 @@ public class OnlineMatchService : IOnlineMatchService
         });
     }
 
-    public async Task<bool> SubmitAnswerByMatchCodeAsync(string matchCode, int userId, MatchAnswerModel answer)
+    // =====================================================
+    // SUBMIT ANSWER
+    // =====================================================
+    // =====================================================
+    // SUBMIT ANSWER
+    // =====================================================
+    public async Task<bool> SubmitAnswerByMatchCodeAsync(
+        string matchCode,
+        int userId,
+        MatchAnswerModel answer)
     {
         var match = await GetMatchByCodeAsync(matchCode);
         if (match == null) return false;
         if (match.Player1ID != userId && match.Player2ID != userId) return false;
-        // 1. Kiểm tra Đúng/Sai
+
         var correct = await _quiz.GetCorrectAnswerAsync(answer.CauHoiID);
-        bool isCorrect = correct != null && correct.Equals(answer.DapAnDaChon, StringComparison.OrdinalIgnoreCase);
+        bool isCorrect =
+            correct != null &&
+            correct.Equals(answer.DapAnDaChon, StringComparison.OrdinalIgnoreCase);
+
+        // ✅ SỬA: Chỉ cộng điểm khi đúng, không cộng khi sai
         int reward = 0;
         if (isCorrect)
         {
-            double ratio = (MAX_TIME - answer.ThoiGianTraLoi) / MAX_TIME;
-            reward = BASE_POINTS + (int)(BONUS_MAX * ratio);
+            reward = BASE_POINTS; // ✅ 100 điểm cố định cho mỗi câu đúng
         }
-        // 2. Cộng điểm
-        if (userId == match.Player1ID) match.DiemPlayer1 += reward;
-        else match.DiemPlayer2 += reward;
+
+        // ✅ Cộng điểm vào người chơi
+        if (userId == match.Player1ID)
+            match.DiemPlayer1 += reward;
+        else
+            match.DiemPlayer2 += reward;
+
         match.TrangThai = "DangChoi";
         _unit.TranDau.Update(match);
-        // === PHẦN QUAN TRỌNG MỚI THÊM: LƯU LOG CÂU TRẢ LỜI ===
+
         var answerLog = new TraLoiTrucTiep
         {
             TranDauID = match.TranDauID,
             CauHoiID = answer.CauHoiID,
             UserID = userId,
-
-            // SỬA TÊN BIẾN Ở ĐÂY:
-            DapAnNguoiChoi = answer.DapAnDaChon, // Sửa từ DapAnChon
-            DungHaySai = isCorrect,              // Sửa từ IsCorrect
-
-            // SỬA KIỂU DỮ LIỆU:
-            ThoiGianTraLoi = DateTime.Now,       // Lưu thời điểm hiện tại
-            ThoiGianGiaiQuyet = answer.ThoiGianTraLoi, // Lưu số giây user trả lời
-
+            DapAnNguoiChoi = answer.DapAnDaChon,
+            DungHaySai = isCorrect,
+            ThoiGianTraLoi = DateTime.Now,
+            ThoiGianGiaiQuyet = answer.ThoiGianTraLoi,
             DiemNhanDuoc = reward
         };
-        await _unit.TranDau.AddPlayerAnswerAsync(answerLog);
-        // ======================================================
-        await _unit.CompleteAsync();
-        return true;
-    }
 
+        await _unit.TranDau.AddPlayerAnswerAsync(answerLog);
+        await _unit.CompleteAsync();
+
+        return isCorrect; // ✅ Trả về true nếu đúng, false nếu sai
+    }
+    // =====================================================
+    // END MATCH
+    // =====================================================
     public async Task<MatchResultModel> EndMatchByCodeAsync(string matchCode)
     {
         var match = await GetMatchByCodeAsync(matchCode);
         if (match == null) throw new Exception("Không tìm thấy trận.");
-        // 1. Lấy danh sách câu hỏi để biết tổng số câu
+
+        // 1. Lấy danh sách câu hỏi và câu trả lời thực tế trong DB
         var questions = await _unit.TranDau.GetMatchQuestionsWithDetailsAsync(match.TranDauID);
-        int totalQuestions = questions.Count();
-        // 2. Lấy tổng số câu trả lời hiện có trong DB
         var answers = await _unit.TranDau.GetMatchAnswersAsync(match.TranDauID);
-        int totalAnswers = answers.Count();
-        // 3. KIỂM TRA: Nếu chưa đủ 2 người trả lời hết (Tổng câu trả lời < Tổng câu hỏi * 2)
-        // Lưu ý: Logic này giả định cả 2 người phải trả lời hết. 
-        // Nếu game cho phép bỏ qua câu hỏi thì logic này cần điều chỉnh đếm số câu đã nộp của từng user.
-        if (totalAnswers < totalQuestions * 2)
+
+        int totalQuestions = questions.Count();
+        int totalAnswersNeeded = totalQuestions * 2; // Mỗi người phải trả lời hết số câu hỏi
+
+        // 2. KIỂM TRA: Nếu chưa đủ số câu trả lời từ cả 2 phía
+        if (answers.Count() < totalAnswersNeeded)
         {
-            // Trả về kết quả tạm thời là "Wait"
             return new MatchResultModel
             {
                 MatchCode = matchCode,
-                KetQua = "Wait", // Ký hiệu chờ
+                KetQua = "Wait", // Ký hiệu chưa xong để Server không gửi GAME_END
                 WinnerHoTen = "Đang chờ đối thủ...",
                 DiemPlayer1 = match.DiemPlayer1,
                 DiemPlayer2 = match.DiemPlayer2
             };
         }
-        // 4. NẾU ĐÃ ĐỦ => TÍNH TOÁN KẾT QUẢ CUỐI CÙNG (Code cũ)
+
+        // 3. NẾU ĐÃ ĐỦ => TÍNH TOÁN KẾT QUẢ CUỐI CÙNG
         string result = "Hoa";
-        int? winner = null;
+        int? winnerId = null;
+
         if (match.DiemPlayer1 > match.DiemPlayer2)
         {
-            winner = match.Player1ID;
+            winnerId = match.Player1ID;
             result = "Thang";
         }
         else if (match.DiemPlayer2 > match.DiemPlayer1)
         {
-            winner = match.Player2ID;
+            winnerId = match.Player2ID;
             result = "Thang";
         }
+
+        // Cập nhật trạng thái trận đấu
         match.TrangThai = "HoanThanh";
         _unit.TranDau.Update(match);
         await _unit.CompleteAsync();
-        // Lấy tên người thắng
+
+        // Lấy tên người thắng để hiển thị
         string winnerName = "Hòa";
-        if (winner.HasValue)
+        if (winnerId.HasValue)
         {
-            var user = await _unit.Users.GetByIdAsync(winner.Value);
-            winnerName = user?.HoTen ?? "Unknown";
+            var user = await _unit.Users.GetByIdAsync(winnerId.Value);
+            winnerName = user?.HoTen ?? "Người chơi";
         }
+
         return new MatchResultModel
         {
             MatchCode = matchCode,
@@ -191,5 +237,137 @@ public class OnlineMatchService : IOnlineMatchService
             DiemPlayer1 = match.DiemPlayer1,
             DiemPlayer2 = match.DiemPlayer2
         };
+    }
+    // =====================================================
+    public async Task<string> CreateMatchWithBothPlayersAsync(int player1Id, int player2Id)
+    {
+        try
+        {
+            Console.WriteLine($"[SERVICE] 📝 Creating match for Player {player1Id} vs Player {player2Id}");
+
+            string code = GenerateMatchCode();
+
+            var match = new TranDauTrucTiep
+            {
+                MatchCode = code,
+                Player1ID = player1Id,
+                Player2ID = player2Id,
+                TrangThai = "DangChoi",
+                ThoiGianBatDau = DateTime.Now,
+                DiemPlayer1 = 0,
+                DiemPlayer2 = 0
+            };
+
+            _unit.TranDau.Add(match);
+            await _unit.CompleteAsync();
+
+            Console.WriteLine($"[SERVICE] ✅ Match {code} added to DB");
+
+            // ✅ Verify match đã được tạo
+            var createdMatch = await _unit.TranDau.GetQueryable()
+                .FirstOrDefaultAsync(m => m.MatchCode == code);
+
+            if (createdMatch == null)
+            {
+                Console.WriteLine($"[SERVICE] ❌ Match verification failed!");
+                return null;
+            }
+
+            Console.WriteLine($"[SERVICE] ✅ Match verified: TranDauID = {createdMatch.TranDauID}");
+
+            // ✅ Tạo danh sách câu hỏi
+            var randomQuestions = await _quiz.GetRandomQuestionsAsync(DEFAULT_QUESTION_COUNT, null, null);
+
+            var matchQuestions = randomQuestions.Select((q, index) => new TranDauCauHoi
+            {
+                TranDauID = createdMatch.TranDauID,
+                CauHoiID = q.CauHoiID,
+                ThuTu = index + 1
+            }).ToList();
+
+            _unit.TranDau.AddMatchQuestions(matchQuestions);
+            await _unit.CompleteAsync();
+
+            Console.WriteLine($"[SERVICE] ✅ Added {matchQuestions.Count} questions to match {code}");
+
+            return code;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SERVICE] ❌ Error creating match: {ex.Message}");
+            Console.WriteLine($"[SERVICE] ❌ Stack trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    // =====================================================
+    // ✅ THÊM MỚI: DELETE MATCH
+    // =====================================================
+    public async Task DeleteMatchAsync(string matchCode)
+    {
+        try
+        {
+            var match = await _unit.TranDau.GetQueryable()
+                .FirstOrDefaultAsync(m => m.MatchCode == matchCode);
+
+            if (match != null)
+            {
+                Console.WriteLine($"[SERVICE] 🗑️ Deleting match {matchCode}...");
+
+                // Xóa câu hỏi trước
+                var questions = _unit.TranDau.GetQueryable()
+                    .Where(q => q.TranDauID == match.TranDauID);
+
+                // Xóa match
+                _unit.TranDau.Delete(match);
+                await _unit.CompleteAsync();
+
+                Console.WriteLine($"[SERVICE] ✅ Match {matchCode} deleted successfully");
+            }
+            else
+            {
+                Console.WriteLine($"[SERVICE] ⚠️ Match {matchCode} not found for deletion");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SERVICE] ❌ Error deleting match: {ex.Message}");
+        }
+    }
+    // =====================================================
+    // MATCH HISTORY (🔥 THÊM – FIX CONTROLLER)
+    // =====================================================
+    public async Task<IEnumerable<TranDauTrucTiep>> GetMatchHistoryAsync(int userId)
+    {
+        return await _unit.TranDau.GetQueryable()
+            .Where(t => t.Player1ID == userId || t.Player2ID == userId)
+            .OrderByDescending(t => t.ThoiGianBatDau)
+            .ToListAsync();
+    }
+    // =====================================================
+    // ✅ THÊM MỚI: GET MATCH ANSWERS COUNT
+    // =====================================================
+    public async Task<int> GetMatchAnswersCountAsync(string matchCode)
+    {
+        try
+        {
+            var match = await GetMatchByCodeAsync(matchCode);
+            if (match == null)
+            {
+                Console.WriteLine($"[SERVICE] ⚠️ Match {matchCode} not found for answer count");
+                return 0;
+            }
+
+            var answers = await _unit.TranDau.GetMatchAnswersAsync(match.TranDauID);
+            int count = answers.Count();
+
+            Console.WriteLine($"[SERVICE] 📊 Match {matchCode} has {count} answers");
+            return count;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SERVICE] ❌ Error getting answer count: {ex.Message}");
+            return 0;
+        }
     }
 }

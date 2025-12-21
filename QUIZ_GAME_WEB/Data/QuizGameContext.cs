@@ -13,6 +13,10 @@ namespace QUIZ_GAME_WEB.Data
         public QuizGameContext(DbContextOptions<QuizGameContext> options) : base(options) { }
 
         // === 1. DbSet Core Entities ===
+        public async Task<int> CompleteAsync()
+        {
+            return await base.SaveChangesAsync();
+        }
         public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
         public DbSet<Admin> Admins { get; set; } = null!;
         public DbSet<NguoiDung> NguoiDungs { get; set; } = null!;
@@ -294,6 +298,58 @@ namespace QUIZ_GAME_WEB.Data
             // QuizChiaSe
             modelBuilder.Entity<QuizChiaSe>().HasData(
                 new QuizChiaSe { QuizChiaSeID = 1, QuizTuyChinhID = 1, UserGuiID = 2, UserNhanID = 3, NgayChiaSe = DateTime.Now }
+            );
+            // === 10. Seed Data cho Comment ===
+            modelBuilder.Entity<Comment>().HasData(
+                new Comment
+                {
+                    CommentID = 1,
+                    UserID = 1,
+                    Content = "Chào mừng mọi người đến với hệ thống Quiz Game!",
+                    NgayTao = DateTime.Now,
+                    EntityType = "System",
+                    RelatedEntityID = 0
+                },
+                new Comment
+                {
+                    CommentID = 2,
+                    UserID = 2,
+                    Content = "Câu hỏi lịch sử này rất thú vị.",
+                    NgayTao = DateTime.Now,
+                    EntityType = "CauHoi",
+                    RelatedEntityID = 1
+                },
+                new Comment
+                {
+                    CommentID = 3,
+                    UserID = 3,
+                    Content = "Mình vừa hoàn thành bộ đề tùy chỉnh của bạn!",
+                    NgayTao = DateTime.Now,
+                    EntityType = "QuizTuyChinh",
+                    RelatedEntityID = 1
+                }
+            );
+
+            // === 11. Seed Data cho ThongKeNguoiDung ===
+            modelBuilder.Entity<ThongKeNguoiDung>().HasData(
+                new ThongKeNguoiDung
+                {
+                    ThongKeID = 1,
+                    UserID = 2,
+                    Ngay = DateTime.Now.Date,
+                    SoTran = 5,
+                    SoCauDung = 40,
+                    DiemTrungBinh = 8.0
+                },
+                new ThongKeNguoiDung
+                {
+                    ThongKeID = 2,
+                    UserID = 3,
+                    Ngay = DateTime.Now.Date,
+                    SoTran = 3,
+                    SoCauDung = 21,
+                    DiemTrungBinh = 7.0
+                }
             );
         }
     }

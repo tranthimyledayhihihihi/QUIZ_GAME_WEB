@@ -1,0 +1,165 @@
+﻿@{
+    ViewBag.Title = "Join Phòng Đối Kháng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var roomCode = ViewBag.RoomCode as string;
+}
+
+<div class="doi-khang-container">
+    <div class="header">
+        <h1>🔑 Join Phòng Đối Kháng</h1>
+    </div>
+
+    <div class="status-box">
+        <div class="hourglass-icon">⏳</div>
+        <h2 id="statusText">Đang kết nối...</h2>
+        <p id="roomInfo"></p>
+    </div>
+
+    <div class="room-code-display">
+        Mã phòng:
+        <span class="code">@roomCode</span>
+    </div>
+</div>
+
+<style>
+    .doi-khang-container {
+        max-width: 600px;
+        margin: 50px auto;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header h1 {
+        color: #2c3e50;
+        margin-bottom: 30px;
+        font-size: 34px;
+    }
+
+    .status-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        min-height: 180px;
+    }
+
+    .hourglass-icon {
+        font-size: 60px;
+        animation: rotate 2s infinite linear;
+    }
+
+    @@keyframes rotate {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .room-code-display {
+        font-size: 20px;
+        font-weight: bold;
+        color: #27ae60;
+        margin-top: 10px;
+    }
+
+        .room-code-display .code {
+            background: #ecf0f1;
+            padding: 6px 12px;
+            border-radius: 8px;
+            margin-left: 6px;
+            letter-spacing: 2px;
+        }
+
+    .error {
+        color: #e74c3c;
+    }
+
+    .connected {
+        color: #2ecc71;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let ws;
+    let matchCode = null;
+
+    function getToken() {
+        return '@Session["JWT_TOKEN"]';
+    }
+
+    function connectWebSocket() {
+        const token = getToken();
+
+        if (!token) {
+            $('#statusText').text('❌ Chưa đăng nhập').addClass('error');
+            return;
+        }
+
+        ws = new WebSocket(
+            'wss://localhost:7092/ws/game?access_token=' + encodeURIComponent(token)
+        );
+
+        ws.onopen = function () {
+            $('#statusText').text('🔑 Đang join phòng...').removeClass('error');
+            joinRoom();
+        };
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            handleServerMessage(data);
+        };
+
+        ws.onerror = function () {
+            $('#statusText').text('❌ Lỗi kết nối').addClass('error');
+        };
+    }
+
+    function joinRoom() {
+        const roomCode = '@roomCode';
+
+        if (!roomCode) {
+            $('#statusText').text('❌ Thiếu mã phòng').addClass('error');
+            return;
+        }
+
+        ws.send(JSON.stringify({
+            Type: 'JOIN_ROOM_CODE',
+            Data: { roomCode: roomCode }
+        }));
+
+        $('#roomInfo').text('Đang gửi yêu cầu join phòng...');
+    }
+
+    function handleServerMessage(data) {
+        switch (data.Type) {
+
+            case 'MATCH_FOUND':
+                $('#statusText')
+                    .text('🎮 Đã join phòng thành công!')
+                    .addClass('connected');
+
+                matchCode = data.Data.matchCode;
+
+                setTimeout(() => {
+                    window.location.href =
+                        '/Quiz/DoiKhang/Match?code=' + matchCode;
+                }, 1500);
+                break;
+
+            case 'ERROR':
+                $('#statusText')
+                    .text('❌ ' + (data.Data.message || 'Có lỗi xảy ra'))
+                    .addClass('error');
+                break;
+        }
+    }
+
+    $(document).ready(function () {
+        connectWebSocket();
+    });
+</script>

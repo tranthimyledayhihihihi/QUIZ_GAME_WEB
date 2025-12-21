@@ -1,18 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Newtonsoft.Json.Linq;
 using QUIZ_GAME_WEB.Data;
 using QUIZ_GAME_WEB.Models.Implementations;
 using QUIZ_GAME_WEB.Models.Interfaces;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.OpenApi.Models;
-using QUIZ_GAME_WEB.Hubs;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ===============================================
-// 1. CONTROLLERS + JSON CONFIG (CHỈ DÙNG 1 LẦN)
+// 1. CONTROLLERS + JSON
 // ===============================================
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -29,18 +30,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(MyAllowSpecificOrigins, policy =>
     {
-        var origins = new List<string>
-        {
-            "http://localhost:3000",
-            "http://localhost:4200",
-            "https://localhost:44353" // ADDED: Frontend URL
-        };
-
-        var clientBaseUrl = builder.Configuration["Client:BaseUrl"];
-        if (!string.IsNullOrEmpty(clientBaseUrl))
-            origins.Add(clientBaseUrl);
-
-        policy.WithOrigins(origins.ToArray())
+        policy.WithOrigins("https://localhost:44353")
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
@@ -54,7 +44,7 @@ builder.Services.AddDbContext<QuizGameContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // ===============================================
-// 4. JWT AUTHENTICATION
+// 4. JWT - ✅ ĐÃ SỬA
 // ===============================================
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -70,42 +60,47 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         };
+
+        // ✅ HỖ TRỢ JWT QUA QUERY STRING CHO WEBSOCKET
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
             {
                 var accessToken = context.Request.Query["access_token"];
                 var path = context.HttpContext.Request.Path;
-                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/matchmakinghub"))
+
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/ws"))
                 {
                     context.Token = accessToken;
+                    Console.WriteLine($"[JWT] Token received from query string for path: {path}");
                 }
+
                 return Task.CompletedTask;
             }
         };
     });
 
 // ===============================================
-// 5. SIGNALR
-// ===============================================
-builder.Services.AddSignalR();
-
-// ===============================================
-// 6. SWAGGER
+// 5. SWAGGER
 // ===============================================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "QUIZ_GAME_WEB API", Version = "v1" });
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "QUIZ_GAME_WEB API",
+        Version = "v1"
+    });
+
     options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         Scheme = "Bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Nhập 'Bearer {token}'"
+        In = ParameterLocation.Header
     });
+
     options.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -117,13 +112,13 @@ builder.Services.AddSwaggerGen(options =>
                     Id = "Bearer"
                 }
             },
-            new string[] { }
+            Array.Empty<string>()
         }
     });
 });
 
 // ===============================================
-// 7. DEPENDENCY INJECTION
+// 6. DI
 // ===============================================
 builder.Services.AddScoped<IQuizRepository, QuizRepository>();
 builder.Services.AddScoped<IResultRepository, ResultRepository>();
@@ -137,30 +132,21 @@ builder.Services.AddScoped<IQuizAttemptService, QuizAttemptService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IRewardService, RewardService>();
 
-builder.Services.AddSingleton<IMatchmakingQueueService, MatchmakingQueueService>();
+builder.Services.AddSingleton<ISocketGameServer, SocketGameServer>();
 
 var app = builder.Build();
 
 // ===============================================
-// 8. AUTO MIGRATION
+// 7. MIGRATION
 // ===============================================
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<QuizGameContext>();
-        context.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Lỗi khi migrate database.");
-    }
+    var context = scope.ServiceProvider.GetRequiredService<QuizGameContext>();
+    context.Database.Migrate();
 }
 
 // ===============================================
-// 9. PIPELINE
+// 8. PIPELINE - ✅ ĐÃ SỬA
 // ===============================================
 if (app.Environment.IsDevelopment())
 {
@@ -169,14 +155,40 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseRouting();
 app.UseCors(MyAllowSpecificOrigins);
 
+// ✅ QUAN TRỌNG: UseAuthentication PHẢI ĐẶT TRƯỚC UseWebSockets
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<MatchmakingHub>("/matchmakinghub");
+app.UseWebSockets();
 app.MapControllers();
 
+// ===============================================
+// 9. MAP WEBSOCKET - ✅ ĐÃ SỬA
+// ===============================================
+app.Map("/ws/game", async (HttpContext context) =>
+{
+    var server = context.RequestServices.GetRequiredService<ISocketGameServer>();
+
+    if (context.WebSockets.IsWebSocketRequest)
+    {
+        if (context.User.Identity?.IsAuthenticated == true)
+        {
+            await server.Handle(context);
+        }
+        else
+        {
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsync("Unauthorized");
+        }
+    }
+    else
+    {
+        context.Response.StatusCode = 400;
+    }
+});
+
+app.MapControllers();
 app.Run();

@@ -1,0 +1,200 @@
+﻿@{
+    ViewBag.Title = "Tạo Phòng Đối Kháng";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="doi-khang-container">
+    <div class="header">
+        <h1>🏠 Tạo Phòng Đối Kháng</h1>
+    </div>
+
+    <div class="status-box">
+        <div class="hourglass-icon">⏳</div>
+        <h2 id="statusText">Đang kết nối...</h2>
+        <p id="roomStatus"></p>
+    </div>
+
+    <div class="room-info">
+        <div class="label">Mã phòng của bạn</div>
+        <div id="roomCode" class="room-code">---</div>
+
+        <button id="btnCopyLink" class="btn btn-success btn-lg" disabled>
+            🔗 Copy link mời
+        </button>
+    </div>
+</div>
+
+<style>
+    .doi-khang-container {
+        max-width: 600px;
+        margin: 50px auto;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header h1 {
+        color: #2c3e50;
+        margin-bottom: 30px;
+        font-size: 34px;
+    }
+
+    .status-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        min-height: 180px;
+    }
+
+    .hourglass-icon {
+        font-size: 60px;
+        animation: rotate 2s infinite linear;
+    }
+
+    @@keyframes rotate {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .room-info {
+        margin-top: 20px;
+        background: #f4f6f8;
+        padding: 20px;
+        border-radius: 12px;
+    }
+
+        .room-info .label {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+    .room-code {
+        font-size: 28px;
+        font-weight: bold;
+        letter-spacing: 3px;
+        color: #27ae60;
+        margin-bottom: 15px;
+    }
+
+    .btn {
+        padding: 14px 30px;
+        font-size: 18px;
+        border-radius: 10px;
+        font-weight: bold;
+    }
+
+    .btn-success {
+        background: #27ae60;
+        color: #fff;
+    }
+
+        .btn-success:disabled {
+            opacity: 0.6;
+        }
+
+    .error {
+        color: #e74c3c;
+    }
+
+    .connected {
+        color: #2ecc71;
+    }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let ws;
+    let roomCode = null;
+
+    function getToken() {
+        return '@Session["JWT_TOKEN"]';
+    }
+
+    function connectWebSocket() {
+        const token = getToken();
+
+        if (!token) {
+            $('#statusText').text('❌ Chưa đăng nhập').addClass('error');
+            return;
+        }
+
+        ws = new WebSocket(
+            'wss://localhost:7092/ws/game?access_token=' + encodeURIComponent(token)
+        );
+
+        ws.onopen = function () {
+            $('#statusText').text('🏠 Đang tạo phòng...').removeClass('error');
+            createRoom();
+        };
+
+        ws.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            handleServerMessage(data);
+        };
+
+        ws.onerror = function () {
+            $('#statusText').text('❌ Lỗi kết nối').addClass('error');
+        };
+    }
+
+    function createRoom() {
+        ws.send(JSON.stringify({
+            Type: 'CREATE_ROOM'
+        }));
+
+        $('#roomStatus').text('Đang tạo phòng, vui lòng chờ...');
+    }
+
+    function handleServerMessage(data) {
+        switch (data.Type) {
+
+            case 'ROOM_CREATED':
+                roomCode = data.Data.roomCode;
+
+                $('#roomCode').text(roomCode);
+                $('#statusText')
+                    .text('⏳ Đang chờ người chơi khác...')
+                    .addClass('connected');
+
+                $('#btnCopyLink').prop('disabled', false);
+                break;
+
+            case 'MATCH_FOUND':
+                $('#statusText').text('🎮 Có người đã join!');
+
+                setTimeout(() => {
+                    window.location.href =
+                        '/Quiz/DoiKhang/Match?code=' + data.Data.matchCode;
+                }, 1500);
+                break;
+
+            case 'ERROR':
+                $('#statusText')
+                    .text('❌ ' + (data.Data.message || 'Có lỗi xảy ra'))
+                    .addClass('error');
+                break;
+        }
+    }
+
+    $('#btnCopyLink').click(function () {
+        if (!roomCode) return;
+
+        const link =
+            window.location.origin +
+            '/Quiz/DoiKhang/Join?code=' + roomCode;
+
+        navigator.clipboard.writeText(link);
+        alert('Đã copy link mời!');
+    });
+
+    $(document).ready(function () {
+        connectWebSocket();
+    });
+</script>
