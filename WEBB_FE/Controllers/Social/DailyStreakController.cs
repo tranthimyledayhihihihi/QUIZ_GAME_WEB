@@ -1,179 +1,106 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using WEBB.Models.ViewModels;
 
-namespace WEBB.Controllers
+public class DailyStreakController : Controller
 {
-    public class DailyStreakController : Controller
+    private readonly string API_BASE = "https://localhost:7092/api/user/achievement";
+
+    // =========================
+    // GET: /DailyStreak
+    // =========================
+    public async Task<ActionResult> Index()
     {
-        private const string STREAK_SESSION_KEY = "DailyStreak_Data";
+        var model = new DailyStreakViewModel();
 
-        // ===============================
-        // VIEW CHÍNH
-        // ===============================
-        public ActionResult Index()
+        // 1️⃣ Check login
+        if (!User.Identity.IsAuthenticated)
         {
-            var userId = GetUserId();
-            var model = GetDailyStreak(userId);
-
-            model.IsLoggedIn = User.Identity.IsAuthenticated;
-            model.UserName = model.IsLoggedIn ? User.Identity.Name : "Khách";
-
+            model.IsLoggedIn = false;
+            model.Message = "Vui lòng đăng nhập";
             return View(model);
         }
 
-        // ===============================
-        // NHẬN THƯỞNG (AJAX)
-        // ===============================
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult NhanThuong()
-        {
-            var userId = GetUserId();
-            var model = ClaimReward(userId);
+        model.IsLoggedIn = true;
+        model.UserName = User.Identity.Name;
 
-            return Json(new
-            {
-                success = true,
-                message = model.Message,
-                soNgayLienTiep = model.SoNgayLienTiep,
-                diemThuong = model.DiemThuong,
-                tongDiem = model.TongDiemDaNhan,
-                daNhanThuongHomNay = model.DaNhanThuongHomNay,
-                coTheNhanThuong = model.CoTheNhanThuong
-            });
+        var token = Session["JWT_TOKEN"]?.ToString();
+        if (string.IsNullOrEmpty(token))
+        {
+            model.Message = "Phiên đăng nhập không hợp lệ";
+            return View(model);
         }
 
-        // ===============================
-        // STATUS (OPTIONAL)
-        // ===============================
-        [HttpGet]
-        public ActionResult GetStreakStatus()
+        // 2️⃣ Gọi API lấy streak
+        using (var client = new HttpClient())
         {
-            var model = GetDailyStreak(GetUserId());
-            return Json(model, JsonRequestBehavior.AllowGet);
-        }
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
 
-        // ===============================
-        // CORE LOGIC
-        // ===============================
-        private DailyStreakViewModel GetDailyStreak(string userId)
-        {
-            var streak = Session[$"{STREAK_SESSION_KEY}_{userId}"] as DailyStreakViewModel;
+            var res = await client.GetAsync($"{API_BASE}/streak");
 
-            if (streak == null)
+            if (!res.IsSuccessStatusCode)
             {
-                streak = new DailyStreakViewModel
-                {
-                    SoNgayLienTiep = 1,
-                    NgayCapNhatCuoi = DateTime.Today,
-                    CoTheNhanThuong = true
-                };
-
-                SaveToSession(userId, streak);
-            }
-            else
-            {
-                ProcessStreakLogic(userId, streak);
+                model.Message = "Không thể tải chuỗi ngày";
+                return View(model);
             }
 
-            return streak;
-        }
+            var json = await res.Content.ReadAsStringAsync();
+            dynamic data = JsonConvert.DeserializeObject(json);
 
-        private DailyStreakViewModel ClaimReward(string userId)
-        {
-            var streak = GetDailyStreak(userId);
+            model.SoNgayLienTiep = (int)data.soNgayLienTiep;
 
-            if (streak.DaNhanThuongHomNay)
+            // ✅ PHẢI GÁN NGÀY TRƯỚC
+            model.NgayCapNhatCuoi = data.ngayCapNhatCuoi != null
+                ? (DateTime)data.ngayCapNhatCuoi
+                : (DateTime?)null;
+
+            // ✅ BUILD TIMELINE 7 NGÀY TỪ DB
+            model.LichSu7Ngay = new List<DateTime>();
+
+            if (model.NgayCapNhatCuoi.HasValue && model.SoNgayLienTiep > 0)
             {
-                streak.Message = "Bạn đã nhận thưởng hôm nay rồi!";
-                return streak;
-            }
-
-            streak.DaNhanThuongHomNay = true;
-            streak.CoTheNhanThuong = false;
-            streak.NgayCapNhatCuoi = DateTime.Today;
-            streak.TongDiemDaNhan += streak.DiemThuong;
-
-            if (!streak.LichSu7Ngay.Any(d => d.Date == DateTime.Today))
-            {
-                streak.LichSu7Ngay.Add(DateTime.Today);
-                streak.LichSu7Ngay = streak.LichSu7Ngay
-                    .OrderByDescending(d => d)
-                    .Take(7)
-                    .ToList();
-            }
-
-            streak.Message = $"🎉 Bạn nhận được {streak.DiemThuong} điểm thưởng!";
-
-            SaveToSession(userId, streak);
-            return streak;
-        }
-
-        private void ProcessStreakLogic(string userId, DailyStreakViewModel streak)
-        {
-            var today = DateTime.Today;
-
-            if (streak.NgayCapNhatCuoi.HasValue)
-            {
-                int diff = (today - streak.NgayCapNhatCuoi.Value.Date).Days;
-
-                if (diff == 1)
+                for (int i = 0; i < model.SoNgayLienTiep; i++)
                 {
-                    streak.SoNgayLienTiep++;
-                    streak.CoTheNhanThuong = true;
-                    streak.DaNhanThuongHomNay = false;
-                    streak.NgayCapNhatCuoi = today;
-                }
-                else if (diff > 1)
-                {
-                    streak.SoNgayLienTiep = 1;
-                    streak.CoTheNhanThuong = true;
-                    streak.DaNhanThuongHomNay = false;
-                    streak.NgayCapNhatCuoi = today;
-                }
-                else
-                {
-                    streak.CoTheNhanThuong = !streak.DaNhanThuongHomNay;
+                    model.LichSu7Ngay.Add(
+                        model.NgayCapNhatCuoi.Value.Date.AddDays(-i)
+                    );
                 }
             }
 
-            CalculateBonus(streak);
-            SaveToSession(userId, streak);
+            model.Message = "Nhận thưởng ngày để tiếp tục chuỗi!";
         }
 
-        private void CalculateBonus(DailyStreakViewModel streak)
-        {
-            if (streak.SoNgayLienTiep >= 30)
-            {
-                streak.DiemThuong = 30;
-                streak.BonusMultiplier = 3;
-            }
-            else if (streak.SoNgayLienTiep >= 7)
-            {
-                streak.DiemThuong = 20;
-                streak.BonusMultiplier = 2;
-            }
-            else
-            {
-                streak.DiemThuong = 10;
-                streak.BonusMultiplier = 1;
-            }
-        }
+        return View(model);
+    }
 
-        private void SaveToSession(string userId, DailyStreakViewModel streak)
+    // =========================
+    // POST: /DailyStreak/NhanThuong
+    // =========================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<ActionResult> NhanThuong()
+    {
+        var token = Session["JWT_TOKEN"]?.ToString();
+        if (string.IsNullOrEmpty(token))
+            return Json(new { success = false, message = "Chưa đăng nhập" });
+        using (var client = new HttpClient())
         {
-            Session[$"{STREAK_SESSION_KEY}_{userId}"] = streak;
-        }
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        private string GetUserId()
-        {
-            if (User.Identity.IsAuthenticated)
-                return User.Identity.Name;
-
-            return Request.UserHostAddress;
+            // Gọi API backend
+            var res = await client.PostAsync($"{API_BASE}/daily-reward", null);
+            var json = await res.Content.ReadAsStringAsync();
+            dynamic result = JsonConvert.DeserializeObject(json);
+            // QUAN TRỌNG: Lấy đúng trạng thái awarded từ Backend
+            bool success = result.awarded ?? false;
+            string msg = result.message ?? "Lỗi cập nhật";
+            return Json(new { success = success, message = msg });
         }
     }
 }

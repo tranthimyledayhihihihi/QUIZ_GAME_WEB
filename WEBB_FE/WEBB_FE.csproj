@@ -316,8 +316,6 @@
     <Content Include="Views\Shared\_Navbar.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Social\Activity\Index.cshtml" />
-    <Content Include="Views\User\Account\Login.cshtml" />
-    <Content Include="Views\User\Account\Register.cshtml" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\Menu\Gifts.cshtml" />
     <Content Include="Views\Leaderboard\Index.cshtml" />
@@ -335,6 +333,8 @@
     <Content Include="Views\Quiz\DoiKhang\Create.cshtml" />
     <Content Include="Views\Quiz\Play\Match.cshtml" />
     <Content Include="Views\Quiz\Custom\Create.cshtml" />
+    <Content Include="Views\User\Account\Login.cshtml" />
+    <Content Include="Views\User\Account\Register.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

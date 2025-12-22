@@ -56,7 +56,16 @@ public class QLPhienDangNhapController : ControllerBase
             query = query.Where(s => s.NguoiDung != null && s.NguoiDung.TenDangNhap.ToLower().Contains(lowerKeyword));
         }
 
+        var today = DateTime.Today;
+
+        // Tổng số phiên (đã có)
         var totalCount = await query.CountAsync();
+
+        // ✅ SỐ PHIÊN HÔM NAY – TOÀN BẢNG
+        var todayCount = await _unitOfWork.LoginSessions
+            .GetQueryable()
+            .CountAsync(s => s.ThoiGianBatDau >= today
+                          && s.ThoiGianBatDau < today.AddDays(1));
 
         var pagedSessions = await query
             .OrderByDescending(s => s.ThoiGianBatDau)
@@ -76,7 +85,14 @@ public class QLPhienDangNhapController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(new { Sessions = pagedSessions, TotalCount = totalCount });
+        return Ok(new
+        {
+            Sessions = pagedSessions,
+            TotalCount = totalCount,
+
+            // ✅ THÊM DÒNG NÀY
+            TodayCount = todayCount
+        });
     }
 
     // ===============================================

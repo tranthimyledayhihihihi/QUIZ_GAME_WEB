@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using QUIZ_GAME_WEB.Models.Input_Models.QUIZ_GAME_WEB.Models.InputModels;
+using QUIZ_GAME_WEB.Models.InputModels.QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.Interfaces;
 using QUIZ_GAME_WEB.Models.QuizModels;
 using System.Linq;
@@ -104,30 +104,29 @@ public class QLDoKhoController : ControllerBase
     // Trong QLDoKhoController.cs
 
     [HttpPut("{doKhoId:int}")]
-    public async Task<IActionResult> UpdateDifficulty(int doKhoId, [FromBody] DoKho updatedModel)
+    public async Task<IActionResult> UpdateDifficulty(int doKhoId, [FromBody] DoKhoCreateModel model) // ✅ Dùng CreateModel
     {
-        // 1. Kiểm tra tính hợp lệ của dữ liệu
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var repo = GetDifficultyRepository();
-
-        // 2. Lấy Entity đang được theo dõi (Tracking) dựa trên ID từ URL
         var existingDifficulty = await repo.GetByIdAsync(doKhoId);
 
         if (existingDifficulty == null)
             return NotFound(new { message = $"Không tìm thấy Độ khó với ID: {doKhoId}." });
 
-        // 3. CẬP NHẬT CHỈ CÁC THUỘC TÍNH DỮ LIỆU
-        // ID (DoKhoID) KHÔNG BAO GIỜ ĐƯỢC CHẠM VÀO
-        existingDifficulty.TenDoKho = updatedModel.TenDoKho;
-        existingDifficulty.DiemThuong = updatedModel.DiemThuong;
+        // CẬP NHẬT CHỈ CÁC THUỘC TÍNH DỮ LIỆU
+        existingDifficulty.TenDoKho = model.TenDoKho;
+        existingDifficulty.DiemThuong = model.DiemThuong;
 
-        // 4. Đánh dấu và lưu
-        repo.Update(existingDifficulty); // Entity Framework theo dõi thay đổi
-        await _unitOfWork.CompleteAsync(); // Thực hiện cập nhật trong database
+        repo.Update(existingDifficulty);
+        await _unitOfWork.CompleteAsync();
 
-        return NoContent(); // 204 No Content
+        return Ok(new
+        {
+            message = $"Cập nhật Độ khó '{existingDifficulty.TenDoKho}' (ID: {doKhoId}) thành công!",
+            data = existingDifficulty // Trả về đối tượng đã cập nhật
+        });
     }
     // ===============================================
     // 5. XÓA ĐỘ KHÓ

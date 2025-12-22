@@ -6,5 +6,5 @@ public class KetQuaDto
     public int SoCauDung { get; set; }
     public int TongCauHoi { get; set; }
     public string TrangThaiKetQua { get; set; } = null!;
-    public DateTime NgayBatDau { get; set; }
+    // Không bao gồm QuizAttempt hoặc các thuộc tính điều hướng khác.
 }

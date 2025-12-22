@@ -27,52 +27,64 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         public async Task<bool> CheckAndAwardDailyRewardAsync(int userId)
         {
             var today = DateTime.Now.Date;
-
-            // Lỗi biên dịch được khắc phục bằng cách sửa Interface
-            var rewardReceived = await _unitOfWork.Results.GetDailyRewardByDateAsync(userId, today);
-
-            if (rewardReceived != null)
+            bool isUpdated = false;
+            // 1. LUÔN CẬP NHẬT STREAK TRƯỚC (Không bị chặn bởi Reward)
+            var streak = await _unitOfWork.Results.GetUserStreakAsync(userId);
+            if (streak == null || streak.NgayCapNhatCuoi.Date < today)
             {
-                return false; // Đã nhận rồi
+                await UpdateUserStreak(userId); // Hàm này có await CompleteAsync ở trong rồi
+                isUpdated = true;
             }
-
-            // Logic 2: Trao thưởng (Thêm bản ghi ThuongNgay vào DB)
-            var newReward = new ThuongNgay
+            // 2. KIỂM TRA VÀ TRAO THƯỞNG (REWARD)
+            var rewardReceived = await _unitOfWork.Results.GetDailyRewardByDateAsync(userId, today);
+            if (rewardReceived == null)
             {
-                UserID = userId,
-                NgayNhan = today,
-                PhanThuong = "100 điểm",
-                DiemThuong = 100,
-                TrangThaiNhan = true
-            };
+                var newReward = new ThuongNgay
+                {
+                    UserID = userId,
+                    NgayNhan = today,
+                    PhanThuong = "100 điểm",
+                    DiemThuong = 100,
+                    TrangThaiNhan = true
+                };
+                _unitOfWork.Results.AddDailyReward(newReward);
 
-            _unitOfWork.Results.AddDailyReward(newReward);
-            await _unitOfWork.CompleteAsync();
-
-            // Logic 3: Cập nhật Streak (Chuỗi Ngày)
-            await UpdateUserStreak(userId);
-
-            return true;
+                // Lưu phần thưởng
+                await _unitOfWork.CompleteAsync();
+                isUpdated = true;
+            }
+            return isUpdated; // Trả về true nếu CÓ cập nhật bất kỳ cái nào (Streak hoặc Reward)
         }
-
         private async Task UpdateUserStreak(int userId)
         {
             var streak = await _unitOfWork.Results.GetUserStreakAsync(userId);
-            var today = DateTime.Now.Date;
-
+            var today = DateTime.Today;
             if (streak == null)
             {
-                // Tạo mới streak
-                _unitOfWork.Results.AddStreak(new ChuoiNgay { UserID = userId, SoNgayLienTiep = 1, NgayCapNhatCuoi = DateTime.Now });
+                _unitOfWork.Results.AddStreak(new ChuoiNgay
+                {
+                    UserID = userId,
+                    SoNgayLienTiep = 1,
+                    NgayCapNhatCuoi = DateTime.Now
+                });
             }
-            else if (streak.NgayCapNhatCuoi.Date == today.AddDays(-1))
+            else
             {
-                // Tiếp tục streak
-                streak.SoNgayLienTiep++;
+                // Nếu hôm qua điểm danh -> tăng chuỗi
+                if (streak.NgayCapNhatCuoi.Date == today.AddDays(-1))
+                {
+                    streak.SoNgayLienTiep++;
+                }
+                // Nếu bỏ lỡ quá 1 ngày -> reset về 1
+                else if (streak.NgayCapNhatCuoi.Date < today.AddDays(-1))
+                {
+                    streak.SoNgayLienTiep = 1;
+                }
                 streak.NgayCapNhatCuoi = DateTime.Now;
-                _unitOfWork.Results.Update(streak); // Dùng Generic Update (Đã có trong IResultRepository)
+                _unitOfWork.Results.Update(streak);
             }
-            // Không cần else: Nếu bị đứt chuỗi, logic reset (NgayCapNhatCuoi != today) sẽ được xử lý tại thời điểm check streak tiếp theo.
+            // QUAN TRỌNG: Phải có dòng này để lưu vào Database
+            await _unitOfWork.CompleteAsync();
         }
     }
 }

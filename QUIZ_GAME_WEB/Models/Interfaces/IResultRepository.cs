@@ -33,11 +33,11 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         // Thống kê/achievement
         Task<IEnumerable<ThongKeNguoiDung>> GetUserDailyStatsAsync(int userId, DateTime? startDate, DateTime? endDate);
         Task<IEnumerable<ThanhTuu>> GetUserAchievementsAsync(int userId);
-
+        Task<IEnumerable<ThuongNgay>> GetUserRewardsAsync(int userId);
         // ===============================================
         // II. ✅ CÁC HÀM BỔ SUNG CHO LỊCH SỬ CHƠI (Controller)
         // ===============================================
-
+        Task<IEnumerable<object>> GetTopPlayersAsync(int topCount);
         /// <summary>
         /// Lấy danh sách kết quả bài làm của người dùng (có phân trang).
         /// </summary>
