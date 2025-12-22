@@ -11,7 +11,7 @@ namespace WEBB.Controllers.Quiz
         // GET: WrongAnswer
         public ActionResult Index()
         {
-            return View("~/Views/Quiz/WrongAnswer/Index.cshtml");
+            return View("~/Views/User/Quiz/WrongAnswer/Index.cshtml");
         }
     }
 }

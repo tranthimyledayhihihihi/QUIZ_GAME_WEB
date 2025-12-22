@@ -11,7 +11,7 @@ namespace WEBB.Controllers.User
         // GET: Home
         public ActionResult Index()
         {
-            return View("~/Views/Home/Index.cshtml");
+            return View("~/Views/User/Home/Index.cshtml");
         }
     }
 }

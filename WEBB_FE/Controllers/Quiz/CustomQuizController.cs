@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 
 namespace WEBB.Controllers.Quiz
 {
     public class CustomQuizController : Controller
     {
-        // GET: CustomQuiz
-        public ActionResult Index()
+        // GET: /Quiz/CustomQuiz/Create
+        public ActionResult Create()
         {
-            return View("~/Views/Quiz/Custom/Index.cshtml");
+            return View("~/Views/User/Quiz/Custom/Create.cshtml");
         }
     }
 }

@@ -83,7 +83,7 @@ namespace WEBB.Controllers
             }
 
             // ✅ VIEW CỦA BẠN
-            return View("~/Views/Menu/Gifts.cshtml", model);
+            return View("~/Views/User/Menu/Gifts.cshtml", model);
         }
 
 
@@ -168,7 +168,7 @@ namespace WEBB.Controllers
                         : new List<LeaderboardItemDto>()
                 };
 
-                return View(model);
+                return View("~/Views/User/Menu/Leaderboard.cshtml", model); ;
             }
         }
 

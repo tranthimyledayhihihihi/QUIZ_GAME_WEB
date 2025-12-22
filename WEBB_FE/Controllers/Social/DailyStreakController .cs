@@ -47,7 +47,7 @@ public class DailyStreakController : Controller
             if (!res.IsSuccessStatusCode)
             {
                 model.Message = "Không thể tải chuỗi ngày";
-                return View(model);
+                return View("~/Views/User/Menu/DailyStreak.cshtml", model);
             }
 
             var json = await res.Content.ReadAsStringAsync();
@@ -76,7 +76,7 @@ public class DailyStreakController : Controller
             model.Message = "Nhận thưởng ngày để tiếp tục chuỗi!";
         }
 
-        return View(model);
+        return View("~/Views/User/Menu/DailyStreak.cshtml", model);
     }
 
     // =========================

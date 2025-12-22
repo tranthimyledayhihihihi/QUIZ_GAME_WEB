@@ -11,7 +11,7 @@ namespace WEBB.Controllers.Quiz
         // GET: SharedQuiz
         public ActionResult Index()
         {
-            return View("~/Views/Quiz/SharedQuiz/Index.cshtml");
+            return View("~/Views/User/Quiz/SharedQuiz/Index.cshtml");
         }
     }
 }

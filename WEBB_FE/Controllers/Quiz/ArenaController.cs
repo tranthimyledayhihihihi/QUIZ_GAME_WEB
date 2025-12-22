@@ -70,7 +70,7 @@ namespace WEBB.Controllers.Quiz
                 }
             }
 
-            return View("~/Views/Quiz/Arena/Index.cshtml", vm);
+            return View("~/Views/User/Quiz/Arena/Index.cshtml");
         }
 
         // ============ MÀN TẠO PHÒNG ============

@@ -53,9 +53,9 @@ namespace WEBB.Controllers.User
                     var rewardsRes = await client.GetAsync($"{API_BASE}/my-rewards");
                     if (rewardsRes.IsSuccessStatusCode)
                     {
-                        var rewardsJson = await rewardsRes.Content.ReadAsStringAsync();
+                        var rewardsJson = await rewardsRes.Content.ReadAsStringAsync(); 
 
-                        // API trả dạng: thuongID, userID, ngayNhan...
+                        // API trả dạng: thuongID, userID, ngayNhan...  
                         var rewards = JsonConvert.DeserializeObject<List<RewardItemViewModel>>(rewardsJson);
                         if (rewards != null)
                             model.Rewards = rewards;
@@ -68,7 +68,7 @@ namespace WEBB.Controllers.User
                 }
             }
 
-            return View("~/Views/Menu/Gifts.cshtml", model);
+            return View("~/Views/User/Menu/Gifts.cshtml", model);
         }
 
         // =========================

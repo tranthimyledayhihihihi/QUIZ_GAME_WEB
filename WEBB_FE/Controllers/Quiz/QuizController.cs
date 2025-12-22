@@ -13,7 +13,7 @@ namespace WEBB.Controllers.Quiz
         // GET: Quiz
         public ActionResult Index()
         {
-            return View("~/Views/Quiz/Play/Index.cshtml");
+            return View("~/Views/User/Quiz/Custom/Create.cshtml");
         }
     }
 }

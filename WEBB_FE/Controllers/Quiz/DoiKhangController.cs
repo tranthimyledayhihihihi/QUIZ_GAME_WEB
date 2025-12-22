@@ -41,7 +41,7 @@ namespace WEBB.Controllers.Quiz
             }
 
             var vm = new DuelLobbyViewModel();
-            return View("~/Views/Quiz/DoiKhang/Index.cshtml", vm);
+            return View("~/Views/User/Quiz/DoiKhang/Index.cshtml", vm);
         }
 
         // POST: /Quiz/DoiKhang/FindMatch
@@ -76,5 +76,48 @@ namespace WEBB.Controllers.Quiz
                 }
             }
         }
+        // GET: /Quiz/DoiKhang/Create
+        public ActionResult Create()
+        {
+            var token = GetToken();
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Bạn chưa đăng nhập.";
+                return RedirectToAction("Login", "Account", new { area = "User" });
+            }
+
+            // Dùng chung Index (JS sẽ gửi CREATE_ROOM qua WebSocket)
+            ViewBag.Mode = "CREATE";
+            return View("~/Views/User/Quiz/DoiKhang/Create.cshtml");
+        }
+
+        // GET: /Quiz/DoiKhang/Join?code=ABC123
+        public ActionResult Join(string code)
+        {
+            var token = GetToken();
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Bạn chưa đăng nhập.";
+                return RedirectToAction("Login", "Account", new { area = "User" });
+            }
+
+            ViewBag.Mode = "JOIN";
+            ViewBag.RoomCode = code; // đổ sẵn mã phòng nếu có
+            return View("~/Views/User/Quiz/DoiKhang/Join.cshtml");
+        }
+
+        public ActionResult Match(string code)
+        {
+            var token = GetToken(); // dùng lại hàm bạn đã có trong controller
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Bạn chưa đăng nhập.";
+                return RedirectToAction("Login", "Account", new { area = "User" });
+            }
+
+            ViewBag.MatchCode = code;
+            return View("~/Views/User/Quiz/DoiKhang/Match.cshtml");
+        }
+
     }
 }

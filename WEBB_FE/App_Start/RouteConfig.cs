@@ -1,4 +1,6 @@
-﻿using System.Web.Mvc;
+﻿using System.Security.Policy;
+using System.Text.RegularExpressions;
+using System.Web.Mvc;
 using System.Web.Routing;
 
 namespace WEBB_FE
@@ -7,21 +9,23 @@ namespace WEBB_FE
     {
         public static void RegisterRoutes(RouteCollection routes)
         {
-            routes.MapMvcAttributeRoutes();  // Đảm bảo rằng bạn sử dụng attribute routing nếu cần.
+            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
-            // Đảm bảo đường dẫn cho khu vực Admin được cấu hình đúng
+            // ✅ THÊM ROUTE CHO QUIZ (PHẢI ĐẶT TRƯỚC DEFAULT ROUTE)
             routes.MapRoute(
-                name: "Admin_Default",
-                url: "Admin/{controller}/{action}/{id}",
-                defaults: new { controller = "Users", action = "Index", id = UrlParameter.Optional }
+                name: "Quiz",
+                url: "Quiz/{controller}/{action}/{id}",
+                defaults: new { action = "Index", id = UrlParameter.Optional },
+                namespaces: new[] { "WEBB.Controllers.Quiz", "WEBB_FE.Controllers.User", "WEBB.Controllers" }
             );
 
+            // Default route
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional },
+                namespaces: new[] { "WEBB_FE.Controllers.User" }
             );
         }
     }
-
 }

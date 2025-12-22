@@ -22,7 +22,7 @@ namespace WEBB.Controllers.Quiz
         {
             // Đưa roomId vào ViewBag thay vì để View tự gọi QueryString
             ViewBag.RoomId = roomId;
-            return View("~/Views/Quiz/Play/Index.cshtml");
+            return View("~/Views/User/Quiz/Play/Index.cshtml");
         }
 
         // ================================
