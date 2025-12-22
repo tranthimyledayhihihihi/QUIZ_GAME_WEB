@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-
-namespace WEBB.Models.Quiz
+﻿namespace WEBB.Models.Quiz
 {
     public class DoKhoDto
     {
+        public int DoKhoID { get; set; }
+        public string TenDoKho { get; set; }
+        public int DiemThuong { get; set; }
     }
 }

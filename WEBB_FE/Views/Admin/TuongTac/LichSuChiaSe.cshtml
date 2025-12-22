@@ -1,0 +1,748 @@
+﻿@{
+    ViewBag.Title = "Lịch sử chia sẻ";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    // Parse JSON data if available
+    dynamic shareHistory = null;
+    bool hasData = false;
+    int totalShares = 0;
+
+    if (ViewBag.RawData != null && !string.IsNullOrWhiteSpace(ViewBag.RawData.ToString()))
+    {
+        try
+        {
+            shareHistory = Newtonsoft.Json.JsonConvert.DeserializeObject<dynamic>(ViewBag.RawData.ToString());
+            hasData = shareHistory != null;
+
+            if (hasData && shareHistory.Count > 0)
+            {
+                totalShares = shareHistory.Count;
+            }
+        }
+        catch
+        {
+            hasData = false;
+        }
+    }
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="share-history-icon me-3">
+                <i class="fas fa-history fa-2x text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1">
+                    <i class="fas fa-share-alt text-primary me-2"></i>
+                    Lịch sử chia sẻ Quiz
+                </h1>
+                <p class="text-muted mb-0">Theo dõi và phân tích lượt chia sẻ từ người dùng</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#analyticsModal">
+                <i class="fas fa-chart-line me-2"></i>Phân tích
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="exportBtn">
+                <i class="fas fa-download me-2"></i>Xuất dữ liệu
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card border-start border-primary border-3 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Tổng lượt chia sẻ</h6>
+                            <h2 class="mb-0 text-primary">@totalShares</h2>
+                        </div>
+                        <div class="stat-icon bg-primary bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-share-alt fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card border-start border-success border-3 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Chia sẻ hôm nay</h6>
+                            <h2 class="mb-0 text-success" id="todayShares">0</h2>
+                        </div>
+                        <div class="stat-icon bg-success bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-calendar-day fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card border-start border-warning border-3 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Nền tảng hàng đầu</h6>
+                            <h4 class="mb-0 text-warning" id="topPlatform">-</h4>
+                        </div>
+                        <div class="stat-icon bg-warning bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-mobile-alt fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card stat-card border-start border-info border-3 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Quiz phổ biến nhất</h6>
+                            <h4 class="mb-0 text-info" id="topQuiz">-</h4>
+                        </div>
+                        <div class="stat-icon bg-info bg-opacity-10 p-3 rounded-circle">
+                            <i class="fas fa-chart-bar fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-3"></i>
+            <span>@ViewBag.Error</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Data Table Section -->
+        <div class="@(hasData ? "col-lg-8" : "col-12")">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-table text-primary me-2"></i>
+                        Dữ liệu chia sẻ chi tiết
+                        @if (hasData)
+                        {
+                            <span class="badge bg-primary ms-2">@totalShares bản ghi</span>
+                        }
+                    </h5>
+                    <div class="d-flex gap-2">
+                        <div class="input-group input-group-sm" style="width: 200px;">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" id="searchData" class="form-control" placeholder="Tìm kiếm...">
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-secondary" id="viewRawBtn">
+                                <i class="fas fa-code me-1"></i>Raw
+                            </button>
+                            <button type="button" class="btn btn-outline-primary active" id="viewTableBtn">
+                                <i class="fas fa-table me-1"></i>Bảng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <!-- Table View -->
+                    <div id="tableView" class="table-view">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="shareTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="15%" class="ps-4">
+                                            <i class="fas fa-calendar me-1"></i>Thời gian
+                                        </th>
+                                        <th width="25%">
+                                            <i class="fas fa-user me-1"></i>Người dùng
+                                        </th>
+                                        <th width="25%">
+                                            <i class="fas fa-question-circle me-1"></i>Quiz
+                                        </th>
+                                        <th width="20%">
+                                            <i class="fas fa-share-square me-1"></i>Nền tảng
+                                        </th>
+                                        <th width="15%" class="text-center">
+                                            <i class="fas fa-info-circle me-1"></i>Trạng thái
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    @if (hasData)
+                                    {
+                                        // Table rows will be populated by JavaScript
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="5" class="text-center py-5">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-database fa-4x text-muted mb-3"></i>
+                                                    <h5 class="text-muted">Không có dữ liệu</h5>
+                                                    <p class="text-muted">Chưa có lượt chia sẻ nào được ghi nhận</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Raw JSON View -->
+                    <div id="rawView" class="raw-view d-none">
+                        <div class="position-relative">
+                            <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-3" id="copyRawBtn">
+                                <i class="fas fa-copy me-1"></i>Sao chép
+                            </button>
+                            <pre id="rawData" class="bg-light p-4 rounded mb-0" style="max-height: 500px; overflow: auto;">
+@if (hasData)
+{
+    @Html.Raw(Newtonsoft.Json.Linq.JToken.Parse(ViewBag.RawData.ToString()).ToString(Newtonsoft.Json.Formatting.Indented))
+}
+else if (ViewBag.Error == null)
+{
+                            <span class="text-muted">Đang tải dữ liệu...</span>
+}
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+
+                @if (hasData)
+                {
+                    <div class="card-footer bg-white border-top">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <small class="text-muted">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Hiển thị <span id="displayCount">@totalShares</span> lượt chia sẻ
+                                </small>
+                            </div>
+                            <div class="col-md-6 text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-secondary" id="prevPage">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" id="nextPage">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Analytics Sidebar -->
+        @if (hasData)
+        {
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-pie text-success me-2"></i>
+                            Phân tích chia sẻ
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Platform Distribution -->
+                        <div class="mb-4">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="fas fa-mobile-alt me-2"></i>Phân bố nền tảng
+                            </h6>
+                            <div id="platformChart" class="chart-container" style="height: 200px;">
+                                <!-- Chart will be rendered here -->
+                            </div>
+                        </div>
+
+                        <!-- Time Distribution -->
+                        <div class="mb-4">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="fas fa-clock me-2"></i>Thời gian chia sẻ
+                            </h6>
+                            <div class="time-slots">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Sáng (6-12h)</span>
+                                    <span class="badge bg-primary" id="morningCount">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Chiều (12-18h)</span>
+                                    <span class="badge bg-success" id="afternoonCount">0</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Tối (18-24h)</span>
+                                    <span class="badge bg-warning" id="eveningCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top Quizzes -->
+                        <div>
+                            <h6 class="fw-semibold mb-3">
+                                <i class="fas fa-trophy me-2"></i>Quiz được chia sẻ nhiều
+                            </h6>
+                            <div id="topQuizzes" class="list-group list-group-flush">
+                                <!-- Top quizzes will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Analytics Modal -->
+<div class="modal fade" id="analyticsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-chart-line me-2"></i>Phân tích chi tiết
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>📊 Thống kê tổng quan</h6>
+                        <ul class="list-group list-group-flush mb-3">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Tổng lượt chia sẻ</span>
+                                <span class="fw-bold text-primary">@totalShares</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Ngày có nhiều lượt nhất</span>
+                                <span class="fw-bold" id="peakDay">-</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>Người dùng tích cực</span>
+                                <span class="fw-bold" id="activeUser">-</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>📈 Xu hướng chia sẻ</h6>
+                        <p class="text-muted small mb-3">Dữ liệu được phân tích dựa trên lịch sử chia sẻ gần đây</p>
+                        <div id="trendInfo" class="alert alert-info">
+                            <i class="fas fa-chart-line me-2"></i>
+                            <span>Đang phân tích xu hướng...</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-warning mt-3">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Gợi ý:</strong> Thúc đẩy chia sẻ bằng cách thêm tính năng chia sẻ xã hội và tặng điểm thưởng.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" id="refreshAnalytics">
+                    <i class="fas fa-sync-alt me-2"></i>Làm mới
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+    .share-history-icon {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        width: 70px;
+        height: 70px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-card {
+        transition: transform 0.2s;
+    }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important;
+        }
+
+    .stat-icon {
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover .stat-icon {
+        transform: scale(1.1);
+    }
+
+    .table-view, .raw-view {
+        transition: opacity 0.3s;
+    }
+
+    #rawData {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+        transform: translateX(2px);
+        transition: all 0.2s;
+    }
+
+    .empty-state {
+        opacity: 0.7;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .chart-container {
+        position: relative;
+    }
+
+    .time-slots {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .badge {
+        font-weight: 500;
+        padding: 0.35em 0.65em;
+    }
+
+    .list-group-item {
+        border: none;
+        padding: 0.75rem 0;
+    }
+
+    pre#rawData::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    pre#rawData::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    pre#rawData::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+    }
+
+        pre#rawData::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize variables
+    let shareData = @Html.Raw(hasData ? ViewBag.RawData : "null");
+    let currentPage = 1;
+    const itemsPerPage = 10;
+
+    // Initialize analytics
+    if (shareData) {
+        initializeAnalytics();
+        populateTable();
+        renderCharts();
+    }
+
+    // View toggle
+    const viewRawBtn = document.getElementById('viewRawBtn');
+    const viewTableBtn = document.getElementById('viewTableBtn');
+    const tableView = document.getElementById('tableView');
+    const rawView = document.getElementById('rawView');
+
+    viewRawBtn.addEventListener('click', function() {
+        this.classList.remove('btn-outline-secondary');
+        this.classList.add('btn-primary');
+        viewTableBtn.classList.remove('btn-outline-primary', 'active');
+        viewTableBtn.classList.add('btn-outline-secondary');
+        tableView.classList.add('d-none');
+        rawView.classList.remove('d-none');
+    });
+
+    viewTableBtn.addEventListener('click', function() {
+        this.classList.remove('btn-outline-secondary');
+        this.classList.add('btn-outline-primary', 'active');
+        viewRawBtn.classList.remove('btn-primary');
+        viewRawBtn.classList.add('btn-outline-secondary');
+        rawView.classList.add('d-none');
+        tableView.classList.remove('d-none');
+    });
+
+    // Copy raw data
+    document.getElementById('copyRawBtn').addEventListener('click', function() {
+        const rawData = document.getElementById('rawData').textContent;
+        navigator.clipboard.writeText(rawData).then(() => {
+            const originalHtml = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-check me-1"></i>Đã sao chép!';
+            setTimeout(() => {
+                this.innerHTML = originalHtml;
+            }, 2000);
+        });
+    });
+
+    // Search functionality
+    document.getElementById('searchData').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#shareTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(searchTerm) ? '' : 'none';
+        });
+
+        updateDisplayCount();
+    });
+
+    // Export functionality
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        if (!shareData) return;
+
+        const dataStr = JSON.stringify(shareData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = 'lich-su-chia-se-' + new Date().toISOString().split('T')[0] + '.json';
+
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        document.body.appendChild(linkElement);
+        linkElement.click();
+        document.body.removeChild(linkElement);
+    });
+
+    // Pagination
+    document.getElementById('prevPage').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            populateTable();
+        }
+    });
+
+    document.getElementById('nextPage').addEventListener('click', function() {
+        const totalPages = Math.ceil(shareData.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            populateTable();
+        }
+    });
+
+    // Analytics functions
+    function initializeAnalytics() {
+        const today = new Date().toISOString().split('T')[0];
+        let todayCount = 0;
+        const platformCount = {};
+        const quizCount = {};
+        const timeCount = { morning: 0, afternoon: 0, evening: 0 };
+
+        shareData.forEach(item => {
+            // Today's shares
+            if (item.ThoiGian && item.ThoiGian.includes(today)) {
+                todayCount++;
+            }
+
+            // Platform distribution
+            const platform = item.NenTang || 'Không xác định';
+            platformCount[platform] = (platformCount[platform] || 0) + 1;
+
+            // Quiz distribution
+            const quizName = item.TenQuiz || 'Quiz #' + (item.QuizID || 'N/A');
+            quizCount[quizName] = (quizCount[quizName] || 0) + 1;
+
+            // Time distribution
+            if (item.ThoiGian) {
+                const hour = new Date(item.ThoiGian).getHours();
+                if (hour >= 6 && hour < 12) timeCount.morning++;
+                else if (hour >= 12 && hour < 18) timeCount.afternoon++;
+                else if (hour >= 18 && hour < 24) timeCount.evening++;
+            }
+        });
+
+        // Update stats
+        document.getElementById('todayShares').textContent = todayCount;
+
+        // Top platform
+        const topPlatform = Object.keys(platformCount).reduce((a, b) =>
+            platformCount[a] > platformCount[b] ? a : b, 'Không xác định');
+        document.getElementById('topPlatform').textContent = topPlatform;
+
+        // Top quiz
+        const topQuiz = Object.keys(quizCount).reduce((a, b) =>
+            quizCount[a] > quizCount[b] ? a : b, 'Không có');
+        document.getElementById('topQuiz').textContent = topQuiz.substring(0, 15) + (topQuiz.length > 15 ? '...' : '');
+
+        // Time distribution
+        document.getElementById('morningCount').textContent = timeCount.morning;
+        document.getElementById('afternoonCount').textContent = timeCount.afternoon;
+        document.getElementById('eveningCount').textContent = timeCount.evening;
+    }
+
+    function populateTable() {
+        const tableBody = document.getElementById('tableBody');
+        if (!shareData || shareData.length === 0) return;
+
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, shareData.length);
+        const pageData = shareData.slice(startIndex, endIndex);
+
+        let html = '';
+
+        pageData.forEach((item, index) => {
+            const time = item.ThoiGian ? formatDateTime(item.ThoiGian) : 'N/A';
+            const user = item.TenNguoiDung || `User #${item.NguoiDungID || 'N/A'}`;
+            const quiz = item.TenQuiz || `Quiz #${item.QuizID || 'N/A'}`;
+            const platform = getPlatformIcon(item.NenTang);
+            const status = item.TrangThai === 1 ? 'Thành công' : 'Thất bại';
+
+            html += `
+                <tr class="align-middle">
+                    <td class="ps-4">
+                        <div class="fw-medium">${time.date}</div>
+                        <small class="text-muted">${time.time}</small>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">${user}</div>
+                        <small class="text-muted">ID: ${item.NguoiDungID || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <div class="fw-semibold">${quiz}</div>
+                        <small class="text-muted">ID: ${item.QuizID || 'N/A'}</small>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="platform-icon me-2">
+                                ${platform.icon}
+                            </div>
+                            <span>${platform.name}</span>
+                        </div>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge ${status === 'Thành công' ? 'bg-success' : 'bg-danger'} bg-opacity-10 text-${status === 'Thành công' ? 'success' : 'danger'} border border-${status === 'Thành công' ? 'success' : 'danger'} border-opacity-25 px-3 py-2">
+                            ${status === 'Thành công' ? '<i class="fas fa-check me-1"></i>' : '<i class="fas fa-times me-1"></i>'}
+                            ${status}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableBody.innerHTML = html;
+        updateDisplayCount();
+
+        // Update pagination buttons state
+        const totalPages = Math.ceil(shareData.length / itemsPerPage);
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage === totalPages;
+    }
+
+    function formatDateTime(dateTimeStr) {
+        try {
+            const date = new Date(dateTimeStr);
+            const dateStr = date.toLocaleDateString('vi-VN');
+            const timeStr = date.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            return { date: dateStr, time: timeStr };
+        } catch (e) {
+            return { date: 'N/A', time: 'N/A' };
+        }
+    }
+
+    function getPlatformIcon(platform) {
+        const platforms = {
+            'facebook': { icon: '<i class="fab fa-facebook text-primary"></i>', name: 'Facebook' },
+            'zalo': { icon: '<i class="fas fa-comment text-info"></i>', name: 'Zalo' },
+            'twitter': { icon: '<i class="fab fa-twitter text-info"></i>', name: 'Twitter' },
+            'linkedin': { icon: '<i class="fab fa-linkedin text-primary"></i>', name: 'LinkedIn' },
+            'telegram': { icon: '<i class="fab fa-telegram text-primary"></i>', name: 'Telegram' },
+            'copy': { icon: '<i class="fas fa-copy text-secondary"></i>', name: 'Sao chép link' }
+        };
+
+        const key = (platform || '').toLowerCase();
+        return platforms[key] || { icon: '<i class="fas fa-share-alt text-muted"></i>', name: platform || 'Khác' };
+    }
+
+    function updateDisplayCount() {
+        const visibleRows = document.querySelectorAll('#shareTable tbody tr:not([style*="none"])').length;
+        document.getElementById('displayCount').textContent = visibleRows;
+    }
+
+    function renderCharts() {
+        // Simple platform chart using divs (can be replaced with Chart.js)
+        const platformCount = {};
+        shareData.forEach(item => {
+            const platform = item.NenTang || 'Khác';
+            platformCount[platform] = (platformCount[platform] || 0) + 1;
+        });
+
+        const total = shareData.length;
+        const chartContainer = document.getElementById('platformChart');
+        chartContainer.innerHTML = '';
+
+        Object.entries(platformCount).forEach(([platform, count]) => {
+            const percentage = ((count / total) * 100).toFixed(1);
+            const color = getPlatformColor(platform);
+
+            const bar = document.createElement('div');
+            bar.className = 'mb-2';
+            bar.innerHTML = `
+                <div class="d-flex justify-content-between mb-1">
+                    <small>${platform}</small>
+                    <small class="fw-semibold">${percentage}%</small>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar"
+                         style="width: ${percentage}%; background-color: ${color};"
+                         aria-valuenow="${percentage}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            `;
+            chartContainer.appendChild(bar);
+        });
+    }
+
+    function getPlatformColor(platform) {
+        const colors = {
+            'facebook': '#1877f2',
+            'zalo': '#0068ff',
+            'twitter': '#1da1f2',
+            'linkedin': '#0a66c2',
+            'telegram': '#0088cc',
+            'copy': '#6c757d'
+        };
+
+        const key = platform.toLowerCase();
+        return colors[key] || '#6f42c1';
+    }
+});
+</script>

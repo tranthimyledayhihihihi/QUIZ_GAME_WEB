@@ -1,7 +1,254 @@
-﻿
+﻿@model List<WEBB.Models.Quiz.CauHoiDto>
+
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Quản lý Câu hỏi";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-question-circle me-2"></i>Quản lý Câu hỏi
+        </h1>
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#createQuestionModal">
+            <i class="fas fa-plus me-2"></i>Thêm Câu hỏi
+        </button>
+    </div>
 
+    <!-- ================= TABLE ================= -->
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="questionsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-center">ID</th>
+                            <th>Nội dung</th>
+                            <th class="text-center">Chủ đề</th>
+                            <th class="text-center">Độ khó</th>
+                            <th class="text-center">Trạng thái</th>
+                            <th class="text-center">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var q in Model)
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">#@q.CauHoiID</span>
+                                </td>
+                                <td>
+                                    @(q.NoiDung.Length > 80
+                                        ? q.NoiDung.Substring(0, 80) + "..."
+                                        : q.NoiDung)
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info">@q.TenChuDe</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(q.TenDoKho == "Dễ" ? "bg-success" :
+                                                         q.TenDoKho == "Trung bình" ? "bg-warning" : "bg-danger")">
+                                        @q.TenDoKho
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(q.TrangThaiDuyet == "Đã duyệt" ? "bg-success" : "bg-warning")">
+                                        @q.TrangThaiDuyet
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-warning"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editQuestionModal"
+                                            onclick="fillEditModal(@Html.Raw(Json.Encode(q)))">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteQuestionModal"
+                                            onclick="setDeleteId(@q.CauHoiID)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= CREATE MODAL ================= -->
+<div class="modal fade" id="createQuestionModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="@Url.Action("Create","Questions")">
+
+                <!-- ====== FIELD BẮT BUỘC CHO API ====== -->
+                <input type="hidden" name="QuizTuyChinhID" value="0" />
+                <input type="hidden" name="AdminDuyetID" value="0" />
+                <input type="hidden" name="TrangThaiDuyet" value="CHO_DUYET" />
+                <input type="hidden" name="NgayTao" value="@DateTime.UtcNow.ToString("o")" />
+                <input type="hidden" name="HinhAnh" value="" />
+                <input type="hidden" name="CacLuaChon" value="" />
+                <!-- =================================== -->
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Thêm Câu hỏi</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label>Nội dung</label>
+                        <textarea name="NoiDung" class="form-control" required></textarea>
+                    </div>
+
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input class="form-control" name="DapAnA" placeholder="Đáp án A" required />
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control" name="DapAnB" placeholder="Đáp án B" required />
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control" name="DapAnC" placeholder="Đáp án C" required />
+                        </div>
+                        <div class="col-md-6">
+                            <input class="form-control" name="DapAnD" placeholder="Đáp án D" required />
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label>Đáp án đúng</label>
+                        <select name="DapAnDung" class="form-select" required>
+                            <option value="">-- Chọn --</option>
+                            <option>A</option>
+                            <option>B</option>
+                            <option>C</option>
+                            <option>D</option>
+                        </select>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label>Chủ đề</label>
+                            <select name="ChuDeID" class="form-select" required>
+                                @foreach (var c in ViewBag.ChuDes)
+                                {
+                                    <option value="@c.ChuDeID">@c.TenChuDe</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Độ khó</label>
+                            <select name="DoKhoID" class="form-select" required>
+                                @foreach (var d in ViewBag.DoKhos)
+                                {
+                                    <option value="@d.DoKhoID">@d.TenDoKho</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ================= EDIT MODAL ================= -->
+<div class="modal fade" id="editQuestionModal">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="@Url.Action("Edit","Questions")">
+                <input type="hidden" name="CauHoiID" id="editCauHoiID" />
+
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">Sửa Câu hỏi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <textarea id="editNoiDung" name="NoiDung" class="form-control mb-2"></textarea>
+                    <input id="editA" name="DapAnA" class="form-control mb-2" />
+                    <input id="editB" name="DapAnB" class="form-control mb-2" />
+                    <input id="editC" name="DapAnC" class="form-control mb-2" />
+                    <input id="editD" name="DapAnD" class="form-control mb-2" />
+
+                    <select id="editDapAnDung" name="DapAnDung" class="form-select mb-2">
+                        <option>A</option>
+                        <option>B</option>
+                        <option>C</option>
+                        <option>D</option>
+                    </select>
+
+                    <select id="editChuDe" name="ChuDeID" class="form-select mb-2">
+                        @foreach (var c in ViewBag.ChuDes)
+                        {
+                            <option value="@c.ChuDeID">@c.TenChuDe</option>
+                        }
+                    </select>
+
+                    <select id="editDoKho" name="DoKhoID" class="form-select">
+                        @foreach (var d in ViewBag.DoKhos)
+                        {
+                            <option value="@d.DoKhoID">@d.TenDoKho</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-warning">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ================= DELETE MODAL ================= -->
+<div class="modal fade" id="deleteQuestionModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post" action="@Url.Action("Delete","Questions")">
+                <input type="hidden" name="id" id="deleteId" />
+                <div class="modal-header bg-danger text-white">
+                    <h5>Xóa câu hỏi</h5>
+                </div>
+                <div class="modal-body text-center">
+                    Bạn có chắc chắn muốn xóa?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button class="btn btn-danger">Xóa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function fillEditModal(q) {
+        editCauHoiID.value = q.CauHoiID;
+        editNoiDung.value = q.NoiDung;
+        editA.value = q.DapAnA;
+        editB.value = q.DapAnB;
+        editC.value = q.DapAnC;
+        editD.value = q.DapAnD;
+        editDapAnDung.value = q.DapAnDung;
+        editChuDe.value = q.ChuDeID;
+        editDoKho.value = q.DoKhoID;
+    }
+
+    function setDeleteId(id) {
+        deleteId.value = id;
+    }
+</script>

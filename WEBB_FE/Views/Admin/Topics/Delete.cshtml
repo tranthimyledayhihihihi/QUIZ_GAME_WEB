@@ -1,0 +1,23 @@
+﻿@model WEBB.Models.Quiz.ChuDeDto
+
+@{
+    ViewBag.Title = "Xóa Chủ đề";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";  // Sử dụng layout Admin
+}
+
+<h2>Xóa Chủ đề</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<div class="alert alert-warning">
+    <strong>Cảnh báo:</strong> Bạn đang muốn xóa chủ đề <strong>@Model.TenChuDe</strong>. Bạn có chắc chắn muốn xóa không?
+</div>
+
+<form action="/Admin/Topics/Delete" method="post">
+    <input type="hidden" name="id" value="@Model.ChuDeID" />
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a href="@Url.Action("Index", "Topics")" class="btn btn-secondary">Quay lại</a>
+</form>

@@ -1,7 +1,449 @@
-﻿
+﻿@model List<WEBB.Models.Quiz.ChuDeDto>
+
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Quản lý Chủ đề";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-folder me-2"></i>Quản lý Chủ đề
+        </h1>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="fas fa-plus me-2"></i>Thêm Chủ đề
+        </button>
+    </div>
 
+    <!-- Thông báo -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số chủ đề
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-folder fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Đang hoạt động
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Count(c => c.TrangThai)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Đang ẩn
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Count(c => !c.TrangThai)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-eye-slash fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng chủ đề -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách Chủ đề</h6>
+            <div class="d-flex align-items-center">
+                <div class="input-group input-group-sm" style="width: 300px;">
+                    <input type="text" class="form-control" placeholder="Tìm kiếm chủ đề..." id="searchInput">
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="topicsTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">ID</th>
+                            <th>Tên Chủ đề</th>
+                            <th>Mô tả</th>
+                            <th class="text-center" style="width: 120px;">Trạng thái</th>
+                            <th class="text-center" style="width: 150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var c in Model)
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">#@c.ChuDeID</span>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-primary">
+                                        <i class="fas fa-folder-open me-2 text-warning"></i>@c.TenChuDe
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="topic-description">
+                                        @if (!string.IsNullOrEmpty(c.MoTa))
+                                        {
+                                            if (c.MoTa.Length > 80)
+                                            {
+                                                @c.MoTa.Substring(0, 80)<text>...</text>
+                                            }
+                                            else
+                                            {
+                                                @c.MoTa
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Không có mô tả</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (c.TrangThai)
+                                    {
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Hoạt động
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">
+                                            <i class="fas fa-eye-slash me-1"></i>Ẩn
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-outline-warning btn-sm me-1"
+                                                data-id="@c.ChuDeID"
+                                                data-ten="@c.TenChuDe"
+                                                data-mota="@c.MoTa"
+                                                data-trangthai="@c.TrangThai.ToString().ToLower()"
+                                                onclick="openEdit(this)"
+                                                title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+
+                                        <form action="/Admin/Topics/Delete" method="post" style="display:inline;"
+                                              onsubmit="return confirmDelete(this)">
+                                            <input type="hidden" name="id" value="@c.ChuDeID" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Xóa">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm Chủ Đề -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>Thêm Chủ Đề Mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/Admin/Topics/Create" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Chủ đề <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="TenChuDe"
+                               placeholder="Nhập tên chủ đề..." required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô tả</label>
+                        <textarea class="form-control" name="MoTa" rows="3"
+                                  placeholder="Nhập mô tả cho chủ đề..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái</label>
+                        <select class="form-select" name="TrangThai">
+                            <option value="true">Hoạt động</option>
+                            <option value="false">Ẩn</option>
+                        </select>
+                        <div class="form-text">
+                            Chủ đề "Ẩn" sẽ không hiển thị trong danh sách tạo câu hỏi mới
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Lưu Chủ đề
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa Chủ Đề -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Sửa Chủ Đề
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/Admin/Topics/Edit" method="post">
+                <input type="hidden" name="ChuDeID" id="edit_id" />
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Chủ đề <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="edit_name" name="TenChuDe" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô tả</label>
+                        <textarea class="form-control" id="edit_desc" name="MoTa" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Trạng thái</label>
+                        <select class="form-select" id="edit_status" name="TrangThai">
+                            <option value="true">Hoạt động</option>
+                            <option value="false">Ẩn</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-sync-alt me-1"></i>Cập nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- CSS tùy chỉnh -->
+<style>
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e3e6f0;
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #4e73df;
+        border-top: none;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .topic-description {
+        max-width: 400px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.35em 0.65em;
+        font-weight: 500;
+    }
+
+    .btn-group .btn {
+        border-radius: 6px !important;
+        transition: all 0.2s;
+    }
+
+        .btn-group .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .modal-header {
+        border-radius: 10px 10px 0 0;
+    }
+
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+</style>
+
+<script>
+    // Hàm mở modal sửa chủ đề
+    function openEdit(btn) {
+        document.getElementById("edit_id").value = btn.dataset.id;
+        document.getElementById("edit_name").value = btn.dataset.ten;
+        document.getElementById("edit_desc").value = btn.dataset.mota;
+        document.getElementById("edit_status").value = btn.dataset.trangthai;
+
+        var editModal = new bootstrap.Modal(document.getElementById("editModal"));
+        editModal.show();
+    }
+
+    // Hàm xác nhận xóa với modal đẹp hơn
+    function confirmDelete(form) {
+        const topicId = form.querySelector('input[name="id"]').value;
+        const topicName = form.closest('tr').querySelector('.fw-semibold').textContent.trim();
+
+        // Tạo modal xác nhận
+        const confirmModal = `
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                            <h5 class="fw-bold">Xóa chủ đề: ${topicName}</h5>
+                            <p class="text-muted">
+                                Chủ đề này sẽ bị xóa vĩnh viễn. Các câu hỏi thuộc chủ đề này sẽ không bị ảnh hưởng.
+                            </p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>Hủy
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="submitDeleteForm(${topicId})">
+                                <i class="fas fa-trash-alt me-1"></i>Xác nhận xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Thêm modal vào body
+        document.body.insertAdjacentHTML('beforeend', confirmModal);
+
+        // Hiển thị modal
+        const modalElement = document.getElementById('confirmDeleteModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        // Xóa modal khi đóng
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+
+        return false; // Ngăn form submit trực tiếp
+    }
+
+    function submitDeleteForm(topicId) {
+        // Tìm form và submit
+        const form = document.querySelector(`form input[value="${topicId}"]`).closest('form');
+        form.submit();
+    }
+
+    // Tìm kiếm trong bảng
+    document.getElementById('searchInput')?.addEventListener('keyup', function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#topicsTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    // Hiệu ứng hover cho bảng
+    document.addEventListener('DOMContentLoaded', function () {
+        const tableRows = document.querySelectorAll('#topicsTable tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function () {
+                this.classList.add('table-active');
+            });
+            row.addEventListener('mouseleave', function () {
+                this.classList.remove('table-active');
+            });
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

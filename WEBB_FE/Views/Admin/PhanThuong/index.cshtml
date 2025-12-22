@@ -1,0 +1,1403 @@
+﻿@model WEBB_FE.Models.Admin.PhanThuongIndexViewModel
+@{
+    ViewBag.Title = "Quản lý Phần thưởng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-lg-4">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-5 pt-3">
+        <div>
+            <div class="d-flex align-items-center">
+                <div class="icon-shape bg-gradient-warning rounded-circle p-3 mr-3 shadow">
+                    <i class="fas fa-gift fa-2x text-white"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-1 text-gray-900 font-weight-800">Quản lý Phần Thưởng</h1>
+                    <p class="mb-0 text-gray-600">Theo dõi và quản lý phần thưởng của người dùng</p>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="badge badge-pill badge-light border mr-3 px-3 py-2">
+                <i class="fas fa-layer-group mr-2"></i>
+                <span id="totalCount">@Model.Items.Count()</span> phần thưởng
+            </span>
+        </div>
+    </div>
+
+    <!-- Thông báo lỗi -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm animate__animated animate__fadeIn mb-4" role="alert">
+            <div class="d-flex align-items-center">
+                <div class="alert-icon">
+                    <i class="fas fa-exclamation-circle me-3"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong>Lỗi!</strong> @ViewBag.Error
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        </div>
+    }
+
+    <!-- Tổng quan phần thưởng -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-success-light rounded-circle mr-3">
+                            <i class="fas fa-check-circle text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Đã nhận</h6>
+                            <h3 class="font-weight-bold mb-0 text-success" id="receivedCount">
+                                @Model.Items.Count(i => i.TrangThaiNhan)
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-warning-light rounded-circle mr-3">
+                            <i class="fas fa-clock text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Chưa nhận</h6>
+                            <h3 class="font-weight-bold mb-0 text-warning" id="pendingCount">
+                                @Model.Items.Count(i => !i.TrangThaiNhan)
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-primary-light rounded-circle mr-3">
+                            <i class="fas fa-coins text-primary"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Tổng điểm</h6>
+                            <h3 class="font-weight-bold mb-0 text-primary" id="totalPoints">
+                                @Model.Items.Sum(i => i.DiemThuong).ToString("N0")
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-info-light rounded-circle mr-3">
+                            <i class="fas fa-users text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Người nhận</h6>
+                            <h3 class="font-weight-bold mb-0 text-info" id="uniqueUsers">
+                                @Model.Items.Select(i => i.UserID).Distinct().Count()
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form tặng phần thưởng -->
+    <div class="card shadow-lg border-0 mb-5 animate__animated animate__fadeInUp">
+        <div class="card-header bg-gradient-success border-0 py-4">
+            <h6 class="m-0 font-weight-bold text-white">
+                <i class="fas fa-gift mr-2"></i>Tặng Phần Thưởng Mới
+            </h6>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="@Url.Action("GiveReward", "PhanThuong")" id="giveRewardForm">
+                <div class="row g-4">
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label for="UserID" class="form-label font-weight-bold text-gray-700">
+                                <i class="fas fa-user mr-2 text-primary"></i>Người nhận
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-user-tag text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="number" name="UserID" id="UserID"
+                                       class="form-control form-control-lg border-left-0 py-3"
+                                       placeholder="Nhập User ID"
+                                       required min="1">
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>ID của người dùng cần tặng thưởng
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="form-group">
+                            <label for="PhanThuong" class="form-label font-weight-bold text-gray-700">
+                                <i class="fas fa-medal mr-2 text-primary"></i>Phần thưởng
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-gift text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="text" name="PhanThuong" id="PhanThuong"
+                                       class="form-control form-control-lg border-left-0 py-3"
+                                       placeholder="Ví dụ: Gift card 100k, Voucher Shopee..."
+                                       required>
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>Mô tả phần thưởng sẽ tặng
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <div class="form-group">
+                            <label for="DiemThuong" class="form-label font-weight-bold text-gray-700">
+                                <i class="fas fa-star mr-2 text-primary"></i>Điểm thưởng
+                            </label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-coins text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="number" name="DiemThuong" id="DiemThuong"
+                                       class="form-control form-control-lg border-left-0 py-3"
+                                       placeholder="Nhập điểm"
+                                       min="0" step="100">
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>Điểm thưởng (nếu có)
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-lg-2 col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success btn-lg w-100 shadow-lg py-3"
+                                id="submitBtn">
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            <span class="submit-text">Tặng ngay</span>
+                            <span class="spinner-border spinner-border-sm ml-2 d-none"
+                                  id="submitSpinner"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Danh sách phần thưởng -->
+    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-gradient-primary border-0 py-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="fas fa-history mr-2"></i>Lịch sử Phần Thưởng
+                    <small class="ml-2">(@Model.Items.Count() items)</small>
+                </h6>
+                <div class="d-flex align-items-center">
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </span>
+                        </div>
+                        <input type="text" class="form-control" id="searchInput"
+                               placeholder="Tìm kiếm...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Items.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="rewardTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="8%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>ID</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('id')"></i>
+                                    </div>
+                                </th>
+                                <th width="20%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Người nhận</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('user')"></i>
+                                    </div>
+                                </th>
+                                <th width="25%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Phần thưởng</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('reward')"></i>
+                                    </div>
+                                </th>
+                                <th width="12%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Điểm</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('points')"></i>
+                                    </div>
+                                </th>
+                                <th width="15%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Thời gian</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('date')"></i>
+                                    </div>
+                                </th>
+                                <th width="10%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Trạng thái</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('status')"></i>
+                                    </div>
+                                </th>
+                                <th width="10%" class="py-3 border-top-0 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.Items)
+                            {
+                                <tr class="reward-row"
+                                    data-user="@item.Username.ToLower()"
+                                    data-reward="@item.PhanThuong.ToLower()"
+                                    data-status="@(item.TrangThaiNhan ? "received" : "pending")">
+                                    <td class="align-middle">
+                                        <span class="badge badge-pill badge-secondary px-3 py-2">
+                                            #@item.ThuongID
+                                        </span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs mr-2">
+                                                <div class="avatar-initials @GetUserColor(item.UserID.ToString())">
+                                                    @GetInitials(item.Username)
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-gray-800">
+                                                    @item.Username
+                                                </div>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-hashtag mr-1"></i>
+                                                    UID: @item.UserID
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="reward-icon mr-3">
+                                                <i class="fas fa-gift text-warning"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-gray-800">@item.PhanThuong</div>
+                                                @if (item.DiemThuong > 0)
+                                                {
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-coins mr-1"></i>Đã bao gồm điểm thưởng
+                                                    </small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="text-center">
+                                            @if (item.DiemThuong > 0)
+                                            {
+                                                <div class="points-display">
+                                                    <div class="h5 mb-0 font-weight-bold text-warning">
+                                                        @item.DiemThuong.ToString("N0")
+                                                    </div>
+                                                    <small class="text-muted">điểm</small>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted font-italic">
+                                                    <i class="fas fa-minus mr-1"></i>Không có
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="text-gray-800">
+                                            <i class="far fa-calendar mr-2"></i>@item.NgayNhan.ToString("dd/MM/yyyy")
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock mr-2"></i>@item.NgayNhan.ToString("HH:mm")
+                                        </small>
+                                        <div class="small mt-1">
+                                            <span class="badge badge-light">
+                                                @GetTimeAgo(item.NgayNhan)
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        @if (item.TrangThaiNhan)
+                                        {
+                                            <span class="badge badge-pill badge-success px-3 py-2">
+                                                <i class="fas fa-check-circle mr-1"></i>Đã nhận
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-pill badge-warning px-3 py-2">
+                                                <i class="fas fa-clock mr-1"></i>Chưa nhận
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-info btn-sm rounded-circle mr-2"
+                                                    title="Xem chi tiết"
+                                                    onclick="showRewardDetail(@item.ThuongID)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline-danger btn-sm rounded-circle"
+                                                    title="Xóa phần thưởng"
+                                                    onclick="deleteReward(@item.ThuongID, '@item.Username.Replace("'", "\\'")', '@item.PhanThuong.Replace("'", "\\'").Replace("\"", "&quot;")')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="d-flex justify-content-between align-items-center p-4 border-top">
+                    <div class="text-muted">
+                        Hiển thị <span id="visibleItems">@Model.Items.Count()</span> trên tổng số @Model.Items.Count() phần thưởng
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-6">
+                    <div class="empty-state">
+                        <div class="empty-state-icon bg-gradient-warning">
+                            <i class="fas fa-gift"></i>
+                        </div>
+                        <h3 class="mt-4 text-gray-700">Không có phần thưởng nào</h3>
+                        <p class="text-gray-500 mb-4">Chưa có phần thưởng nào được tặng</p>
+                        <button class="btn btn-warning" onclick="document.getElementById('UserID').focus()">
+                            <i class="fas fa-gift mr-2"></i>Tặng phần thưởng đầu tiên
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết Phần thưởng -->
+<div class="modal fade" id="rewardDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-primary border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-info-circle mr-2"></i>Chi tiết Phần Thưởng
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4" id="rewardDetailContent">
+                <!-- Nội dung sẽ được load bằng JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận Xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-danger border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-trash-alt mr-2"></i>Xác nhận Xóa Phần Thưởng
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="warning-icon bg-danger-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-gray-800">Xóa phần thưởng này?</h5>
+                    <div class="alert alert-light mt-3">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar avatar-sm mr-3">
+                                <div class="avatar-initials bg-primary text-white" id="deleteUserInitials"></div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="font-weight-bold text-gray-800" id="deleteUsername"></div>
+                                <p class="mb-1 text-muted small" id="deleteRewardPreview"></p>
+                                <div class="small text-muted">
+                                    <i class="fas fa-coins mr-1"></i>Điểm: <span id="deleteRewardPoints"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-danger small mt-3">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Hành động này không thể hoàn tác. Phần thưởng sẽ bị xóa vĩnh viễn khỏi hệ thống.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light px-4" data-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <form method="post" action="@Url.Action("Delete", "PhanThuong")" id="deleteForm">
+                    <input type="hidden" name="id" id="deleteRewardId" />
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-trash mr-2"></i>Xác nhận xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-gradient-success text-white border-0">
+                <i class="fas fa-check-circle mr-2"></i>
+                <strong class="me-auto">Thành công!</strong>
+                <small>Vừa xong</small>
+                <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body bg-white" id="toastMessage"></div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetUserColor(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            return "bg-secondary";
+
+        int hash = 0;
+        foreach (char c in userId)
+        {
+            hash = (hash << 5) - hash + c;
+        }
+
+        hash = Math.Abs(hash);
+        int index = hash % 5;
+
+        switch (index)
+        {
+            case 0:
+                return "bg-primary";
+            case 1:
+                return "bg-success";
+            case 2:
+                return "bg-warning";
+            case 3:
+                return "bg-danger";
+            default:
+                return "bg-info";
+        }
+    }
+
+
+
+    public string GetInitials(string username)
+    {
+        if (string.IsNullOrWhiteSpace(username))
+            return "??";
+
+        var names = username
+            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (names.Length >= 2)
+        {
+            char first = names[0][0];
+            char last = names[names.Length - 1][0];
+            return (first.ToString() + last.ToString()).ToUpper();
+        }
+
+        if (username.Length >= 2)
+            return username.Substring(0, 2).ToUpper();
+
+        return username.ToUpper();
+    }
+
+
+    public string GetTimeAgo(DateTime date)
+    {
+        var timeSpan = DateTime.Now - date;
+
+        if (timeSpan.TotalDays >= 365)
+            return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
+        if (timeSpan.TotalDays >= 30)
+            return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
+        if (timeSpan.TotalDays >= 7)
+            return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
+        if (timeSpan.TotalDays >= 1)
+            return $"{(int)timeSpan.TotalDays} ngày trước";
+        if (timeSpan.TotalHours >= 1)
+            return $"{(int)timeSpan.TotalHours} giờ trước";
+        if (timeSpan.TotalMinutes >= 1)
+            return $"{(int)timeSpan.TotalMinutes} phút trước";
+
+        return "Vừa xong";
+    }
+}
+
+<style>
+    /* CSS Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --warning-gradient: linear-gradient(135deg, #ffc107 0%, #ff9900 100%);
+        --danger-gradient: linear-gradient(135deg, #f5365c 0%, #f56036 100%);
+        --info-gradient: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+        --shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+        --shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+    }
+
+    /* Custom Styles */
+    body {
+        background: linear-gradient(135deg, #f8f9fc 0%, #e9ecef 100%);
+        min-height: 100vh;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+    }
+
+    .bg-gradient-primary {
+        background: var(--primary-gradient);
+    }
+
+    .bg-gradient-success {
+        background: var(--success-gradient);
+    }
+
+    .bg-gradient-warning {
+        background: var(--warning-gradient);
+    }
+
+    /* Badge styles */
+    .badge-success {
+        background: var(--success-gradient);
+    }
+
+    .badge-warning {
+        background: var(--warning-gradient);
+    }
+
+    /* Icon shapes */
+    .icon-shape {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .bg-primary-light {
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+
+    .bg-danger-light {
+        background-color: rgba(245, 54, 92, 0.1);
+    }
+
+    /* Avatar */
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: 600;
+    }
+
+    .avatar-sm {
+        width: 36px;
+        height: 36px;
+        font-size: 0.875rem;
+    }
+
+    .avatar-xs {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+
+    .avatar-initials {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: white;
+    }
+
+    /* Reward icon */
+    .reward-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background-color: rgba(255, 193, 7, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* Points display */
+    .points-display {
+        display: inline-block;
+        text-align: center;
+    }
+
+    /* Table styles */
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        border-top: none;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: #4a5568;
+        background-color: #f8f9fe;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fe;
+        border-left-color: #667eea;
+        transform: translateX(2px);
+    }
+
+    /* Form controls */
+    .input-group-text {
+        border-radius: 0.5rem 0 0 0.5rem;
+        border-right: none;
+        transition: all 0.3s;
+    }
+
+    .form-control {
+        border-radius: 0 0.5rem 0.5rem 0;
+        border-left: none;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #667eea;
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-success {
+        background: var(--success-gradient);
+        border: none;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-warning {
+        background: var(--warning-gradient);
+        border: none;
+        color: white;
+    }
+
+    .btn-warning:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--danger-gradient);
+        color: white;
+        border: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-info:hover {
+        background: var(--info-gradient);
+        color: white;
+        border: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-rounded-circle {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+    }
+
+    /* Warning icon */
+    .warning-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Cursor */
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    /* Animation */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate__animated {
+        animation-duration: 0.6s;
+        animation-fill-mode: both;
+    }
+
+    .animate__fadeInUp {
+        animation-name: fadeInUp;
+    }
+
+    /* Scrollbar */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+
+        .btn-group {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .btn-rounded-circle {
+            width: 34px;
+            height: 34px;
+        }
+
+        .points-display .h5 {
+            font-size: 1.1rem;
+        }
+    }
+</style>
+
+<script>
+    // Khởi tạo các biến
+    let currentSort = { column: 'date', direction: 'desc' };
+    let currentRewardId = null;
+
+    // Xử lý form tặng thưởng
+    document.getElementById('giveRewardForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('submitSpinner');
+        const submitText = submitBtn.querySelector('.submit-text');
+
+        const userId = document.getElementById('UserID').value.trim();
+        const rewardName = document.getElementById('PhanThuong').value.trim();
+
+        if (!userId || !rewardName) {
+            showToast('Vui lòng điền đầy đủ thông tin!', 'error');
+            return;
+        }
+
+        // Hiển thị loading
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        submitText.textContent = 'Đang xử lý...';
+
+        // Giả lập delay
+        setTimeout(() => {
+            // Submit form thực tế
+            this.submit();
+
+            // Reset form và hiển thị thông báo
+            setTimeout(() => {
+                this.reset();
+                showToast('Đã tặng phần thưởng thành công!');
+
+                // Reset button
+                submitBtn.disabled = false;
+                spinner.classList.add('d-none');
+                submitText.textContent = 'Tặng ngay';
+            }, 500);
+        }, 1500);
+    });
+
+    // Hiển thị chi tiết phần thưởng
+    function showRewardDetail(rewardId) {
+        // Tìm hàng chứa phần thưởng
+        const rows = document.querySelectorAll('.reward-row');
+        let targetRow = null;
+
+        rows.forEach(row => {
+            const idBadge = row.cells[0].querySelector('.badge');
+            if (idBadge && idBadge.textContent.includes(rewardId.toString())) {
+                targetRow = row;
+            }
+        });
+
+        if (!targetRow) return;
+
+        const username = targetRow.cells[1].querySelector('.font-weight-bold').textContent;
+        const userId = targetRow.cells[1].querySelector('.text-muted').textContent.replace('UID: ', '');
+        const reward = targetRow.cells[2].querySelector('.font-weight-bold').textContent;
+        const points = targetRow.cells[3].querySelector('.font-weight-bold')?.textContent || '0';
+        const date = targetRow.cells[4].querySelector('.text-gray-800').textContent.replace('📅 ', '');
+        const time = targetRow.cells[4].querySelector('.text-muted').textContent.replace('🕒 ', '');
+        const timeAgo = targetRow.cells[4].querySelector('.badge-light').textContent;
+        const status = targetRow.cells[5].querySelector('.badge').textContent.trim();
+        const statusClass = targetRow.cells[5].querySelector('.badge').className;
+        const statusIcon = targetRow.cells[5].querySelector('.badge i').className;
+
+        const detailContent = document.getElementById('rewardDetailContent');
+        detailContent.innerHTML = `
+            <div class="text-center mb-4">
+                <div class="reward-icon-large mx-auto mb-3">
+                    <i class="fas fa-gift fa-3x text-warning"></i>
+                </div>
+                <h4 class="font-weight-bold text-gray-800">Phần Thưởng #${rewardId}</h4>
+                <p class="text-muted mb-0">
+                    <span class="badge ${statusClass} px-3 py-2">
+                        <i class="${statusIcon} mr-1"></i>
+                        ${status}
+                    </span>
+                </p>
+            </div>
+
+            <div class="bg-light rounded p-4 mb-4">
+                <h6 class="font-weight-bold text-gray-700 mb-3">
+                    <i class="fas fa-user-gift mr-2 text-primary"></i>Thông tin Người Nhận
+                </h6>
+                <div class="d-flex align-items-center mb-3">
+                    <div class="avatar avatar-lg mr-3">
+                        <div class="avatar-initials ${GetUserColorClass(userId)} text-white">
+                            ${username.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-weight-bold text-gray-800">${username}</div>
+                        <div class="text-muted">
+                            <i class="fas fa-hashtag mr-1"></i>User ID: ${userId}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="bg-light rounded p-3">
+                        <h6 class="font-weight-bold text-gray-700 mb-2">
+                            <i class="fas fa-gift mr-2 text-primary"></i>Chi tiết Phần Thưởng
+                        </h6>
+                        <div>
+                            <div class="font-weight-bold text-gray-800 mb-1">${reward}</div>
+                            ${points !== '0' ? `
+                                <div class="d-flex align-items-center mt-2">
+                                    <i class="fas fa-coins text-warning mr-2"></i>
+                                    <div>
+                                        <div class="font-weight-bold text-warning">${points} điểm</div>
+                                        <small class="text-muted">Điểm thưởng kèm theo</small>
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-light rounded p-3">
+                        <h6 class="font-weight-bold text-gray-700 mb-2">
+                            <i class="fas fa-calendar-alt mr-2 text-primary"></i>Thời gian
+                        </h6>
+                        <div>
+                            <div class="font-weight-bold text-gray-800">
+                                <i class="far fa-calendar mr-2"></i>${date}
+                            </div>
+                            <small class="text-muted">
+                                <i class="far fa-clock mr-2"></i>${time}
+                            </small>
+                            <div class="mt-2">
+                                <span class="badge badge-light">${timeAgo}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-light rounded p-3 mb-4">
+                <h6 class="font-weight-bold text-gray-700 mb-2">
+                    <i class="fas fa-chart-bar mr-2 text-primary"></i>Thống kê Tổng hợp
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-primary">${Math.floor(Math.random() * 5) + 1}</div>
+                        <small class="text-muted">Phần thưởng nhận</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-success">${Math.floor(Math.random() * 10000)}</div>
+                        <small class="text-muted">Tổng điểm</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-info">${status === 'Đã nhận' ? '100%' : '0%'}</div>
+                        <small class="text-muted">Tỷ lệ nhận</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button class="btn btn-primary mr-2" onclick="viewUserProfile(${userId})">
+                    <i class="fas fa-user mr-2"></i>Xem hồ sơ người dùng
+                </button>
+                <button class="btn btn-outline-info" onclick="sendReminder(${userId}, ${rewardId})">
+                    <i class="fas fa-bell mr-2"></i>Nhắc nhận thưởng
+                </button>
+            </div>
+        `;
+
+        $('#rewardDetailModal').modal('show');
+    }
+
+    // Helper function for user color
+    function GetUserColorClass(userId) {
+        const hash = Array.from(userId).reduce((hash, char) => {
+            return (hash << 5) - hash + char.charCodeAt(0);
+        }, 0);
+        const colors = ['bg-primary', 'bg-success', 'bg-warning', 'bg-danger', 'bg-info'];
+        return colors[Math.abs(hash) % colors.length];
+    }
+
+    // Xem hồ sơ người dùng
+    function viewUserProfile(userId) {
+        alert(`Chuyển đến hồ sơ của User ID: ${userId}`);
+        $('#rewardDetailModal').modal('hide');
+    }
+
+    // Gửi nhắc nhận
+    function sendReminder(userId, rewardId) {
+        showToast(`Đã gửi nhắc nhận cho User ID: ${userId}`, 'success');
+        $('#rewardDetailModal').modal('hide');
+    }
+
+    // Xóa phần thưởng
+    function deleteReward(rewardId, username, reward) {
+        currentRewardId = rewardId;
+
+        // Tìm hàng để lấy thông tin điểm
+        const rows = document.querySelectorAll('.reward-row');
+        let points = '0';
+        rows.forEach(row => {
+            const idBadge = row.cells[0].querySelector('.badge');
+            if (idBadge && idBadge.textContent.includes(rewardId.toString())) {
+                const pointsElement = row.cells[3].querySelector('.font-weight-bold');
+                points = pointsElement ? pointsElement.textContent.replace(/,/g, '') : '0';
+            }
+        });
+
+        // Cập nhật modal xóa
+        document.getElementById('deleteUserInitials').textContent =
+            username.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        document.getElementById('deleteUsername').textContent = username;
+
+        // Rút gọn nội dung nếu quá dài
+        const previewReward = reward.length > 80 ? reward.substring(0, 80) + '...' : reward;
+        document.getElementById('deleteRewardPreview').textContent = previewReward;
+        document.getElementById('deleteRewardPoints').textContent = points;
+        document.getElementById('deleteRewardId').value = rewardId;
+
+        $('#deleteModal').modal('show');
+    }
+
+    // Xử lý xác nhận xóa
+    document.getElementById('deleteForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const btn = this.querySelector('button[type="submit"]');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xóa...';
+        btn.disabled = true;
+
+        const formData = new FormData(this);
+
+        // Gửi request xóa
+        fetch(this.action, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => {
+                if (response.ok) {
+                    // Xóa hàng khỏi bảng
+                    const rows = document.querySelectorAll('.reward-row');
+                    rows.forEach(row => {
+                        const idBadge = row.cells[0].querySelector('.badge');
+                        if (idBadge && idBadge.textContent.includes(currentRewardId.toString())) {
+                            row.classList.add('animate__animated', 'animate__fadeOut');
+                            setTimeout(() => {
+                                row.remove();
+                                updateStats();
+                                updateVisibleCount();
+                                showToast('Đã xóa phần thưởng thành công!');
+                            }, 500);
+                        }
+                    });
+                    $('#deleteModal').modal('hide');
+                } else {
+                    showToast('Có lỗi xảy ra khi xóa phần thưởng!', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Lỗi kết nối!', 'error');
+            })
+            .finally(() => {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                currentRewardId = null;
+            });
+    });
+
+    // Cập nhật thống kê
+    function updateStats() {
+        const rows = document.querySelectorAll('.reward-row');
+        const total = rows.length;
+
+        let received = 0;
+        let pending = 0;
+        let totalPoints = 0;
+
+        rows.forEach(row => {
+            const statusBadge = row.cells[5].querySelector('.badge');
+            const pointsElement = row.cells[3].querySelector('.font-weight-bold');
+
+            if (statusBadge.textContent.includes('Đã nhận')) {
+                received++;
+            } else {
+                pending++;
+            }
+
+            if (pointsElement) {
+                const points = parseInt(pointsElement.textContent.replace(/,/g, '')) || 0;
+                totalPoints += points;
+            }
+        });
+
+        const uniqueUsers = new Set();
+        rows.forEach(row => {
+            const userIdElement = row.cells[1].querySelector('.text-muted');
+            if (userIdElement) {
+                const userId = userIdElement.textContent.match(/\d+/);
+                if (userId) uniqueUsers.add(userId[0]);
+            }
+        });
+
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('receivedCount').textContent = received;
+        document.getElementById('pendingCount').textContent = pending;
+        document.getElementById('totalPoints').textContent = totalPoints.toLocaleString();
+        document.getElementById('uniqueUsers').textContent = uniqueUsers.size;
+    }
+
+    // Hiển thị toast
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('successToast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        if (type === 'error') {
+            toast.querySelector('.toast-header').className = 'toast-header bg-gradient-danger text-white border-0';
+            toast.querySelector('.fas').className = 'fas fa-exclamation-circle mr-2';
+            toast.querySelector('.me-auto').textContent = 'Lỗi!';
+        } else {
+            toast.querySelector('.toast-header').className = 'toast-header bg-gradient-success text-white border-0';
+            toast.querySelector('.fas').className = 'fas fa-check-circle mr-2';
+            toast.querySelector('.me-auto').textContent = 'Thành công!';
+        }
+
+        toastMessage.textContent = message;
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    // Sắp xếp bảng
+    function sortTable(column) {
+        const table = document.getElementById('rewardTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('.reward-row'));
+
+        if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.column = column;
+            currentSort.direction = 'asc';
+        }
+
+        rows.sort((a, b) => {
+            let aValue, bValue;
+
+            switch (column) {
+                case 'id':
+                    aValue = parseInt(a.cells[0].querySelector('.badge').textContent.replace('#', ''));
+                    bValue = parseInt(b.cells[0].querySelector('.badge').textContent.replace('#', ''));
+                    break;
+                case 'user':
+                    aValue = a.cells[1].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    bValue = b.cells[1].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    break;
+                case 'reward':
+                    aValue = a.cells[2].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    bValue = b.cells[2].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    break;
+                case 'points':
+                    const aPoints = a.cells[3].querySelector('.font-weight-bold');
+                    const bPoints = b.cells[3].querySelector('.font-weight-bold');
+                    aValue = aPoints ? parseInt(aPoints.textContent.replace(/,/g, '')) || 0 : 0;
+                    bValue = bPoints ? parseInt(bPoints.textContent.replace(/,/g, '')) || 0 : 0;
+                    break;
+                case 'date':
+                    aValue = new Date(a.cells[4].querySelector('.text-gray-800').textContent.split('/').reverse().join('-'));
+                    bValue = new Date(b.cells[4].querySelector('.text-gray-800').textContent.split('/').reverse().join('-'));
+                    break;
+                case 'status':
+                    aValue = a.cells[5].querySelector('.badge').textContent.toLowerCase();
+                    bValue = b.cells[5].querySelector('.badge').textContent.toLowerCase();
+                    break;
+            }
+
+            if (currentSort.direction === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+        updateSortIcons(column);
+    }
+
+    function updateSortIcons(currentColumn) {
+        document.querySelectorAll('.fa-sort').forEach(icon => {
+            icon.classList.remove('fa-sort-up', 'fa-sort-down');
+            icon.classList.add('fa-sort');
+        });
+
+        const currentIcon = document.querySelector(`[onclick="sortTable('${currentColumn}")"]`);
+        if (currentIcon) {
+            currentIcon.classList.remove('fa-sort');
+            currentIcon.classList.add(currentSort.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+        }
+    }
+
+    // Tìm kiếm
+    document.getElementById('searchInput')?.addEventListener('input', function (e) {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#rewardTable .reward-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const user = row.getAttribute('data-user');
+            const reward = row.getAttribute('data-reward');
+            const status = row.getAttribute('data-status');
+            const searchText = `${user} ${reward} ${status}`;
+
+            if (searchText.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+
+                // Highlight kết quả tìm kiếm
+                if (searchTerm) {
+                    const rewardText = row.cells[2].querySelector('.font-weight-bold');
+                    const originalText = rewardText.getAttribute('data-original') || rewardText.textContent;
+                    rewardText.setAttribute('data-original', originalText);
+                    const highlighted = originalText.replace(
+                        new RegExp(searchTerm, 'gi'),
+                        match => `<span class="bg-warning text-dark px-1 rounded">${match}</span>`
+                    );
+                    rewardText.innerHTML = highlighted;
+                }
+            } else {
+                row.style.display = 'none';
+
+                // Khôi phục text gốc
+                const rewardText = row.cells[2].querySelector('.font-weight-bold');
+                if (rewardText && rewardText.getAttribute('data-original')) {
+                    rewardText.textContent = rewardText.getAttribute('data-original');
+                }
+            }
+        });
+
+        document.getElementById('visibleItems').textContent = visibleCount;
+    });
+
+    // Cập nhật số lượng hiển thị
+    function updateVisibleCount() {
+        const visibleCount = document.querySelectorAll('#rewardTable .reward-row:not([style*="display: none"])').length;
+        document.getElementById('visibleItems').textContent = visibleCount;
+    }
+
+    // Khởi tạo
+    document.addEventListener('DOMContentLoaded', function () {
+        // Update visible count
+        updateVisibleCount();
+
+        // Add click handlers for table rows
+        document.querySelectorAll('.reward-row').forEach(row => {
+            row.addEventListener('click', function (e) {
+                if (!e.target.closest('.btn')) {
+                    const detailBtn = this.querySelector('[onclick^="showRewardDetail"]');
+                    if (detailBtn) {
+                        const rewardId = detailBtn.getAttribute('onclick').match(/\d+/)[0];
+                        showRewardDetail(rewardId);
+                    }
+                }
+            });
+        });
+    });
+</script>

@@ -1,0 +1,19 @@
+﻿@model WEBB.Models.Admin.AdminSessionDto
+
+@{
+    ViewBag.Title = "Chi tiết Phiên đăng nhập";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Chi tiết Phiên đăng nhập</h2>
+
+<ul class="list-group">
+    <li class="list-group-item"><b>Session ID:</b> @Model.SessionID</li>
+    <li class="list-group-item"><b>User:</b> @Model.Username</li>
+    <li class="list-group-item"><b>Bắt đầu:</b> @Model.ThoiGianBatDau</li>
+    <li class="list-group-item"><b>Kết thúc:</b> @Model.ThoiGianKetThuc</li>
+    <li class="list-group-item"><b>IP:</b> @Model.IPAddress</li>
+    <li class="list-group-item"><b>Thiết bị:</b> @Model.DeviceType</li>
+</ul>
+
+<a class="btn btn-secondary mt-3" href="@Url.Action("Index")">Quay lại</a>

@@ -1,0 +1,14 @@
+﻿@{
+    ViewBag.Title = "Khóa tài khoản";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Khóa tài khoản</h2>
+
+<p>Bạn có chắc chắn muốn <b>KHÓA</b> tài khoản này?</p>
+
+<form method="post" action="@Url.Action("LockConfirm", "Users")">
+    <input type="hidden" name="id" value="@ViewBag.UserId" />
+    <button type="submit" class="btn btn-danger">Khóa</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
+</form>

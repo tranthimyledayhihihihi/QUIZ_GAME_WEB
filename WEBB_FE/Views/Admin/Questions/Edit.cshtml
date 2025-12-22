@@ -1,7 +1,41 @@
-﻿
+﻿@model WEBB.Models.Quiz.CauHoiDto
 @{
-    ViewBag.Title = "Edit";
+    ViewBag.Title = "Sửa Câu hỏi";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Edit</h2>
+<h2>Sửa Câu hỏi</h2>
 
+<form method="post" action="@Url.Action("Edit", "Questions")">
+    @Html.HiddenFor(m => m.CauHoiID)
+
+    <textarea name="NoiDung" class="form-control mb-2" required>@Model.NoiDung</textarea>
+
+    <input name="DapAnA" class="form-control mb-2" value="@Model.DapAnA" required />
+    <input name="DapAnB" class="form-control mb-2" value="@Model.DapAnB" required />
+    <input name="DapAnC" class="form-control mb-2" value="@Model.DapAnC" required />
+    <input name="DapAnD" class="form-control mb-2" value="@Model.DapAnD" required />
+
+    <input name="DapAnDung" class="form-control mb-2" value="@Model.DapAnDung" required />
+
+    <select name="ChuDeID" class="form-control mb-2">
+        @foreach (var cd in ViewBag.ChuDes)
+        {
+            <option value="@cd.chuDeID" @(cd.chuDeID == Model.ChuDeID ? "selected" : "")>
+                @cd.tenChuDe
+            </option>
+        }
+    </select>
+
+    <select name="DoKhoID" class="form-control mb-3">
+        @foreach (var dk in ViewBag.DoKhos)
+        {
+            <option value="@dk.doKhoID" @(dk.doKhoID == Model.DoKhoID ? "selected" : "")>
+                @dk.tenDoKho
+            </option>
+        }
+    </select>
+
+    <button type="submit" class="btn btn-success">Lưu</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
+</form>

@@ -1,0 +1,722 @@
+﻿@model WEBB_FE.Models.Admin.ThongKeViewModel
+@{
+    ViewBag.Title = "Thống kê người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    // Calculate totals
+    int totalGames = Model.DailyStats.Sum(x => x.SoTran);
+    int totalCorrect = Model.DailyStats.Sum(x => x.SoCauDung);
+    double avgScore = Model.DailyStats.Any() ? Model.DailyStats.Average(x => x.DiemTrungBinh) : 0;
+    int activeDays = Model.DailyStats.Count(x => x.SoTran > 0);
+    int maxGamesInDay = Model.DailyStats.Any() ? Model.DailyStats.Max(x => x.SoTran) : 0;
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="stats-icon me-3">
+                <i class="fas fa-chart-line fa-2x text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1">📊 Thống kê người dùng</h1>
+                <p class="text-muted mb-0">Theo dõi và phân tích hiệu suất người chơi</p>
+            </div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">
+                <i class="fas fa-question-circle me-2"></i>Hướng dẫn
+            </button>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-4" role="alert">
+            <i class="fas fa-exclamation-triangle me-3"></i>
+            @ViewBag.Error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- User Search Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-search text-primary me-2"></i>
+                Tìm kiếm người dùng
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-6 col-lg-4">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-user me-1"></i>Nhập User ID
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-hashtag"></i>
+                        </span>
+                        <input type="number"
+                               name="userId"
+                               class="form-control"
+                               value="@Model.UserID"
+                               placeholder="VD: 12345"
+                               min="1"
+                               required />
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-chart-bar me-2"></i>Xem thống kê
+                        </button>
+                        @if (Model.UserID > 0)
+                        {
+                            <a href="/Admin/Users/Details/@Model.UserID" class="btn btn-outline-info">
+                                <i class="fas fa-external-link-alt me-2"></i>Chi tiết user
+                            </a>
+                        }
+                    </div>
+                </div>
+                <div class="col-md-12 col-lg-4">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Nhập ID người dùng để xem thống kê chi tiết trong 30 ngày gần nhất
+                    </small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.UserID > 0)
+    {
+        <!-- User Info Summary -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-circle text-primary me-2"></i>
+                            Tổng quan người dùng
+                            <span class="badge bg-primary ms-2">ID: @Model.UserID</span>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Streak Card -->
+                            @if (Model.Streak != null)
+                            {
+                                <div class="col-md-6">
+                                    <div class="streak-card p-4 rounded-3 bg-gradient text-white"
+                                         style="background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="text-white-50 mb-2">
+                                                    <i class="fas fa-fire me-2"></i>Chuỗi chơi liên tiếp
+                                                </h6>
+                                                <h2 class="mb-0">@Model.Streak.SoNgayLienTiep ngày</h2>
+                                            </div>
+                                            <div class="streak-icon">
+                                                <i class="fas fa-fire fa-3x opacity-25"></i>
+                                            </div>
+                                        </div>
+                                        <hr class="my-3 opacity-25">
+                                        <small class="text-white-75">
+                                            <i class="fas fa-clock me-1"></i>
+                                            Cập nhật: @Model.Streak.NgayCapNhatCuoi.ToString("dd/MM/yyyy HH:mm")
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Active Days -->
+                            <div class="col-md-6">
+                                <div class="stat-card p-4 rounded-3 bg-light h-100">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="text-muted mb-2">
+                                                <i class="fas fa-calendar-check me-2"></i>Ngày hoạt động
+                                            </h6>
+                                            <h2 class="mb-0 text-success">
+                                                @activeDays/@Model.DailyStats.Count
+                                            </h2>
+                                            <small class="text-muted">
+                                                @((activeDays * 100 / Math.Max(Model.DailyStats.Count, 1)))% tham gia
+                                            </small>
+
+                                        </div>
+                                        <div class="stat-icon">
+                                            <i class="fas fa-calendar-alt fa-2x text-success opacity-50"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Games -->
+                            <div class="col-md-4">
+                                <div class="stat-card p-3 rounded-3 bg-light h-100">
+                                    <div class="text-center">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="fas fa-gamepad me-2"></i>Tổng trận
+                                        </h6>
+                                        <h3 class="mb-0 text-primary">@totalGames</h3>
+                                        <small class="text-muted">
+                                            @(maxGamesInDay > 0 ? $"Cao nhất: {maxGamesInDay}/ngày" : "")
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Total Correct -->
+                            <div class="col-md-4">
+                                <div class="stat-card p-3 rounded-3 bg-light h-100">
+                                    <div class="text-center">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="fas fa-check-circle me-2"></i>Câu đúng
+                                        </h6>
+                                        <h3 class="mb-0 text-success">@totalCorrect</h3>
+                                        <small class="text-muted">
+                                            @(totalGames > 0 ? $"Tỉ lệ: {(totalCorrect * 100.0 / totalGames):F1}%" : "")
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Average Score -->
+                            <div class="col-md-4">
+                                <div class="stat-card p-3 rounded-3 bg-light h-100">
+                                    <div class="text-center">
+                                        <h6 class="text-muted mb-2">
+                                            <i class="fas fa-star me-2"></i>Điểm TB
+                                        </h6>
+                                        <h3 class="mb-0 text-warning">@avgScore.ToString("F1")</h3>
+                                        <small class="text-muted">
+                                            Trung bình mỗi trận
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Chart -->
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-bar text-success me-2"></i>
+                            Hiệu suất 7 ngày gần nhất
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="performanceChart" style="height: 200px;">
+                            <!-- Chart will be rendered here -->
+                            <div class="text-center py-4">
+                                <i class="fas fa-chart-bar fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Biểu đồ hiệu suất</p>
+                                <button class="btn btn-sm btn-outline-primary" onclick="renderPerformanceChart()">
+                                    <i class="fas fa-sync-alt me-1"></i>Tạo biểu đồ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Stats Table -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-alt text-info me-2"></i>
+                    Thống kê chi tiết 30 ngày
+                    <span class="badge bg-info ms-2">@Model.DailyStats.Count ngày</span>
+                </h5>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" id="searchTable" class="form-control" placeholder="Tìm theo ngày...">
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="exportBtn">
+                        <i class="fas fa-download me-1"></i>Xuất CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="statsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="20%" class="ps-4">
+                                    <i class="fas fa-calendar me-1"></i>Ngày
+                                </th>
+                                <th width="20%" class="text-center">
+                                    <i class="fas fa-gamepad me-1"></i>Số trận
+                                </th>
+                                <th width="20%" class="text-center">
+                                    <i class="fas fa-check-circle me-1"></i>Số câu đúng
+                                </th>
+                                <th width="20%" class="text-center">
+                                    <i class="fas fa-star me-1"></i>Điểm TB
+                                </th>
+                                <th width="20%" class="text-center">
+                                    <i class="fas fa-chart-line me-1"></i>Hiệu suất
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.DailyStats.Any())
+                            {
+                                foreach (var item in Model.DailyStats.OrderByDescending(x => x.Ngay))
+                                {
+                                    var performanceClass = item.SoTran > 0 ? "" : "table-secondary";
+                                    var performancePercent = item.SoTran > 0 ? (item.SoCauDung * 100.0 / (item.SoTran * 10)) : 0;
+
+                                    <tr class="align-middle @performanceClass">
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <div class="date-badge me-3">
+                                                    <div class="day-number">@item.Ngay.ToString("dd")</div>
+                                                    <div class="day-name">@item.Ngay.ToString("ddd", new System.Globalization.CultureInfo("vi-VN"))</div>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-medium">@item.Ngay.ToString("dd/MM/yyyy")</div>
+                                                    @if (item.Ngay.Date == DateTime.Today.Date)
+                                                    {
+                                                        <small class="text-primary fw-bold">
+                                                            <i class="fas fa-star me-1"></i>Hôm nay
+                                                        </small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.SoTran > 0)
+                                            {
+                                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">
+                                                    @item.SoTran trận
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.SoTran > 0)
+                                            {
+                                                <span class="fw-semibold text-success">@item.SoCauDung</span>
+                                                <div class="text-muted small">
+                                                    @(item.SoTran > 0 ? $"{(item.SoCauDung * 100.0 / (item.SoTran * 10)):F1}%" : "")
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.SoTran > 0)
+                                            {
+                                                <span class="fw-bold @(item.DiemTrungBinh >= 8 ? "text-success" : item.DiemTrungBinh >= 5 ? "text-warning" : "text-danger")">
+                                                    @item.DiemTrungBinh.ToString("F1")
+                                                </span>
+                                                <div class="progress mt-1" style="height: 5px;">
+                                                    <div class="progress-bar @(item.DiemTrungBinh >= 8 ? "bg-success" : item.DiemTrungBinh >= 5 ? "bg-warning" : "bg-danger")"
+                                                         role="progressbar"
+                                                         style="width: @(item.DiemTrungBinh * 10)%"
+                                                         aria-valuenow="@item.DiemTrungBinh"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="10">
+                                                    </div>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @if (item.SoTran > 0)
+                                            {
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                    <div class="performance-indicator me-2"
+                                                         style="width: 100px; height: 20px; background-color: #e9ecef; border-radius: 10px; overflow: hidden;">
+                                                        <div class="performance-bar"
+                                                             style="height: 100%; width: @performancePercent%;
+                                                                    background-color: @(performancePercent >= 80 ? "#28a745" : performancePercent >= 60 ? "#ffc107" : "#dc3545");">
+                                                        </div>
+                                                    </div>
+                                                    <span class="small fw-medium">@performancePercent.ToString("F0")%</span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2">
+                                                    Không hoạt động
+                                                </span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-5">
+                                        <div class="empty-state">
+                                            <i class="fas fa-chart-line fa-4x text-muted mb-3"></i>
+                                            <h5 class="text-muted">Không có dữ liệu thống kê</h5>
+                                            <p class="text-muted">Người dùng này chưa có hoạt động nào trong 30 ngày qua</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if (Model.DailyStats.Any())
+            {
+                <div class="card-footer bg-white border-top">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Hiển thị @Model.DailyStats.Count ngày gần nhất
+                            </small>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted me-3">
+                                <span class="badge bg-success me-1">●</span> Tốt (≥8)
+                            </small>
+                            <small class="text-muted me-3">
+                                <span class="badge bg-warning me-1">●</span> Trung bình (5-8)
+                            </small>
+                            <small class="text-muted">
+                                <span class="badge bg-danger me-1">●</span> Cần cải thiện (<5)
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Empty State -->
+        <div class="text-center py-5">
+            <div class="empty-state">
+                <i class="fas fa-user-chart fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted mb-3">Chưa chọn người dùng</h3>
+                <p class="text-muted mb-4">Vui lòng nhập User ID để xem thống kê chi tiết</p>
+                <div class="row justify-content-center">
+                    <div class="col-md-6">
+                        <form method="get" class="input-group">
+                            <input type="number"
+                                   name="userId"
+                                   class="form-control form-control-lg"
+                                   placeholder="Nhập User ID"
+                                   required />
+                            <button class="btn btn-primary btn-lg" type="submit">
+                                <i class="fas fa-chart-bar me-2"></i>Xem thống kê
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Hướng dẫn thống kê
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>📊 Chỉ số thống kê:</h6>
+                <ul class="mb-3">
+                    <li><strong>Chuỗi ngày chơi liên tiếp</strong>: Số ngày người dùng tham gia liên tục</li>
+                    <li><strong>Số trận</strong>: Tổng số lượt chơi quiz trong ngày</li>
+                    <li><strong>Số câu đúng</strong>: Tổng số câu trả lời đúng</li>
+                    <li><strong>Điểm trung bình</strong>: Điểm trung bình mỗi trận (thang 10)</li>
+                    <li><strong>Hiệu suất</strong>: Tỉ lệ câu trả lời đúng</li>
+                </ul>
+
+                <h6>🎯 Đánh giá hiệu suất:</h6>
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <div class="text-center p-2 rounded bg-success bg-opacity-10">
+                            <div class="text-success fw-bold">≥ 80%</div>
+                            <small>Tốt</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center p-2 rounded bg-warning bg-opacity-10">
+                            <div class="text-warning fw-bold">60-79%</div>
+                            <small>Trung bình</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="text-center p-2 rounded bg-danger bg-opacity-10">
+                            <div class="text-danger fw-bold">< 60%</div>
+                            <small>Cần cải thiện</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    <strong>Mẹo:</strong> Sử dụng dữ liệu này để đề xuất cải thiện trải nghiệm người dùng
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+    .stats-icon {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        width: 70px;
+        height: 70px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .streak-card {
+        transition: transform 0.3s;
+        border: none;
+    }
+
+        .streak-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 15px rgba(255, 107, 107, 0.2);
+        }
+
+    .stat-card {
+        transition: all 0.2s;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+        }
+
+    .date-badge {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+    }
+
+        .date-badge .day-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .date-badge .day-name {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+        transform: translateX(2px);
+        transition: all 0.2s;
+    }
+
+    .table-hover tbody tr.table-secondary:hover {
+        background-color: rgba(108, 117, 125, 0.05) !important;
+    }
+
+    .empty-state {
+        opacity: 0.7;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .performance-indicator {
+        position: relative;
+    }
+
+    .performance-bar {
+        transition: width 0.5s ease;
+    }
+
+    .progress {
+        border-radius: 3px;
+    }
+
+    .progress-bar {
+        border-radius: 3px;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchTable');
+    const statsTable = document.getElementById('statsTable');
+
+    if (searchInput && statsTable) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = statsTable.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const dateCell = row.querySelector('td:first-child');
+                const dateText = dateCell ? dateCell.textContent.toLowerCase() : '';
+                row.style.display = dateText.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+
+    // Export CSV functionality
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const userId = @Model.UserID;
+            const filename = `thong-ke-user-${userId}-${new Date().toISOString().split('T')[0]}.csv`;
+
+            let csv = 'Ngày,Số trận,Số câu đúng,Điểm trung bình,Tỉ lệ đúng (%)\n';
+
+            const rows = document.querySelectorAll('#statsTable tbody tr:not([style*="none"])');
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 4) {
+                    const date = cells[0].textContent.trim();
+                    const games = cells[1].textContent.replace('trận', '').trim();
+                    const correct = cells[2].querySelector('.fw-semibold')?.textContent.trim() || '0';
+                    const score = cells[3].querySelector('.fw-bold')?.textContent.trim() || '0';
+                    const rate = cells[2].querySelector('.small')?.textContent.replace('%', '').trim() || '0';
+
+                    csv += `"${date}",${games},${correct},${score},${rate}\n`;
+                }
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    // Render performance chart
+    function renderPerformanceChart() {
+    const chartContainer = document.getElementById('performanceChart');
+    if (!chartContainer) return;
+
+    const last7Days = @Html.Raw(
+        Newtonsoft.Json.JsonConvert.SerializeObject(
+            Model.DailyStats
+                .OrderByDescending(x => x.Ngay)
+                .Take(7)
+                .Reverse()
+        )
+    );
+
+    if (last7Days && last7Days.length > 0) {
+        chartContainer.innerHTML = '';
+
+        const maxGames = Math.max(...last7Days.map(x => x.SoTran || 0));
+
+        last7Days.forEach(day => {
+            const date = new Date(day.Ngay).toLocaleDateString('vi-VN', {
+                weekday: 'short',
+                day: 'numeric'
+            });
+
+            const games = day.SoTran || 0;
+            const percentage = maxGames > 0 ? (games / maxGames) * 100 : 0;
+
+            const bar = document.createElement('div');
+            bar.className = 'mb-3';
+            bar.innerHTML = `
+                <div class="d-flex align-items-center mb-1">
+                    <small class="text-muted" style="width:40px;">${date}</small>
+                    <div class="flex-grow-1 ms-2">
+                        <div class="d-flex justify-content-between">
+                            <small class="fw-medium">${games} trận</small>
+                            <small class="text-muted">${(day.DiemTrungBinh || 0).toFixed(1)} điểm</small>
+                        </div>
+                        <div class="progress" style="height:8px;">
+                            <div class="progress-bar bg-primary"
+                                 style="width:${percentage}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chartContainer.appendChild(bar);
+        });
+    }
+}
+
+    // Auto render chart if user is selected
+    @if (Model.UserID > 0 && Model.DailyStats.Any())
+    {
+        <text>
+        setTimeout(() => {
+            renderPerformanceChart();
+        }, 500);
+        </text>
+    }
+
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('#statsTable tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            row.style.transition = 'opacity 0.3s, transform 0.3s';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 30);
+    });
+});
+</script>

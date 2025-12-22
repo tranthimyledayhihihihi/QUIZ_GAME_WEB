@@ -1,7 +1,410 @@
-﻿
+﻿@model List<WEBB.Models.Quiz.DoKhoDto>
+
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Quản lý Độ Khó";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-line me-2"></i>Quản lý Độ Khó
+        </h1>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="fas fa-plus me-2"></i>Thêm Độ Khó
+        </button>
+    </div>
 
+    <!-- Thông báo -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số độ khó
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-layer-group fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Điểm thưởng trung bình
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @{
+                                    var avgPoints = Model.Any() ? Model.Average(d => d.DiemThuong) : 0;
+                                }
+                                @avgPoints.ToString("N1")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Điểm thưởng cao nhất
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(Model.Any() ? Model.Max(d => d.DiemThuong) : 0)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-up fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bảng độ khó -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách Độ Khó</h6>
+            <div class="d-flex align-items-center">
+                <div class="input-group input-group-sm" style="width: 300px;">
+                    <input type="text" class="form-control" placeholder="Tìm kiếm độ khó..." id="searchInput">
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="difficultyTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">ID</th>
+                            <th class="text-center">Tên Độ Khó</th>
+                            <th class="text-center">Điểm Thưởng</th>
+                            <th class="text-center" style="width: 150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var difficulty in Model.OrderBy(d => d.DiemThuong))
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">#@difficulty.DoKhoID</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        @GetDifficultyIcon(difficulty.TenDoKho)
+                                        <span class="fw-semibold ms-2">@difficulty.TenDoKho</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span class="badge @GetPointsBadgeClass(difficulty.DiemThuong) me-2">
+                                            <i class="fas fa-star me-1"></i>@difficulty.DiemThuong
+                                        </span>
+                                        <span class="text-muted">điểm</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Edit", "Difficulties", new { id = difficulty.DoKhoID })"
+                                           class="btn btn-outline-warning btn-sm me-1"
+                                           title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+
+                                        <form action="@Url.Action("Delete", "Difficulties")"
+                                              method="post"
+                                              style="display:inline;"
+                                              onsubmit="return confirmDelete(this, '@difficulty.TenDoKho')">
+                                            <input type="hidden" name="id" value="@difficulty.DoKhoID" />
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" title="Xóa">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Thêm Độ Khó -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>Thêm Độ Khó Mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/Admin/Difficulties/Create" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Độ Khó <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="TenDoKho"
+                               placeholder="Ví dụ: Dễ, Trung bình, Khó..." required>
+                        <div class="form-text">Tên độ khó sẽ hiển thị khi tạo câu hỏi</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Điểm Thưởng <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" name="DiemThuong"
+                                   placeholder="Nhập điểm thưởng..." required min="1" max="100">
+                            <span class="input-group-text">điểm</span>
+                        </div>
+                        <div class="form-text">Điểm thưởng cho câu hỏi thuộc độ khó này</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Lưu Độ Khó
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- CSS tùy chỉnh -->
+<style>
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e3e6f0;
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #4e73df;
+        border-top: none;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+    }
+
+    .btn-group .btn {
+        border-radius: 6px !important;
+        transition: all 0.2s;
+    }
+
+        .btn-group .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .modal-header {
+        border-radius: 10px 10px 0 0;
+    }
+
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .difficulty-icon {
+        font-size: 1.2rem;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+    }
+</style>
+
+<script>
+    // Hàm xác nhận xóa
+    function confirmDelete(form, difficultyName) {
+        event.preventDefault();
+
+        // Tạo modal xác nhận
+        const confirmModal = `
+            <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header bg-danger text-white">
+                            <h5 class="modal-title">
+                                <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body text-center">
+                            <i class="fas fa-trash-alt fa-4x text-danger mb-3"></i>
+                            <h5 class="fw-bold">Xóa độ khó: ${difficultyName}</h5>
+                            <p class="text-muted">
+                                Độ khó này sẽ bị xóa vĩnh viễn. Các câu hỏi đang sử dụng độ khó này cần được cập nhật lại.
+                            </p>
+                        </div>
+                        <div class="modal-footer justify-content-center">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i>Hủy
+                            </button>
+                            <button type="button" class="btn btn-danger" onclick="submitForm(${form.querySelector('input[name="id"]').value})">
+                                <i class="fas fa-trash-alt me-1"></i>Xác nhận xóa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Thêm modal vào body
+        document.body.insertAdjacentHTML('beforeend', confirmModal);
+
+        // Hiển thị modal
+        const modalElement = document.getElementById('confirmDeleteModal');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        // Xóa modal khi đóng
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            this.remove();
+        });
+
+        return false;
+    }
+
+    function submitForm(difficultyId) {
+        // Tìm form và submit
+        const form = document.querySelector(`form input[value="${difficultyId}"]`).closest('form');
+        form.submit();
+    }
+
+    // Tìm kiếm trong bảng
+    document.getElementById('searchInput')?.addEventListener('keyup', function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#difficultyTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    // Hiệu ứng hover cho bảng
+    document.addEventListener('DOMContentLoaded', function () {
+        const tableRows = document.querySelectorAll('#difficultyTable tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function () {
+                this.classList.add('table-active');
+            });
+            row.addEventListener('mouseleave', function () {
+                this.classList.remove('table-active');
+            });
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+@functions {
+    // Hàm trả về icon tương ứng với độ khó
+    public IHtmlString GetDifficultyIcon(string tenDoKho)
+    {
+        string iconClass = "fas fa-question-circle"; // Mặc định
+        string badgeClass = "bg-secondary text-white";
+
+        if (tenDoKho.ToLower().Contains("dễ") || tenDoKho.ToLower().Contains("easy"))
+        {
+            iconClass = "fas fa-smile";
+            badgeClass = "bg-success text-white";
+        }
+        else if (tenDoKho.ToLower().Contains("trung bình") || tenDoKho.ToLower().Contains("medium"))
+        {
+            iconClass = "fas fa-meh";
+            badgeClass = "bg-warning text-dark";
+        }
+        else if (tenDoKho.ToLower().Contains("khó") || tenDoKho.ToLower().Contains("hard"))
+        {
+            iconClass = "fas fa-frown";
+            badgeClass = "bg-danger text-white";
+        }
+
+        return Html.Raw($"<span class='difficulty-icon {badgeClass}'><i class='{iconClass}'></i></span>");
+    }
+
+    // Hàm trả về class badge cho điểm thưởng
+    public IHtmlString GetPointsBadgeClass(int diemThuong)
+    {
+        if (diemThuong <= 3)
+            return Html.Raw("bg-success text-white");
+        else if (diemThuong <= 7)
+            return Html.Raw("bg-warning text-dark");
+        else
+            return Html.Raw("bg-danger text-white");
+    }
+}

@@ -7,7 +7,14 @@ namespace WEBB_FE
     {
         public static void RegisterRoutes(RouteCollection routes)
         {
-            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+            routes.MapMvcAttributeRoutes();  // Đảm bảo rằng bạn sử dụng attribute routing nếu cần.
+
+            // Đảm bảo đường dẫn cho khu vực Admin được cấu hình đúng
+            routes.MapRoute(
+                name: "Admin_Default",
+                url: "Admin/{controller}/{action}/{id}",
+                defaults: new { controller = "Users", action = "Index", id = UrlParameter.Optional }
+            );
 
             routes.MapRoute(
                 name: "Default",
@@ -16,4 +23,5 @@ namespace WEBB_FE
             );
         }
     }
+
 }

@@ -1,0 +1,23 @@
+﻿@{
+    ViewBag.Title = "Cập nhật vai trò";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Cập nhật vai trò</h2>
+
+<form method="post" action="@Url.Action("UpdateRoleConfirm", "Users")">
+    <input type="hidden" name="userId" value="@ViewBag.UserId" />
+
+    <div class="form-group">
+        <label>Chọn vai trò</label>
+        <select name="newRoleId" class="form-control">
+            <option value="1">SuperAdmin</option>
+            <option value="2">Moderator</option>
+            <option value="3">Player</option>
+        </select>
+    </div>
+
+    <br />
+    <button type="submit" class="btn btn-warning">Cập nhật</button>
+    <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
+</form>

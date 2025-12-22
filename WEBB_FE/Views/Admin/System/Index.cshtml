@@ -1,0 +1,329 @@
+﻿@model List<WEBB.Models.System.SystemSettingDto>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Cấu hình hệ thống";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="system-config-icon me-3">
+                <i class="fas fa-cogs fa-2x text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-0">⚙️ Cấu hình hệ thống</h1>
+                <p class="text-muted mb-0">Quản lý các thiết lập hệ thống và cấu hình chung</p>
+            </div>
+        </div>
+        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">
+            <i class="fas fa-question-circle me-2"></i>Trợ giúp
+        </button>
+    </div>
+
+    <!-- Alert Messages -->
+    <div class="alerts-container">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                <i class="fas fa-check-circle me-2"></i>
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+    </div>
+
+    <!-- Add New Configuration Card -->
+    <div class="card shadow-sm mb-4 border-primary">
+        <div class="card-header bg-primary text-white d-flex align-items-center">
+            <i class="fas fa-plus-circle me-2"></i>
+            <h5 class="mb-0">Thêm cấu hình mới</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/Admin/System/Create" id="addConfigForm">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="Key" class="form-label fw-bold">
+                            <i class="fas fa-key me-1"></i>Key
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input name="Key" class="form-control" placeholder="VD: SiteName, EmailHost, ..." required
+                               pattern="[A-Za-z0-9_]+" title="Chỉ chấp nhận chữ, số và dấu gạch dưới" />
+                        <div class="form-text">Không chứa khoảng trắng, không dấu</div>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="Value" class="form-label fw-bold">
+                            <i class="fas fa-code me-1"></i>Giá trị
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input name="Value" class="form-control" placeholder="Giá trị cấu hình" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label for="MoTa" class="form-label fw-bold">
+                            <i class="fas fa-info-circle me-1"></i>Mô tả
+                        </label>
+                        <input name="MoTa" class="form-control" placeholder="Mô tả chức năng của cấu hình này" />
+                        <div class="form-text">Giúp hiểu rõ mục đích sử dụng</div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Thêm mới
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Configuration List Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    Danh sách cấu hình
+                    <span class="badge bg-secondary ms-2">@Model.Count</span>
+                </h5>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Tìm kiếm cấu hình...">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="configTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="25%">
+                                <i class="fas fa-key me-1"></i>Key
+                            </th>
+                            <th width="30%">
+                                <i class="fas fa-code me-1"></i>Giá trị
+                            </th>
+                            <th width="35%">
+                                <i class="fas fa-info-circle me-1"></i>Mô tả
+                            </th>
+                            <th width="10%" class="text-center">
+                                <i class="fas fa-cogs me-1"></i>Hành động
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model)
+                        {
+                            <tr class="align-middle">
+                                <form method="post" action="/Admin/System/Edit" class="config-form">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="key-badge bg-light rounded p-2 me-2">
+                                            <code class="text-primary">@s.Key</code>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="Key" value="@s.Key" />
+                                </td>
+                                <td>
+                                    <input name="Value" value="@s.Value"
+                                           class="form-control form-control-sm"
+                                           data-original-value="@s.Value" />
+                                </td>
+                                <td>
+                                    <input name="MoTa" value="@s.MoTa"
+                                           class="form-control form-control-sm"
+                                           data-original-value="@s.MoTa" />
+                                </td>
+                                <td class="text-center">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary save-btn" disabled>
+                                        <i class="fas fa-save me-1"></i>Lưu
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary reset-btn ms-1" disabled>
+                                        <i class="fas fa-undo me-1"></i>
+                                    </button>
+                                </td>
+                                </form>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <div class="empty-state">
+                    <i class="fas fa-cogs fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">Chưa có cấu hình nào</h5>
+                    <p class="text-muted">Hãy thêm cấu hình đầu tiên cho hệ thống của bạn</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Trợ giúp cấu hình
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>📝 Hướng dẫn sử dụng:</h6>
+                <ul class="mb-3">
+                    <li><strong>Key</strong>: Tên định danh, không dấu, không khoảng trắng</li>
+                    <li><strong>Giá trị</strong>: Thông số cấu hình tương ứng</li>
+                    <li><strong>Mô tả</strong>: Giải thích mục đích sử dụng (không bắt buộc)</li>
+                </ul>
+
+                <h6>💡 Ví dụ thông dụng:</h6>
+                <div class="bg-light p-3 rounded">
+                    <p><code>SiteName</code> = "Website của tôi"</p>
+                    <p><code>EmailHost</code> = "smtp.gmail.com"</p>
+                    <p><code>MaxLoginAttempts</code> = "5"</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this CSS in your layout or in a style tag -->
+<style>
+    .system-config-icon {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .key-badge {
+        border-left: 3px solid #0d6efd;
+        font-family: 'Courier New', monospace;
+    }
+
+    .config-form input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+    }
+
+    .empty-state {
+        opacity: 0.7;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+    }
+
+    .save-btn:not(:disabled):hover {
+        transform: translateY(-1px);
+        transition: transform 0.2s;
+    }
+
+    .card {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        border-bottom: 1px solid rgba(0,0,0,.125);
+    }
+
+    .form-control:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+</style>
+
+<!-- Add this JavaScript at the end -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const configTable = document.getElementById('configTable');
+
+        if (searchInput && configTable) {
+            searchInput.addEventListener('input', function () {
+                const searchTerm = this.value.toLowerCase();
+                const rows = configTable.querySelectorAll('tbody tr');
+
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(searchTerm) ? '' : 'none';
+                });
+            });
+        }
+
+        // Enable save buttons when inputs change
+        const forms = document.querySelectorAll('.config-form');
+
+        forms.forEach(form => {
+            const inputs = form.querySelectorAll('input[type="text"]');
+            const saveBtn = form.querySelector('.save-btn');
+            const resetBtn = form.querySelector('.reset-btn');
+
+            inputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    const originalValue = this.getAttribute('data-original-value') || '';
+                    if (this.value !== originalValue) {
+                        saveBtn.disabled = false;
+                        resetBtn.disabled = false;
+                        saveBtn.classList.remove('btn-outline-primary');
+                        saveBtn.classList.add('btn-primary');
+                    } else {
+                        saveBtn.disabled = true;
+                        resetBtn.disabled = true;
+                        saveBtn.classList.remove('btn-primary');
+                        saveBtn.classList.add('btn-outline-primary');
+                    }
+                });
+            });
+
+            // Reset button functionality
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function () {
+                    inputs.forEach(input => {
+                        const originalValue = input.getAttribute('data-original-value') || '';
+                        input.value = originalValue;
+                        input.dispatchEvent(new Event('input'));
+                    });
+                });
+            }
+
+            // Form submission
+            form.addEventListener('submit', function (e) {
+                const saveBtn = this.querySelector('.save-btn');
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...';
+                saveBtn.disabled = true;
+            });
+        });
+
+        // Add validation for key field
+        const keyInput = document.querySelector('input[name="Key"]');
+        if (keyInput) {
+            keyInput.addEventListener('input', function () {
+                this.value = this.value.replace(/[^A-Za-z0-9_]/g, '');
+            });
+        }
+    });
+</script>

@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Mvc;
 using System.Web.Security;
 using Newtonsoft.Json;
@@ -24,7 +25,6 @@ namespace WEBB.Controllers.User
                 _apiBase += "/";
         }
 
-        // DTO dùng để nhận JSON trả về từ API /api/account/login
         private class LoginApiResponse
         {
             public string Token { get; set; }
@@ -32,30 +32,25 @@ namespace WEBB.Controllers.User
             public string VaiTro { get; set; }
         }
 
-        // ===========================
         // GET: /Account/Login
-        // ===========================
         [HttpGet]
         public ActionResult Login()
         {
             return View("~/Views/User/Account/Login.cshtml", new LoginRequest());
         }
 
-        // ===========================
         // POST: /Account/Login
-        // ===========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Login(LoginRequest model)
         {
             if (!ModelState.IsValid)
-                return View("~/Views/User/Account/Login.cshtml", model);
+                return View(model);
 
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_apiBase);
 
-                // *** QUAN TRỌNG: map đúng tên field mà API cần ***
                 var payload = new
                 {
                     tenDangNhap = model.UserName,  // -> TenDangNhap bên API
@@ -75,7 +70,7 @@ namespace WEBB.Controllers.User
                 catch (Exception ex)
                 {
                     model.ErrorMessage = "Không kết nối được tới API: " + ex.Message;
-                    return View("~/Views/User/Account/Login.cshtml", model);
+                    return View(model);
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
@@ -83,8 +78,6 @@ namespace WEBB.Controllers.User
                 // Nếu API trả HTTP lỗi (400, 401, 500...)
                 if (!response.IsSuccessStatusCode)
                 {
-                    // API của bạn dùng Unauthorized(...) với { message = "..." }
-                    // nên mình cố gắng đọc message ra cho bạn xem
                     try
                     {
                         dynamic errorObj = JsonConvert.DeserializeObject(json);
@@ -96,48 +89,44 @@ namespace WEBB.Controllers.User
                                              (int)response.StatusCode + " - " + response.StatusCode;
                     }
 
-                    return View("~/Views/User/Account/Login.cshtml", model);
+                    return View(model);
                 }
 
-                // HTTP 200 => parse LoginResponseModel từ API
-                LoginApiResponse result = null;
-                try
-                {
-                    result = JsonConvert.DeserializeObject<LoginApiResponse>(json);
-                }
-                catch
-                {
-                    model.ErrorMessage = "Không đọc được dữ liệu trả về từ API.";
-                    return View("~/Views/User/Account/Login.cshtml", model);
-                }
+                // Parse JSON kết quả trả về
+                LoginApiResponse result = JsonConvert.DeserializeObject<LoginApiResponse>(json);
 
                 if (result == null || string.IsNullOrEmpty(result.Token))
                 {
                     model.ErrorMessage = "Đăng nhập thất bại (token rỗng).";
-                    return View("~/Views/User/Account/Login.cshtml", model);
+                    return View(model);
                 }
 
-                // ✅ Thành công: Lưu token + cookie đăng nhập
+                // Lưu token vào Session và vai trò của người dùng
                 Session["JWT_TOKEN"] = result.Token;
-                // Bạn có thể dùng HoTen hoặc UserName, tùy ý
+                Session["Role"] = result.VaiTro;  // Lưu vai trò của người dùng
                 FormsAuthentication.SetAuthCookie(model.UserName, false);
 
-                return RedirectToAction("Index", "Home");
+                // Kiểm tra vai trò và chuyển hướng đến layout Admin nếu là Admin hoặc Moderator
+                if (result.VaiTro == "SuperAdmin" || result.VaiTro == "Moderator")
+                {
+                    // Chuyển hướng đến Admin/Topics
+                    return RedirectToAction("Index", "Topics");  // Chuyển hướng tới controller Topics mà không cần dùng area
+                }
+                else
+                {
+                    return RedirectToAction("Index", "Home");  // Chuyển hướng tới trang chính cho người dùng
+                }
             }
         }
 
-        // ===========================
         // GET: /Account/Register
-        // ===========================
         [HttpGet]
         public ActionResult Register()
         {
             return View("~/Views/User/Account/Register.cshtml", new RegisterRequest());
         }
 
-        // ===========================
         // POST: /Account/Register
-        // ===========================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Register(RegisterRequest model)
@@ -153,7 +142,7 @@ namespace WEBB.Controllers.User
                 {
                     tenDangNhap = model.UserName,
                     matKhau = model.Password,
-                    xacNhanMatKhau = model.ConfirmPassword, // ⭐ THÊM DÒNG NÀY
+                    xacNhanMatKhau = model.ConfirmPassword,
                     email = model.Email,
                     hoTen = model.UserName
                 };
@@ -164,6 +153,7 @@ namespace WEBB.Controllers.User
                     "application/json");
 
                 HttpResponseMessage response;
+
                 try
                 {
                     response = await client.PostAsync("api/account/register", content);
@@ -185,8 +175,7 @@ namespace WEBB.Controllers.User
                     }
                     catch
                     {
-                        model.ErrorMessage = "Đăng ký thất bại. Mã lỗi: " +
-                                             (int)response.StatusCode + " - " + response.StatusCode;
+                        model.ErrorMessage = "Đăng ký thất bại.";
                     }
 
                     return View("~/Views/User/Account/Register.cshtml", model);
@@ -197,12 +186,39 @@ namespace WEBB.Controllers.User
             }
         }
 
-
-        public ActionResult Logout()
+        // LOGOUT
+        public async Task<ActionResult> Logout()
         {
-            Session["JWT_TOKEN"] = null;
+            string token = Session["JWT_TOKEN"] as string;
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                using (var client = new HttpClient())
+                {
+                    client.BaseAddress = new Uri(_apiBase);
+
+                    client.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                    try
+                    {
+                        // 🔥 GỌI API LOGOUT BE
+                        await client.PostAsync("api/account/logout", null);
+                    }
+                    catch
+                    {
+                        // Không cần xử lý gì – dù BE fail vẫn logout FE
+                    }
+                }
+            }
+
+            // 🔐 Clear FE session
+            Session.Clear();
+            Session.Abandon();
             FormsAuthentication.SignOut();
+
             return RedirectToAction("Login");
         }
+
     }
 }

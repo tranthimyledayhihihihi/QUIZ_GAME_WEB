@@ -1,7 +1,430 @@
-﻿
+﻿@model List<WEBB.Models.Admin.AdminUserDto>
+
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Danh Sách Người Dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-users me-2"></i>Quản lý Người Dùng
+        </h1>
+    </div>
 
+    <!-- Thông báo -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số người dùng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-friends fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Đang hoạt động
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Count(u => u.TrangThai)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                Đã khóa
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Count(u => !u.TrangThai)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-slash fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                SuperAdmin
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Count(u => u.RoleName == "SuperAdmin")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-crown fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bộ lọc và tìm kiếm -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách Người Dùng</h6>
+            <form method="get" action="@Url.Action("Index", "Users")" class="d-flex">
+                <div class="input-group">
+                    <input type="text" class="form-control" name="keyword"
+                           placeholder="Tìm kiếm người dùng..." value="@Request.QueryString["keyword"]">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center" style="width: 60px;">ID</th>
+                            <th>Người Dùng</th>
+                            <th>Thông tin</th>
+                            <th class="text-center" style="width: 120px;">Trạng Thái</th>
+                            <th class="text-center" style="width: 120px;">Vai Trò</th>
+                            <th class="text-center" style="width: 220px;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var user in Model)
+                            {
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary">#@user.UserID</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="user-avatar me-3">
+                                                <div class="avatar-circle bg-primary text-white">
+                                                    @GetUserInitials(user.HoTen)
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">@user.TenDangNhap</div>
+                                                <small class="text-muted">@user.Email</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="mb-1">
+                                                <i class="fas fa-user me-1 text-primary"></i>
+                                                <span class="fw-medium">@user.HoTen</span>
+                                            </div>
+                                            <div>
+                                                <i class="fas fa-calendar-alt me-1 text-success"></i>
+                                                <small class="text-muted">@user.NgayDangKy.ToString("dd/MM/yyyy")</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        @if (user.TrangThai)
+                                        {
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check-circle me-1"></i>Hoạt động
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger">
+                                                <i class="fas fa-lock me-1"></i>Đã khóa
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (user.RoleName == "SuperAdmin")
+                                        {
+                                            <span class="badge bg-warning text-dark">
+                                                <i class="fas fa-crown me-1"></i>@user.RoleName
+                                            </span>
+                                        }
+                                        else if (user.RoleName == "Admin")
+                                        {
+                                            <span class="badge bg-info text-white">
+                                                <i class="fas fa-shield-alt me-1"></i>@user.RoleName
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">
+                                                <i class="fas fa-user me-1"></i>@user.RoleName
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a class="btn btn-outline-info"
+                                               href="@Url.Action("Details", "Users", new { id = user.UserID })"
+                                               title="Xem chi tiết">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+
+                                            @if (user.TrangThai)
+                                            {
+                                                if (user.RoleName == "SuperAdmin")
+                                                {
+                                                    <button class="btn btn-outline-danger" disabled
+                                                            title="Không thể khóa SuperAdmin">
+                                                        <i class="fas fa-lock"></i>
+                                                    </button>
+                                                }
+                                                else
+                                                {
+                                                    <a class="btn btn-outline-danger"
+                                                       href="@Url.Action("Lock", "Users", new { id = user.UserID })"
+                                                       title="Khóa tài khoản"
+                                                       onclick="return confirmLock('@user.TenDangNhap')">
+                                                        <i class="fas fa-lock"></i>
+                                                    </a>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <a class="btn btn-outline-success"
+                                                   href="@Url.Action("Unlock", "Users", new { id = user.UserID })"
+                                                   title="Mở khóa tài khoản"
+                                                   onclick="return confirmUnlock('@user.TenDangNhap')">
+                                                    <i class="fas fa-unlock"></i>
+                                                </a>
+                                            }
+
+                                            <a class="btn btn-outline-warning"
+                                               href="@Url.Action("UpdateRole", "Users", new { id = user.UserID })"
+                                               title="Cập nhật vai trò">
+                                                <i class="fas fa-user-cog"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                                        <h5 class="text-muted">Không có người dùng nào</h5>
+                                        @if (!string.IsNullOrEmpty(Request.QueryString["keyword"]))
+                                        {
+                                            <p>Không tìm thấy người dùng phù hợp với từ khóa "@Request.QueryString["keyword"]"</p>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- CSS tùy chỉnh -->
+<style>
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e3e6f0;
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #4e73df;
+        border-top: none;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.8em;
+        padding: 0.4em 0.7em;
+        font-weight: 500;
+    }
+
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .btn-group .btn {
+        border-radius: 6px !important;
+        margin: 0 2px;
+        transition: all 0.2s;
+    }
+
+        .btn-group .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-group .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .user-info {
+        font-size: 0.9rem;
+    }
+
+    .input-group .form-control {
+        border-right: none;
+    }
+
+    .input-group .btn {
+        border-left: none;
+    }
+
+    .form-control:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+</style>
+
+<script>
+    // Xác nhận khóa tài khoản
+    function confirmLock(username) {
+        return confirm(`Bạn có chắc chắn muốn khóa tài khoản "${username}"?\n\nNgười dùng sẽ không thể đăng nhập cho đến khi được mở khóa.`);
+    }
+
+    // Xác nhận mở khóa tài khoản
+    function confirmUnlock(username) {
+        return confirm(`Bạn có chắc chắn muốn mở khóa tài khoản "${username}"?\n\nNgười dùng sẽ có thể đăng nhập lại.`);
+    }
+
+    // Tìm kiếm client-side (bổ sung)
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.querySelector('input[name="keyword"]');
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        if (searchInput && tableRows.length > 0) {
+            searchInput.addEventListener('input', function () {
+                const filter = this.value.toLowerCase();
+
+                tableRows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (row.querySelector('.empty-state')) {
+                        return; // Bỏ qua hàng empty state
+                    }
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                });
+            });
+        }
+
+        // Hiệu ứng hover cho bảng
+        tableRows.forEach(row => {
+            if (!row.querySelector('.empty-state')) {
+                row.addEventListener('mouseenter', function () {
+                    this.classList.add('table-active');
+                });
+                row.addEventListener('mouseleave', function () {
+                    this.classList.remove('table-active');
+                });
+            }
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+@functions {
+    // Hàm lấy chữ cái đầu của tên người dùng
+    public IHtmlString GetUserInitials(string hoTen)
+    {
+        if (string.IsNullOrWhiteSpace(hoTen))
+            return Html.Raw("<i class='fas fa-user'></i>");
+
+        var parts = hoTen.Split(' ');
+        if (parts.Length >= 2)
+        {
+            return Html.Raw($"{parts[0][0]}{parts[1][0]}".ToUpper());
+        }
+        else
+        {
+            return Html.Raw(hoTen[0].ToString().ToUpper());
+        }
+    }
+}

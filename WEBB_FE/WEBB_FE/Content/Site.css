@@ -1,0 +1,211 @@
+﻿/* Set padding to keep content from hitting the edges */
+.body-content {
+    margin-top: 15px;
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Override the default bootstrap behavior where horizontal description lists 
+   will truncate terms that are too long to fit in the left column 
+*/
+.dl-horizontal dt {
+    white-space: normal;
+}
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+textarea {
+    max-width: 280px;
+}
+
+:root {
+    --primary-gradient: linear-gradient(135deg, #8A2BE2 0%, #FF69B4 100%); /* Tím sang Hồng */
+    --secondary-gradient: linear-gradient(135deg, #FF8C00 0%, #FFD700 100%); /* Cam sang Vàng */
+    --success-gradient: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%); /* Xanh dương sang Xanh lá */
+    --bg-color: #f0f2f5;
+    --text-color: #333;
+    --card-bg: #ffffff;
+}
+
+body {
+    font-family: 'Nunito', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin-bottom: 80px; /* Chừa chỗ cho bottom nav */
+}
+/* Header & Top Bar */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.user-welcome {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+/* Welcome Banner */
+.welcome-banner {
+    background: var(--primary-gradient);
+    color: white;
+    padding: 30px 20px;
+    border-radius: 20px;
+    margin: 20px;
+    box-shadow: 0 10px 20px rgba(138, 43, 226, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+    .welcome-banner h2 {
+        font-weight: 800;
+        margin-bottom: 15px;
+    }
+
+.btn-find-friend {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 50px;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s;
+}
+
+    .btn-find-friend:hover {
+        background: white;
+        color: #8A2BE2;
+    }
+/* Feature Buttons */
+.feature-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    padding: 0 20px;
+    margin-bottom: 30px;
+}
+
+.feature-card {
+    padding: 15px;
+    border-radius: 15px;
+    color: white;
+    text-align: center;
+    font-weight: 700;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+    .feature-card:hover {
+        transform: translateY(-3px);
+    }
+
+.bg-orange {
+    background: linear-gradient(135deg, #FF9966 0%, #FF5E62 100%);
+}
+
+.bg-green {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+}
+
+.bg-blue {
+    background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
+}
+
+.bg-purple {
+    background: linear-gradient(135deg, #cc2b5e 0%, #753a88 100%);
+}
+/* Quiz List */
+.section-title {
+    padding: 0 20px;
+    margin-bottom: 15px;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+.quiz-card {
+    background: white;
+    margin: 0 20px 15px;
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    transition: all 0.3s;
+}
+
+    .quiz-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+
+.quiz-icon {
+    width: 60px;
+    height: 60px;
+    background: #e0f7fa;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #00bcd4;
+}
+
+.quiz-info h5 {
+    margin: 0;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.quiz-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #888;
+}
+/* Bottom Nav */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #aaa;
+    font-size: 0.8rem;
+    transition: color 0.3s;
+}
+
+    .nav-item i {
+        font-size: 1.2rem;
+        margin-bottom: 4px;
+    }
+
+    .nav-item.active {
+        color: #8A2BE2;
+    }
+

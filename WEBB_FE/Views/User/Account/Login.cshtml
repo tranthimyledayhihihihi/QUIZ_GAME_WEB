@@ -3,145 +3,1492 @@
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewBag.Title = "Đăng nhập IQuiz";
+    ViewBag.BodyClass = "login-page";
 }
 
-<div class="auth-page">
-    <div class="auth-card">
-        <div class="auth-logo">IQ</div>
+<div class="auth-container">
+    <div class="auth-wrapper">
+        <!-- Left Side - Brand & Features -->
+        <div class="auth-left">
+            <div class="auth-background">
+                <div class="auth-overlay"></div>
+                <div class="auth-content">
+                    <div class="auth-brand">
+                        <div class="auth-brand-logo">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M2 17L12 22L22 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path d="M2 12L12 17L22 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <h1 class="auth-brand-name">IQuiz</h1>
+                        <p class="auth-brand-tagline">Nơi kiến thức gặp thử thách</p>
+                    </div>
 
-        <h2 class="auth-title">Đăng nhập IQuiz</h2>
-        <p class="auth-subtitle">
-            Chào mừng bạn quay lại, hãy đăng nhập để tiếp tục.
-        </p>
+                    <div class="auth-carousel">
+                        <div class="carousel-slide active">
+                            <div class="slide-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h3>Thử thách bản thân</h3>
+                            <p>Hàng ngàn câu hỏi đa dạng chủ đề, cập nhật liên tục</p>
+                        </div>
+                        <div class="carousel-slide">
+                            <div class="slide-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h3>Theo dõi tiến độ</h3>
+                            <p>Biểu đồ thông minh giúp bạn cải thiện điểm số</p>
+                        </div>
+                        <div class="carousel-slide">
+                            <div class="slide-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3>Kết nối cộng đồng</h3>
+                            <p>Thi đấu và học hỏi từ hàng ngàn người dùng</p>
+                        </div>
+                    </div>
 
-        @* Thông báo đăng ký thành công từ TempData *@
-        @if (TempData["RegisterSuccess"] != null)
-        {
-            <div class="alert alert-success">
-                @TempData["RegisterSuccess"]
-            </div>
-        }   
+                    <div class="auth-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">10K+</div>
+                            <div class="stat-label">Người học</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-value">50K+</div>
+                            <div class="stat-label">Câu hỏi</div>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <div class="stat-value">4.8</div>
+                            <div class="stat-label">
+                                <i class="fas fa-star"></i> Đánh giá
+                            </div>
+                        </div>
+                    </div>
 
-        @* Thông báo lỗi đăng nhập *@
-        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
-        {
-            <div class="alert alert-danger">
-                @Model.ErrorMessage
-            </div>
-        }
-
-        @using (Html.BeginForm("Login", "Account", FormMethod.Post))
-        {
-            @Html.AntiForgeryToken()
-
-            <div class="form-group">
-                @Html.LabelFor(m => m.UserName, "Tên đăng nhập")
-                @Html.TextBoxFor(m => m.UserName, new { @class = "form-control auth-input", placeholder = "Nhập tên đăng nhập..." })
-                @Html.ValidationMessageFor(m => m.UserName, null, new { @class = "text-danger" })
-            </div>
-
-            <div class="form-group">
-                @Html.LabelFor(m => m.Password, "Mật khẩu")
-                @Html.PasswordFor(m => m.Password, new { @class = "form-control auth-input", placeholder = "Nhập mật khẩu..." })
-                @Html.ValidationMessageFor(m => m.Password, null, new { @class = "text-danger" })
-            </div>
-
-            <div class="form-group d-flex align-items-center justify-content-between mt-2 mb-3">
-                <div>
-                    <input type="checkbox" id="rememberMe" />
-                    <label for="rememberMe">Ghi nhớ đăng nhập</label>
+                    <div class="auth-quote">
+                        <div class="quote-icon">"</div>
+                        <p class="quote-text">Học mà chơi, chơi mà học - IQuiz mang đến trải nghiệm học tập thú vị nhất!</p>
+                        <div class="quote-author">- Người dùng IQuiz</div>
+                    </div>
                 </div>
-                <a href="#" class="auth-link">Quên mật khẩu?</a>
             </div>
+        </div>
 
-            <button type="submit" class="btn btn-primary auth-btn">
-                Đăng nhập
-            </button>
-
-            <p class="mt-3 text-center">
-                Chưa có tài khoản?
-                <a href="@Url.Action("Register", "Account")" class="auth-link">
-                    Đăng ký ngay
+        <!-- Right Side - Login Form -->
+        <div class="auth-right">
+            <div class="auth-form-container">
+                <!-- Back button for mobile -->
+                <a href="@Url.Action("Index", "Home")" class="mobile-back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Về trang chủ</span>
                 </a>
-            </p>
-        }
+
+                <div class="auth-form-header">
+                    <div class="header-icon">
+                        <i class="fas fa-sign-in-alt"></i>
+                    </div>
+                    <h1>Chào mừng trở lại!</h1>
+                    <p class="subtitle">Đăng nhập để tiếp tục hành trình học tập của bạn</p>
+                </div>
+
+                <!-- Success Message from Registration -->
+                @if (TempData["RegisterSuccess"] != null)
+                {
+                    <div class="alert alert-success animated fadeIn">
+                        <div class="alert-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h5>Đăng ký thành công!</h5>
+                            <p>@TempData["RegisterSuccess"]</p>
+                        </div>
+                        <button class="alert-close" onclick="this.parentElement.style.display='none'">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                }
+
+                <!-- Error Message -->
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-error animated fadeIn">
+                        <div class="alert-icon">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h5>Đăng nhập thất bại</h5>
+                            <p>@Model.ErrorMessage</p>
+                        </div>
+                        <button class="alert-close" onclick="this.parentElement.style.display='none'">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                }
+
+                <!-- Demo Credentials Hint -->
+                <div class="demo-hint">
+                    <div class="hint-header">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Thử với tài khoản demo:</span>
+                    </div>
+                    <div class="hint-credentials">
+                        <div class="credential">
+                            <span class="label">Tài khoản:</span>
+                            <code>Admin_sa</code>
+                        </div>
+                        <div class="credential">
+                            <span class="label">Mật khẩu:</span>
+                            <code>sa</code>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" action="@Url.Action("Login", "Account")" class="auth-form" id="loginForm">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-user"></i>
+                            <span>Tên đăng nhập hoặc Email</span>
+                        </label>
+                        <div class="input-container">
+                            @Html.TextBoxFor(m => m.UserName, new
+                            {
+                                @class = "auth-input",
+                                placeholder = "Nhập tên đăng nhập hoặc email",
+                                autocomplete = "username",
+                                required = "required"
+                            })
+                            <div class="input-icon-right">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.UserName, "", new { @class = "validation-error" })
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <i class="fas fa-lock"></i>
+                            <span>Mật khẩu</span>
+                        </label>
+                        <div class="input-container">
+                            @Html.PasswordFor(m => m.Password, new
+                            {
+                                @class = "auth-input",
+                                placeholder = "Nhập mật khẩu của bạn",
+                                autocomplete = "current-password",
+                                id = "passwordInput",
+                                required = "required"
+                            })
+                            <div class="input-icon-right">
+                                <button type="button" class="password-toggle" onclick="togglePassword()">
+                                    <i class="fas fa-eye" id="passwordIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "validation-error" })
+
+                        <div class="password-actions">
+                            <label class="remember-me">
+                                <input type="checkbox" name="rememberMe" id="rememberMe" />
+                                <span class="checkmark"></span>
+                                <span>Ghi nhớ đăng nhập</span>
+                            </label>
+                            <a href="@Url.Action("ForgotPassword", "Account")" class="forgot-password">
+                                <i class="fas fa-key"></i>
+                                Quên mật khẩu?
+                            </a>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-submit-btn" id="loginButton">
+                        <span class="btn-text">Đăng nhập</span>
+                        <span class="btn-icon">
+                            <i class="fas fa-sign-in-alt"></i>
+                        </span>
+                    </button>
+
+                    <!-- Quick Login Options -->
+                    <div class="quick-login">
+                        <p class="quick-login-title">Đăng nhập nhanh với:</p>
+                        <div class="quick-login-buttons">
+                            <button type="button" class="quick-btn demo-btn" data-username="Admin_sa" data-password="sa">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Tài khoản Admin</span>
+                            </button>
+                            <button type="button" class="quick-btn demo-btn" data-username="Player01" data-password="p1">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Tài khoản Player</span>
+                            </button>
+                            <button type="button" class="quick-btn demo-btn" data-username="moder" data-password="moderator">
+                                <i class="fas fa-user-circle"></i>
+                                <span>Tài khoản Moderator</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="divider">
+                        <span class="divider-line"></span>
+                        <span class="divider-text">Hoặc đăng nhập với</span>
+                        <span class="divider-line"></span>
+                    </div>
+
+                    <!-- Social Login -->
+                    <div class="social-login">
+                        <button type="button" class="social-btn google-btn" onclick="loginWithGoogle()">
+                            <div class="social-icon">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <span class="social-text">Google</span>
+                        </button>
+                        <button type="button" class="social-btn facebook-btn" onclick="loginWithFacebook()">
+                            <div class="social-icon">
+                                <i class="fab fa-facebook-f"></i>
+                            </div>
+                            <span class="social-text">Facebook</span>
+                        </button>
+                        <button type="button" class="social-btn github-btn" onclick="loginWithGithub()">
+                            <div class="social-icon">
+                                <i class="fab fa-github"></i>
+                            </div>
+                            <span class="social-text">GitHub</span>
+                        </button>
+                    </div>
+
+                    <!-- Register Link -->
+                    <div class="auth-footer">
+                        <p class="register-text">
+                            Chưa có tài khoản?
+                            <a href="@Url.Action("Register", "Account")" class="register-link">
+                                <strong>Tạo tài khoản mới</strong>
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </p>
+                        <p class="terms-note">
+                            Bằng việc đăng nhập, bạn đồng ý với
+                            <a href="@Url.Action("Terms", "Home")">Điều khoản dịch vụ</a>
+                            và
+                            <a href="@Url.Action("Privacy", "Home")">Chính sách bảo mật</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Đang đăng nhập...</p>
     </div>
 </div>
 
 @section Styles {
     <style>
-        .auth-page {
+        :root {
+            --primary-color: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary-color: #7209b7;
+            --success-color: #4cc9f0;
+            --error-color: #f72585;
+            --warning-color: #f8961e;
+            --text-primary: #1a1a2e;
+            --text-secondary: #6c757d;
+            --text-light: #8e9aaf;
+            --border-color: #e0e0e0;
+            --bg-light: #f8f9fa;
+            --bg-white: #ffffff;
+            --bg-gradient: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --transition: all 0.3s ease;
+        }
+
+        /* Base Styles */
+        .login-page {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .auth-container {
             min-height: 100vh;
+            width: 100vw;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 24px;
+            padding: 20px;
+            overflow: hidden;
         }
 
-        .auth-card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 32px 40px;
-            width: 420px;
-            max-width: 100%;
-            box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3);
+        .auth-wrapper {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            height: calc(100vh - 40px);
+            min-height: 600px;
+            max-height: 900px;
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            position: relative;
         }
 
-        .auth-logo {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: #eef2ff;
+        /* Left Side */
+        .auth-left {
+            flex: 1;
+            background: var(--bg-gradient);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-background {
+            position: relative;
+            height: 100%;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .auth-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.9) 0%, rgba(58, 12, 163, 0.9) 100%);
+        }
+
+        .auth-content {
+            position: relative;
+            z-index: 2;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .auth-brand {
+            text-align: center;
+            padding-bottom: 40px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+        }
+
+        .auth-brand-logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-lg);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 700;
-            font-size: 20px;
-            margin: 0 auto 16px;
-            color: #4f46e5;
+            margin: 0 auto 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .auth-title {
+        .auth-brand-logo svg {
+            width: 32px;
+            height: 32px;
+            color: white;
+        }
+
+        .auth-brand-name {
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-brand-tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin: 0;
+            font-weight: 300;
+        }
+
+        .auth-carousel {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
             text-align: center;
+            padding: 20px;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide-icon {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .slide-icon i {
+            font-size: 30px;
+            color: white;
+        }
+
+        .carousel-slide h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .carousel-slide p {
+            font-size: 16px;
+            opacity: 0.9;
+            line-height: 1.6;
+            max-width: 320px;
+            margin: 0 auto;
+        }
+
+        .auth-stats {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 28px;
             font-weight: 700;
             margin-bottom: 4px;
         }
 
-        .auth-subtitle {
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-label i {
+            color: #ffd700;
+            margin-right: 4px;
+        }
+
+        .stat-divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .auth-quote {
             text-align: center;
-            color: #6b7280;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .quote-icon {
+            font-size: 40px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 16px;
+        }
+
+        .quote-text {
+            font-size: 16px;
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .quote-author {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Right Side */
+        .auth-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .auth-form-container {
+            width: 100%;
+            max-width: 440px;
+            margin: auto;
+        }
+
+        .mobile-back-btn {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
             margin-bottom: 20px;
+            padding: 8px 0;
+            transition: var(--transition);
+        }
+
+        .mobile-back-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .auth-form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+        }
+
+        .header-icon i {
+            font-size: 24px;
+            color: white;
+        }
+
+        .auth-form-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Alerts */
+        .alert {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 24px;
+            animation: slideIn 0.5s ease;
+        }
+
+        .animated.fadeIn {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .alert-success {
+            background: #f0fff4;
+            border: 2px solid #c6f6d5;
+            color: #2f855a;
+        }
+
+        .alert-error {
+            background: #fff5f5;
+            border: 2px solid #fed7d7;
+            color: #c53030;
+        }
+
+        .alert-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-content h5 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .alert-content p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .alert-close {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        /* Demo Hint */
+        .demo-hint {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 1px solid #667eea30;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .hint-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+        }
+
+        .hint-header i {
+            font-size: 16px;
+        }
+
+        .hint-credentials {
+            display: grid;
+            gap: 8px;
+        }
+
+        .credential {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .credential .label {
+            color: var(--text-secondary);
+            min-width: 80px;
+        }
+
+        .credential code {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            color: var(--primary-color);
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Form Styles */
+        .auth-form {
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .form-label i {
+            color: var(--primary-color);
+            font-size: 16px;
+        }
+
+        .input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            transition: var(--transition);
+            background: var(--bg-white);
+        }
+
+        .input-container:focus-within {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
         }
 
         .auth-input {
-            border-radius: 999px;
-            padding-left: 16px;
-            padding-right: 16px;
-        }
-
-        .auth-btn {
+            flex: 1;
+            border: none;
+            padding: 16px 20px;
+            font-size: 15px;
+            background: transparent;
+            outline: none;
             width: 100%;
-            border-radius: 999px;
-            padding: 10px 0;
-            font-weight: 600;
         }
 
-        .auth-link {
-            color: #4f46e5;
+        .auth-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .input-icon-right {
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 18px;
+            padding: 4px;
+            transition: var(--transition);
+        }
+
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+
+        .validation-error {
+            display: block;
+            font-size: 13px;
+            color: var(--error-color);
+            margin-top: 8px;
+        }
+
+        .password-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 16px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .remember-me input {
+            display: none;
+        }
+
+        .checkmark {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            display: inline-block;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .remember-me input:checked + .checkmark {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .remember-me input:checked + .checkmark::after {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 1px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .forgot-password {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .forgot-password:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .forgot-password i {
+            font-size: 12px;
+        }
+
+        /* Submit Button */
+        .auth-submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            border-radius: var(--radius-sm);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: var(--transition);
+            margin: 24px 0;
+        }
+
+        .auth-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .auth-submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-icon {
+            font-size: 18px;
+        }
+
+        /* Quick Login */
+        .quick-login {
+            margin-bottom: 24px;
+        }
+
+        .quick-login-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .quick-login-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .quick-btn {
+            flex: 1;
+            padding: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-white);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: var(--transition);
+        }
+
+        .quick-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .demo-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .guest-btn:hover {
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 32px 0;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .divider-text {
+            padding: 0 20px;
+        }
+
+        /* Social Login */
+        .social-login {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .social-btn {
+            padding: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-white);
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .social-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .google-btn:hover {
+            border-color: #DB4437;
+            color: #DB4437;
+        }
+
+        .facebook-btn:hover {
+            border-color: #4267B2;
+            color: #4267B2;
+        }
+
+        .github-btn:hover {
+            border-color: #333;
+            color: #333;
+        }
+
+        .social-icon {
+            font-size: 20px;
+        }
+
+        .social-text {
+            font-size: 13px;
+        }
+
+        /* Footer */
+        .auth-footer {
+            text-align: center;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .register-text {
+            font-size: 15px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .register-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .register-link:hover {
+            color: var(--primary-dark);
+            gap: 10px;
+        }
+
+        .register-link i {
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .terms-note {
+            font-size: 12px;
+            color: var(--text-light);
+            margin: 0;  
+        }
+
+        .terms-note a {
+            color: var(--text-secondary);
             text-decoration: none;
         }
 
-            .auth-link:hover {
-                text-decoration: underline;
+        .terms-note a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .loading-spinner {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-spinner p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Animations */
+        @@keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @@keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 1024px) {
+            .auth-wrapper {
+                max-height: 95vh;
             }
 
-        .form-group {
-            margin-bottom: 12px;
+            .auth-left {
+                flex: 1.2;
+            }
+
+            .auth-right {
+                flex: 0.8;
+                padding: 30px;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .auth-container {
+                padding: 0;
+                background: var(--bg-white);
+            }
+
+            .auth-wrapper {
+                flex-direction: column;
+                height: 100vh;
+                max-height: none;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .auth-left {
+                display: none;
+            }
+
+            .auth-right {
+                flex: 1;
+                padding: 24px;
+                overflow-y: auto;
+            }
+
+            .mobile-back-btn {
+                display: flex;
+            }
+
+            .auth-form-header h1 {
+                font-size: 28px;
+            }
+
+            .social-login {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-login-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @@media (max-width: 480px) {
+            .auth-right {
+                padding: 16px;
+            }
+
+            .auth-form-container {
+                max-width: 100%;
+            }
+
+            .auth-form-header h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            .auth-submit-btn {
+                padding: 16px;
+                font-size: 15px;
+            }
+
+            .demo-hint {
+                padding: 16px;
+            }
+
+            .hint-credentials {
+                grid-template-columns: 1fr;
+            }
+
+            .credential {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .password-actions {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+        }
+
+        @@media (max-height: 700px) {
+            .auth-wrapper {
+                height: 100vh;
+                max-height: none;
+            }
+
+            .auth-left {
+                overflow-y: auto;
+            }
+
+            .auth-carousel {
+                margin-bottom: 20px;
+            }
+
+            .auth-stats {
+                margin-bottom: 20px;
+                padding: 16px;
+            }
+
+            .auth-quote {
+                padding: 16px;
+                margin-bottom: 20px;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .auth-right::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .auth-right::-webkit-scrollbar-track {
+            background: var(--bg-light);
+            border-radius: 3px;
+        }
+
+        .auth-right::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .auth-right::-webkit-scrollbar-thumb:hover {
+            background: var(--text-light);
+        }
+
+        .auth-left::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .auth-left::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        .auth-left::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .auth-left::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
     </style>
 }
 
 @section Scripts {
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const passwordIcon = document.getElementById('passwordIcon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordIcon.classList.remove('fa-eye');
+                passwordIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.classList.remove('fa-eye-slash');
+                passwordIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Carousel functionality
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+
+        function rotateCarousel() {
+            slides.forEach(slide => slide.classList.remove('active'));
+            slides[currentSlide].classList.add('active');
+            currentSlide = (currentSlide + 1) % slides.length;
+        }
+
+        // Rotate every 5 seconds
+        setInterval(rotateCarousel, 5000);
+
+        // Quick login with demo account
+        document.querySelectorAll('.quick-btn.demo-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const username = this.dataset.username;
+                const password = this.dataset.password;
+
+                document.querySelector('#UserName').value = username;
+                document.querySelector('#passwordInput').value = password;
+
+                // Show success message
+                showToast('Đã điền thông tin demo! Nhấn "Đăng nhập" để tiếp tục.', 'success');
+            });
+        });
+
+        // Form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const loginBtn = document.getElementById('loginButton');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Show loading state
+            if (loginBtn && loadingOverlay) {
+                loginBtn.innerHTML = `
+                    <span class="btn-text">Đang đăng nhập...</span>
+                    <span class="btn-icon">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                `;
+                loginBtn.disabled = true;
+                loadingOverlay.style.display = 'flex';
+            }
+
+            // In a real application, you would handle the AJAX submission here
+            // For now, let the form submit normally
+
+            // Simulate network delay for demo
+            setTimeout(() => {
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+            }, 1500);
+        });
+
+        // Social login functions (placeholder)
+        function loginWithGoogle() {
+            showToast('Tính năng đăng nhập với Google đang được phát triển', 'info');
+        }
+
+        function loginWithFacebook() {
+            showToast('Tính năng đăng nhập với Facebook đang được phát triển', 'info');
+        }
+
+        function loginWithGithub() {
+            showToast('Tính năng đăng nhập với GitHub đang được phát triển', 'info');
+        }
+
+        // Toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <div class="toast-content">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            // Add styles if not already added
+            if (!document.getElementById('toast-styles')) {
+                const style = document.createElement('style');
+                style.id = 'toast-styles';
+                style.textContent = `
+                    .toast {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        background: white;
+                        border-radius: var(--radius-md);
+                        padding: 16px;
+                        box-shadow: var(--shadow-lg);
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        z-index: 10000;
+                        animation: slideInRight 0.3s ease;
+                        max-width: 400px;
+                        border-left: 4px solid var(--primary-color);
+                    }
+                    .toast-success { border-left-color: #2f855a; }
+                    .toast-info { border-left-color: var(--primary-color); }
+                    .toast-error { border-left-color: #c53030; }
+                    .toast-content { display: flex; align-items: center; gap: 10px; }
+                    .toast-content i { font-size: 18px; }
+                    .toast-success .toast-content i { color: #2f855a; }
+                    .toast-info .toast-content i { color: var(--primary-color); }
+                    .toast-close { background: none; border: none; color: #999; cursor: pointer; }
+                    @@keyframes slideInRight {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.style.animation = 'slideOutRight 0.3s ease forwards';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Add slideOutRight animation
+        if (!document.getElementById('toast-animations')) {
+            const style = document.createElement('style');
+            style.id = 'toast-animations';
+            style.textContent = `
+                @@keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Auto-focus username input on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const usernameInput = document.querySelector('#UserName');
+            if (usernameInput) {
+                setTimeout(() => usernameInput.focus(), 300);
+            }
+        });
+
+        // Handle form validation on blur
+        document.querySelectorAll('.auth-input').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.value.trim() === '') {
+                    this.parentElement.classList.add('invalid');
+                } else {
+                    this.parentElement.classList.remove('invalid');
+                }
+            });
+        });
+
+        // Add some styles for invalid state
+        const style = document.createElement('style');
+        style.textContent = `
+            .input-container.invalid {
+                border-color: var(--error-color);
+                animation: shake 0.5s ease;
+            }
+            @@keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
     @Scripts.Render("~/bundles/jqueryval")
 }
