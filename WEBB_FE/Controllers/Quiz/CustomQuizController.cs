@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
-
 namespace WEBB.Controllers.Quiz
 {
     public class CustomQuizController : Controller
@@ -12,6 +11,11 @@ namespace WEBB.Controllers.Quiz
         public ActionResult Index()
         {
             return View("~/Views/Quiz/Custom/Index.cshtml");
+        }
+        // GET: CustomQuiz/Create
+        public ActionResult Create()
+        {
+            return View("~/Views/Quiz/Custom/Create.cshtml");
         }
     }
 }

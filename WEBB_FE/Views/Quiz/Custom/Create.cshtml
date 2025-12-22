@@ -1,0 +1,387 @@
+﻿@{
+    ViewBag.Title = "Tạo Quiz Tùy Chỉnh";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="create-quiz-container">
+    <div class="quiz-header">
+        <h1>✨ Tạo Quiz Của Bạn</h1>
+        <p>Đóng góp câu hỏi cho cộng đồng và nhận điểm thưởng!</p>
+    </div>
+    <div class="form-card">
+        <!-- Thông tin chung -->
+        <div class="section-title">📝 Thông Tin Chung</div>
+        <div class="form-group">
+            <label>Tên Quiz</label>
+            <input type="text" id="TenQuiz" placeholder="Ví dụ: Đố vui ngày Tết..." class="form-control" />
+        </div>
+        <div class="form-group">
+            <label>Mô Tả</label>
+            <textarea id="MoTa" rows="3" placeholder="Mô tả ngắn về quiz này..." class="form-control"></textarea>
+        </div>
+        <div class="form-row">
+            <!-- Mặc định ID = 1 (Kiến thức chung) cho đơn giản, có thể sửa nếu cần -->
+            <input type="hidden" id="ChuDeID" value="1" />
+
+            <div class="form-group half">
+                <label>Độ Khó</label>
+                <select id="DoKhoID" class="form-control">
+                    <option value="1">Dễ</option>
+                    <option value="2">Trung Bình</option>
+                    <option value="3">Khó</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <!-- Danh sách câu hỏi -->
+    <div id="questions-list">
+        <!-- JS sẽ thêm câu hỏi vào đây -->
+    </div>
+    <button class="btn-add-question" onclick="addQuestion()">➕ Thêm Câu Hỏi</button>
+    <div class="action-buttons">
+        <button class="btn-submit" onclick="submitQuiz()">🚀 Gửi Đề Xuất</button>
+    </div>
+</div>
+<!-- Template cho 1 câu hỏi -->
+<template id="question-template">
+    <div class="question-card" data-index="{index}">
+        <div class="card-header">
+            <h3>Câu Hỏi <span class="q-idx">{displayIndex}</span></h3>
+            <button class="btn-remove" onclick="removeQuestion(this)">🗑️</button>
+        </div>
+        <div class="form-group">
+            <input type="text" class="q-content form-control" placeholder="Nhập nội dung câu hỏi..." required />
+        </div>
+        <div class="answers-grid-input">
+            <div class="answer-input-group">
+                <span class="ans-label">A</span>
+                <input type="text" class="form-control ans-a" placeholder="Đáp án A" required />
+                <input type="radio" name="correct-{index}" value="A" class="correct-radio" checked title="Chọn làm đáp án đúng" />
+            </div>
+            <div class="answer-input-group">
+                <span class="ans-label">B</span>
+                <input type="text" class="form-control ans-b" placeholder="Đáp án B" required />
+                <input type="radio" name="correct-{index}" value="B" class="correct-radio" title="Chọn làm đáp án đúng" />
+            </div>
+            <div class="answer-input-group">
+                <span class="ans-label">C</span>
+                <input type="text" class="form-control ans-c" placeholder="Đáp án C" required />
+                <input type="radio" name="correct-{index}" value="C" class="correct-radio" title="Chọn làm đáp án đúng" />
+            </div>
+            <div class="answer-input-group">
+                <span class="ans-label">D</span>
+                <input type="text" class="form-control ans-d" placeholder="Đáp án D" required />
+                <input type="radio" name="correct-{index}" value="D" class="correct-radio" title="Chọn làm đáp án đúng" />
+            </div>
+        </div>
+    </div>
+</template>
+<style>
+    /* Style đẹp, hiện đại (Glassmorphism + Gradient Tím) */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .create-quiz-container {
+        max-width: 800px;
+        margin: 30px auto;
+        padding: 0 15px;
+    }
+
+    .quiz-header {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #fff;
+        background: var(--primary-gradient);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+    }
+
+        .quiz-header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .quiz-header p {
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+    .form-card, .question-card {
+        background: var(--glass-bg);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+        margin-bottom: 25px;
+        animation: fadeIn 0.5s ease;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        border-left: 4px solid #764ba2;
+        padding-left: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 16px;
+        transition: all 0.3s;
+    }
+
+        .form-control:focus {
+            border-color: #764ba2;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+        }
+    /* Questions */
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #764ba2;
+        }
+
+    .btn-remove {
+        background: #ff7675;
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+
+        .btn-remove:hover {
+            transform: scale(1.1);
+            background: #d63031;
+        }
+
+    .answers-grid-input {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .answer-input-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .ans-label {
+        position: absolute;
+        left: 10px;
+        font-weight: bold;
+        color: #999;
+        z-index: 1;
+    }
+
+    .answer-input-group input[type="text"] {
+        padding-left: 30px;
+        padding-right: 35px; /* chỗ cho radio */
+    }
+
+    .correct-radio {
+        position: absolute;
+        right: 10px;
+        width: 20px;
+        height: 20px;
+        accent-color: #2ecc71;
+        cursor: pointer;
+    }
+    /* Buttons */
+    .btn-add-question {
+        background: white;
+        color: #764ba2;
+        border: 2px dashed #764ba2;
+        width: 100%;
+        padding: 15px;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin-bottom: 30px;
+    }
+
+        .btn-add-question:hover {
+            background: #f8f9fa;
+            transform: translateY(-2px);
+        }
+
+    .action-buttons {
+        text-align: center;
+    }
+
+    .btn-submit {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 15px 50px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 10px 20px rgba(118, 75, 162, 0.4);
+        transition: all 0.3s;
+    }
+
+        .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(118, 75, 162, 0.6);
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .answers-grid-input {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    let questionCount = 0;
+    function addQuestion() {
+        questionCount++;
+        const template = document.getElementById('question-template').innerHTML;
+        const html = template
+            .replace(/{index}/g, questionCount)
+            .replace(/{displayIndex}/g, questionCount);
+
+        $('#questions-list').append(html);
+
+        // Scroll xuống câu hỏi mới
+        const newCard = $('#questions-list .question-card').last();
+        $('html, body').animate({
+            scrollTop: newCard.offset().top - 100
+        }, 500);
+    }
+    function removeQuestion(btn) {
+        $(btn).closest('.question-card').remove();
+        updateIndexes();
+    }
+    function updateIndexes() {
+        questionCount = 0;
+        $('.question-card').each(function() {
+            questionCount++;
+            $(this).find('.q-idx').text(questionCount);
+        });
+    }
+    function getToken() {
+         var token = '@Html.Raw(Session["JwtToken"])';
+         if (!token) token = '@Html.Raw(Session["JWT_TOKEN"])';
+         return token;
+    }
+    function submitQuiz() {
+        const token = getToken();
+        if(!token) {
+            alert("Bạn cần đăng nhập để gửi đề xuất!");
+            window.location.href = '/Account/Login';
+            return;
+        }
+        const tenQuiz = $('#TenQuiz').val().trim();
+        if (!tenQuiz) { alert("Vui lòng nhập Tên Quiz!"); return; }
+        const questions = [];
+        let isValid = true;
+        $('.question-card').each(function() {
+            const index = $(this).attr('data-index');
+            const noiDung = $(this).find('.q-content').val().trim();
+            const ansA = $(this).find('.ans-a').val().trim();
+            const ansB = $(this).find('.ans-b').val().trim();
+            const ansC = $(this).find('.ans-c').val().trim();
+            const ansD = $(this).find('.ans-d').val().trim();
+            const dapAnDung = $(this).find(`input[name="correct-${index}"]:checked`).val();
+            if (!noiDung || !ansA || !ansB || !ansC || !ansD || !dapAnDung) {
+                isValid = false;
+                alert(`Vui lòng điền đầy đủ nội dung và chọn đáp án đúng cho Câu hỏi số ${$(this).find('.q-idx').text()}`);
+                return false;
+            }
+            questions.push({
+                ChuDeID: parseInt($('#ChuDeID').val()),
+                DoKhoID: parseInt($('#DoKhoID').val()),
+                NoiDung: noiDung,
+                DapAnA: ansA,
+                DapAnB: ansB,
+                DapAnC: ansC,
+                DapAnD: ansD,
+                DapAnDung: dapAnDung
+            });
+        });
+        if (!isValid) return;
+        if (questions.length === 0) {
+            alert("Vui lòng thêm ít nhất 1 câu hỏi!");
+            return;
+        }
+        const payload = {
+            TenQuiz: tenQuiz,
+            MoTa: $('#MoTa').val().trim(),
+            Questions: questions
+        };
+        // Gửi API
+        $.ajax({
+            url: 'https://localhost:7092/api/QuizTuyChinh/submit',
+            type: 'POST',
+            contentType: 'application/json',
+            headers: { "Authorization": "Bearer " + token },
+            data: JSON.stringify(payload),
+            success: function(res) {
+                alert("🎉 Gửi đề xuất thành công! Cảm ơn đóng góp của bạn.");
+                window.location.href = '/Quiz/CustomQuiz';
+            },
+            error: function(err) {
+                console.error(err);
+                alert("❌ Lỗi: " + (err.responseJSON?.message || err.responseText || "Không thể gửi Quiz"));
+            }
+        });
+    }
+    // Add 1 câu hỏi đầu tiên
+    $(document).ready(function() {
+        addQuestion();
+    });
+</script>

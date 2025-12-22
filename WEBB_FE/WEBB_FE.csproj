@@ -334,6 +334,7 @@
     <Content Include="Views\Quiz\DoiKhang\Join.cshtml" />
     <Content Include="Views\Quiz\DoiKhang\Create.cshtml" />
     <Content Include="Views\Quiz\Play\Match.cshtml" />
+    <Content Include="Views\Quiz\Custom\Create.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
