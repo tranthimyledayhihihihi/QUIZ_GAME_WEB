@@ -1,30 +1,31 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using QUIZ_GAME_WEB.Data;
+using QUIZ_GAME_WEB.Models.CoreEntities;
+using QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.Interfaces;
 using QUIZ_GAME_WEB.Models.QuizModels;
 using QUIZ_GAME_WEB.Models.ResultsModels;
+using QUIZ_GAME_WEB.Models.SocialRankingModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
-using QUIZ_GAME_WEB.Models.InputModels;
-using QUIZ_GAME_WEB.Models.CoreEntities;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Collections.Generic;
-using System;
 
 namespace QUIZ_GAME_WEB.Models.Implementations
 {
     public class QuizRepository : GenericRepository<CauHoi>, IQuizRepository
     {
         // Khắc phục lỗi "hiding inherited member"
-        private new readonly QuizGameContext _context; 
-        
+        private new readonly QuizGameContext _context;
+
         // Khởi tạo các Generic Repository để trả về từ IQuizRepository
         private readonly IGenericRepository<ChuDe> _topicRepository;
         private readonly IGenericRepository<DoKho> _difficultyRepository;
 
-        public QuizRepository(QuizGameContext context) : base(context) 
-        { 
-            _context = context; 
+        public QuizRepository(QuizGameContext context) : base(context)
+        {
+            _context = context;
             // Khởi tạo các Generic Repository cho các Entity liên quan
             _topicRepository = new GenericRepository<ChuDe>(context);
             _difficultyRepository = new GenericRepository<DoKho>(context);
@@ -40,7 +41,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
             if (chuDeId.HasValue) query = query.Where(q => q.ChuDeID == chuDeId.Value);
             if (doKhoId.HasValue) query = query.Where(q => q.DoKhoID == doKhoId.Value);
             query = query.Where(q => q.TrangThaiDuyet == "Approved"); // Chỉ lấy câu hỏi đã duyệt
-            
+
             query = query.Include(q => q.ChuDe).Include(q => q.DoKho);
             return await query.OrderBy(r => Guid.NewGuid()).Take(count).ToListAsync();
         }
@@ -84,14 +85,14 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         public void AddTopic(ChuDe topic) => _context.ChuDes.Add(topic);
         public async Task AddQuizTuyChinhAsync(QuizTuyChinh quiz) => await _context.QuizTuyChinhs.AddAsync(quiz);
         public async Task AddQuizAttemptAsync(QuizAttempt attempt) => await _context.QuizAttempts.AddAsync(attempt);
-        
+
         // Sửa: Hàm SaveQuizAttemptAsync trả về Task (async void không được dùng)
-        public Task SaveQuizAttemptAsync(QuizAttempt attempt) 
+        public Task SaveQuizAttemptAsync(QuizAttempt attempt)
         {
             _context.QuizAttempts.Update(attempt);
-            return Task.CompletedTask; 
+            return Task.CompletedTask;
         }
-        
+
         public async Task AddQuizChiaSeAsync(QuizChiaSe share) => await _context.QuizChiaSes.AddAsync(share);
 
         // ===============================================
@@ -135,7 +136,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         {
             return _difficultyRepository;
         }
-        
+
         public async Task<int> CountAllCauHoisAsync() => await _context.CauHois.CountAsync();
         public async Task<int> CountActiveQuestionsAsync() => await _context.CauHois.Where(q => q.TrangThaiDuyet == "Approved").CountAsync();
 
@@ -241,7 +242,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
             return (questions, totalCount);
         }
-        
+
         public async Task<IEnumerable<CauHoi>> GetAllCauHoisWithDetailsAsync()
         {
             return await _context.CauHois.Include(q => q.ChuDe).Include(q => q.DoKho).AsNoTracking().ToListAsync();
@@ -367,7 +368,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
             return (shares, totalCount);
         }
-        
+
         public async Task<(IEnumerable<QuizShareDto> Shares, int TotalCount)> GetSharedQuizzesByReceiverAsync(int userId)
         {
             var query = _context.QuizChiaSes
@@ -394,7 +395,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
             return (shares, totalCount);
         }
-        
+
         public async Task<QuizShareDetailDto?> GetShareDetailByIdAsync(int shareId)
         {
             var shareDetail = await _context.QuizChiaSes
@@ -427,8 +428,8 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         {
             var todayQuiz = await _context.QuizNgays
                 .Where(qn => qn.Ngay.Date == DateTime.Today.Date)
-                .Include(qn => qn.CauHoi) 
-                    .ThenInclude(ch => ch!.DoKho) 
+                .Include(qn => qn.CauHoi)
+                    .ThenInclude(ch => ch!.DoKho)
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
 
@@ -448,5 +449,53 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                 // Bổ sung các trường DapAnA, B, C, D nếu DTO QuizNgayDetailsDto yêu cầu
             };
         }
+        // ================================
+        public IGenericRepository<TroGiup> GetHelperRepository()
+        {
+            return new GenericRepository<TroGiup>(_context);
+        }
+
+        /// <summary>
+        /// Trả về Generic Repository cho thực thể SystemSettings (Cấu hình hệ thống).
+        /// </summary>
+        public IGenericRepository<SystemSetting> GetSettingsRepository()
+        {
+            return new GenericRepository<SystemSetting>(_context);
+        }
+        // QUIZ TÙY CHỈNH – ADMIN
+        // ================================
+
+        public IQueryable<QuizTuyChinh> GetQuizTuyChinhQueryable()
+        {
+            return _context.QuizTuyChinhs
+                .Include(q => q.NguoiDung)
+                .Include(q => q.CauHois);
+        }
+
+        public async Task<QuizTuyChinh?> GetQuizTuyChinhByIdAsync(int id)
+        {
+            return await _context.QuizTuyChinhs
+                .Include(q => q.NguoiDung)
+                .Include(q => q.CauHois)
+                .FirstOrDefaultAsync(q => q.QuizTuyChinhID == id);
+        }
+
+        public void UpdateQuizTuyChinh(QuizTuyChinh quiz)
+        {
+            _context.QuizTuyChinhs.Update(quiz);
+        }
+        public IGenericRepository<ThuongNgay> GetRewardRepository()
+        {
+            return new GenericRepository<ThuongNgay>(_context);
+        }
+        public IGenericRepository<Comment> GetCommentRepository()
+        {
+            return new GenericRepository<Comment>(_context);
+        }
+        public void DeleteQuizTuyChinh(QuizTuyChinh quiz)
+        {
+            _context.QuizTuyChinhs.Remove(quiz);
+        }
+
     }
 }

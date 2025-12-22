@@ -331,6 +331,9 @@
     <Content Include="Views\Quiz\DoiKhang\Match.cshtml" />
     <Content Include="Views\User\Profile\Index.cshtml" />
     <Content Include="Views\User\History\Index.cshtml" />
+    <Content Include="Views\Quiz\DoiKhang\Join.cshtml" />
+    <Content Include="Views\Quiz\DoiKhang\Create.cshtml" />
+    <Content Include="Views\Quiz\Play\Match.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

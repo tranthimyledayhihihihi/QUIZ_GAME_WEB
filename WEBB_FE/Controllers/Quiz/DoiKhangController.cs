@@ -24,7 +24,7 @@ namespace WEBB.Controllers.Quiz
 
         private string GetToken()
         {
-            var token = Session["JWT_TOKEN"] as string;
+            var token = Session["JwtToken"] as string;
             if (string.IsNullOrEmpty(token))
                 token = Session["JWT_TOKEN"] as string;
             return token;
@@ -76,6 +76,36 @@ namespace WEBB.Controllers.Quiz
                 }
             }
         }
+        // GET: /Quiz/DoiKhang/Create
+        public ActionResult Create()
+        {
+            var token = GetToken();
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Bạn chưa đăng nhập.";
+                return RedirectToAction("Login", "Account", new { area = "User" });
+            }
+
+            // Dùng chung Index (JS sẽ gửi CREATE_ROOM qua WebSocket)
+            ViewBag.Mode = "CREATE";
+            return View("~/Views/Quiz/DoiKhang/Create.cshtml");
+        }
+
+        // GET: /Quiz/DoiKhang/Join?code=ABC123
+        public ActionResult Join(string code)
+        {
+            var token = GetToken();
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Bạn chưa đăng nhập.";
+                return RedirectToAction("Login", "Account", new { area = "User" });
+            }
+
+            ViewBag.Mode = "JOIN";
+            ViewBag.RoomCode = code; // đổ sẵn mã phòng nếu có
+            return View("~/Views/Quiz/DoiKhang/Join.cshtml");
+        }
+
         public ActionResult Match(string code)
         {
             var token = GetToken(); // dùng lại hàm bạn đã có trong controller
