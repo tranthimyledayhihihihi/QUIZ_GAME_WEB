@@ -270,6 +270,7 @@
     let ws;
     let currentMatchCode = null;
     let isSearching = false;
+    let findMatchTimeout;
 
     function getToken() {
         return '@Html.Raw(Session["JWT_TOKEN"])';
@@ -297,9 +298,7 @@
             $('#statusText').text('❌ Lỗi kết nối');
         };
 
-        ws.onclose = function() {
-            $('#statusText').text('🔌 Mất kết nối');
-        };
+       
     }
 
     function handleServerMessage(data) {
@@ -323,6 +322,9 @@
                 break;
 
             case 'MATCH_FOUND':
+                // ✨ HỦY TIMEOUT KHI TÌM THẤY TRẬN
+                clearTimeout(findMatchTimeout);
+
                 currentMatchCode = data.Data.matchCode;
                 $('#statusText').text('🎮 Đã tìm thấy đối thủ!');
                 setTimeout(() => {
@@ -336,6 +338,12 @@
                     $('#statusText').text('✅ Đã kết nối');
                 }, 3000);
                 break;
+            case 'ROOM_EXPIRED':
+                $('#statusText').text('❌ Phòng đã hết hạn. Vui lòng tạo phòng mới.');
+                // KHÔNG xoá roomCode ngay
+                break;
+
+
         }
     }
 
@@ -347,16 +355,29 @@
         });
     }
 
-    $('#btnTimTran').click(function () {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ Type: 'FIND_MATCH' }));
-            $('#statusText').text('⏳ Đang tìm đối thủ...');
-        } else {
-            $('#statusText').text('❌ Chưa kết nối WebSocket');
-        }
-    });
+   $('#btnTimTran').click(function () {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ Type: 'FIND_MATCH' }));
+        $('#statusText').text('⏳ Đang tìm đối thủ...');
+        
+        // ✨ THÊM TIMEOUT 60 GIÂY
+        findMatchTimeout = setTimeout(() => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ Type: 'CANCEL_QUEUE' }));
+            }
+            $('#statusText').text('❌ Không tìm được đối thủ sau 60 giây. Vui lòng thử lại!');
+            $('#btnTimTran').show();
+            $('#btnHuyTimTran').hide();
+        }, 60000);
+    } else {
+        $('#statusText').text('❌ Chưa kết nối WebSocket');
+    }
+});
 
     $('#btnHuyTimTran').click(function () {
+        // ✨ HỦY TIMEOUT KHI USER TỰ HỦY
+        clearTimeout(findMatchTimeout);
+
         if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ Type: 'CANCEL_QUEUE' }));
         }

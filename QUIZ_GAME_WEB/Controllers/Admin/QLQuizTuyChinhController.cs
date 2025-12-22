@@ -95,7 +95,6 @@ public class QLQuizTuyChinhController : ControllerBase
             })
         });
     }
-
     // =================================================
     // 3️⃣ DUYỆT QUIZ
     [HttpPost("{id:int}/phe-duyet")]

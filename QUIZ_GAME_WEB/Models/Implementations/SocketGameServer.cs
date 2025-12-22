@@ -19,6 +19,12 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         private readonly ConcurrentDictionary<string, List<int>> _matchRooms = new();
 
         // ===============================
+        // MATCH COMPLETION TRACKING
+        // ===============================
+        private readonly ConcurrentDictionary<string, bool> _matchCompleted = new();
+        private readonly ConcurrentDictionary<string, object> _matchLocks = new();
+
+        // ===============================
         // RANDOM MATCH QUEUE
         // ===============================
         private readonly List<int> _randomQueue = new();
@@ -116,7 +122,6 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                         await HandleJoinPrivateRoomAsync(userId, roomCode);
                     break;
 
-                // 🔥 FIX: THÊM HANDLER CHO JOIN_MATCH
                 case "JOIN_MATCH":
                     var matchCode = data.Data?.GetProperty("matchCode").GetString();
                     if (!string.IsNullOrEmpty(matchCode))
@@ -125,7 +130,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                         JoinMatchRoom(userId, matchCode);
                         await Send(userId, new { Type = "JOINED_MATCH", Data = new { matchCode } });
 
-                        // 🔥 GỬI CÂU HỎI NGAY SAU KHI CLIENT JOIN
+                        // Gửi câu hỏi ngay sau khi client join
                         await SendQuestionsToMatch(matchCode);
                     }
                     break;
@@ -158,6 +163,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         public async Task HandleCreateRoomAsync(int userId)
         {
             string roomCode = Guid.NewGuid().ToString("N")[..6].ToUpper();
+
             _waitingRooms[roomCode] = new List<int> { userId };
 
             await Send(userId, new
@@ -165,7 +171,35 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                 Type = "ROOM_CREATED",
                 Data = new { roomCode }
             });
+
+            _ = Task.Delay(TimeSpan.FromMinutes(1)).ContinueWith(async _ =>
+            {
+                if (!_waitingRooms.TryGetValue(roomCode, out var room))
+                    return;
+
+                lock (room)
+                {
+                    // ❌ Không expire nếu phòng đã đủ người
+                    if (room.Count >= 2)
+                        return;
+                }
+
+                if (_waitingRooms.TryRemove(roomCode, out var removedRoom))
+                {
+                    Console.WriteLine($"⏰ Room {roomCode} expired after 5 minutes");
+
+                    foreach (var playerId in removedRoom)
+                    {
+                        await Send(playerId, new
+                        {
+                            Type = "ROOM_EXPIRED",
+                            Data = new { message = "Phòng đã hết hạn (5 phút không có người vào)" }
+                        });
+                    }
+                }
+            });
         }
+
 
         public async Task HandleJoinPrivateRoomAsync(int userId, string roomCode)
         {
@@ -187,7 +221,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
             if (room.Count == 2)
             {
-                _waitingRooms.TryRemove(roomCode, out _);
+                _waitingRooms.TryRemove(roomCode, out List<int> removedRoom);
                 await StartPrivateMatch(room[0], room[1]);
             }
         }
@@ -202,7 +236,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
             Console.WriteLine($"🎮 Starting match {matchCode} between {p1} and {p2}");
 
-            // Join both players to match room NGAY LẬP TỨC
+            // Join both players to match room ngay lập tức
             JoinMatchRoom(p1, matchCode);
             JoinMatchRoom(p2, matchCode);
 
@@ -213,17 +247,18 @@ namespace QUIZ_GAME_WEB.Models.Implementations
             Console.WriteLine($"✅ Both players notified, waiting for them to join match page...");
         }
 
-        // 🔥 PHƯƠNG THỨC MỚI - GỬI CÂU HỎI CHỈ KHI CẢ 2 PLAYERS ĐÃ JOIN
+        /* =========================================================
+           SEND QUESTIONS TO MATCH
+        ========================================================= */
         private async Task SendQuestionsToMatch(string matchCode)
         {
-            // Kiểm tra xem đã gửi câu hỏi chưa
             if (!_matchRooms.TryGetValue(matchCode, out var players))
             {
                 Console.WriteLine($"⚠️ Match room {matchCode} not found when trying to send questions");
                 return;
             }
 
-            // Chỉ gửi khi CẢ 2 players đã join
+            // Chỉ gửi khi cả 2 players đã join
             if (players.Count < 2)
             {
                 Console.WriteLine($"⏳ Waiting for both players to join {matchCode}. Current: {players.Count}/2");
@@ -313,16 +348,105 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
         private async Task CheckMatchCompletion(string matchCode)
         {
+            // 🔥 KIỂM TRA NGAY TỪ ĐẦU ĐỂ TRÁNH GỌI SERVICE NHIỀU LẦN
+            var lockObj = _matchLocks.GetOrAdd(matchCode, _ => new object());
+
+            bool shouldBroadcast = false;
+            lock (lockObj)
+            {
+                if (_matchCompleted.ContainsKey(matchCode))
+                {
+                    Console.WriteLine($"⚠️ Match {matchCode} already completed, skipping");
+                    return;
+                }
+
+                // Đánh dấu đang xử lý để tránh duplicate
+                _matchCompleted[matchCode] = false; // false = đang xử lý
+                shouldBroadcast = true;
+            }
+
+            if (!shouldBroadcast) return;
+
             using var scope = _serviceProvider.CreateScope();
             var matchService = scope.ServiceProvider.GetRequiredService<IOnlineMatchService>();
 
             var result = await matchService.EndMatchByCodeAsync(matchCode);
-            if (result.KetQua == "Wait") return;
 
-            await Broadcast(matchCode, new
+            if (result.KetQua == "Wait")
             {
-                Type = "GAME_END",
-                Data = result
+                // Nếu chưa xong thì xóa flag
+                lock (lockObj)
+                {
+                    _matchCompleted.TryRemove(matchCode, out _);
+                }
+                return;
+            }
+
+            // ✅ XÁC NHẬN TRẬN ĐẤU ĐÃ KẾT THÚC
+            lock (lockObj)
+            {
+                _matchCompleted[matchCode] = true; // true = đã hoàn thành
+            }
+
+            Console.WriteLine($"🏁 Match {matchCode} completed! Result: {result.KetQua}");
+
+            // 🔥 ĐẢM BẢO CẢ 2 NGƯỜI CHƠI ĐỀU NHẬN ĐƯỢC KẾT QUẢ
+            try
+            {
+                if (!_matchRooms.TryGetValue(matchCode, out var players))
+                {
+                    Console.WriteLine($"❌ Match room {matchCode} not found!");
+                    return;
+                }
+
+                Console.WriteLine($"📢 Broadcasting GAME_END to {players.Count} players in {matchCode}");
+
+                // 🔥 GỬI RIÊNG TỪNG NGƯỜI VÀ ĐỢI XÁC NHẬN
+                var sendTasks = new List<Task>();
+                foreach (var playerId in players.ToList())
+                {
+                    sendTasks.Add(Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await Send(playerId, new
+                            {
+                                Type = "GAME_END",
+                                Data = result
+                            });
+
+                            // Gửi lại lần 2 sau 500ms để đảm bảo
+                            await Task.Delay(500);
+                            await Send(playerId, new
+                            {
+                                Type = "GAME_END",
+                                Data = result
+                            });
+
+                            Console.WriteLine($"  ✅ Sent GAME_END to player {playerId} (x2)");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"  ❌ Failed to send to player {playerId}: {ex.Message}");
+                        }
+                    }));
+                }
+
+                await Task.WhenAll(sendTasks);
+                Console.WriteLine($"✅ All GAME_END messages sent for match {matchCode}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error in CheckMatchCompletion for {matchCode}: {ex.Message}");
+            }
+
+            // Cleanup sau 15 giây (tăng thời gian để user có thể xem kết quả)
+            _ = Task.Delay(150000).ContinueWith(t =>
+            {
+                _matchRooms.TryRemove(matchCode, out _);
+                _matchCompleted.TryRemove(matchCode, out _);
+                _matchLocks.TryRemove(matchCode, out _);
+                Console.WriteLine($"🧹 Cleaned up match {matchCode}");
             });
         }
 
@@ -351,6 +475,20 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         public void Unregister(int userId)
         {
             _userSockets.TryRemove(userId, out _);
+
+            // 🔥 XÓA USER KHỎI TẤT CẢ MATCH ROOMS
+            foreach (var kvp in _matchRooms)
+            {
+                var players = kvp.Value;
+                lock (players)
+                {
+                    if (players.Remove(userId))
+                    {
+                        Console.WriteLine($"🔌 Removed user {userId} from match room {kvp.Key}");
+                    }
+                }
+            }
+
             Console.WriteLine($"🔌 User {userId} disconnected. Total online: {_userSockets.Count}");
         }
 
@@ -368,11 +506,18 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                 return;
             }
 
-            var json = JsonSerializer.Serialize(message);
-            var buffer = Encoding.UTF8.GetBytes(json);
+            try
+            {
+                var json = JsonSerializer.Serialize(message);
+                var buffer = Encoding.UTF8.GetBytes(json);
 
-            await socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-            Console.WriteLine($"📤 Sent to user {userId}: {json.Substring(0, Math.Min(100, json.Length))}...");
+                await socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+                Console.WriteLine($"📤 Sent to user {userId}: {json.Substring(0, Math.Min(100, json.Length))}...");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error sending to user {userId}: {ex.Message}");
+            }
         }
 
         public async Task Broadcast(string matchCode, object message)
@@ -385,11 +530,28 @@ namespace QUIZ_GAME_WEB.Models.Implementations
 
             Console.WriteLine($"📢 Broadcasting to match {matchCode} ({players.Count} players)");
 
-            foreach (var uid in players)
+            // 🔥 SỬ DỤNG ToList() ĐỂ TRÁNH COLLECTION MODIFIED EXCEPTION
+            var playersList = players.ToList();
+            var tasks = new List<Task>();
+
+            foreach (var uid in playersList)
             {
-                Console.WriteLine($"  → Sending to user {uid}");
-                await Send(uid, message);
+                tasks.Add(Task.Run(async () =>
+                {
+                    try
+                    {
+                        Console.WriteLine($"  → Sending to user {uid}");
+                        await Send(uid, message);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"❌ Failed to send to user {uid}: {ex.Message}");
+                    }
+                }));
             }
+
+            await Task.WhenAll(tasks);
+            Console.WriteLine($"✅ Broadcast completed for match {matchCode}");
         }
 
         public int GetOnlineCount() => _userSockets.Count;

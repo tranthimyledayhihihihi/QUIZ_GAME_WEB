@@ -1,15 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using QUIZ_GAME_WEB.Data;
 using QUIZ_GAME_WEB.Models.InputModels;
 using QUIZ_GAME_WEB.Models.Interfaces;
-using QUIZ_GAME_WEB.Models.ResultsModels;
 using QUIZ_GAME_WEB.Models.QuizModels;
+using QUIZ_GAME_WEB.Models.ResultsModels;
 using QUIZ_GAME_WEB.Models.ViewModels;
 using System;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 public class OnlineMatchService : IOnlineMatchService
 {
@@ -366,4 +367,15 @@ public class OnlineMatchService : IOnlineMatchService
             return 0;
         }
     }
+    public async Task<int> GetPlayerAnswersCountAsync(string matchCode, int userId)
+    {
+        var match = await GetMatchByCodeAsync(matchCode);
+        if (match == null) return 0;
+
+        var answers = await _unit.TranDau.GetMatchAnswersAsync(match.TranDauID);
+        return answers.Count(a => a.UserID == userId);
+    }
+
+   
+
 }

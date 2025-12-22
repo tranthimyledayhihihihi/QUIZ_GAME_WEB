@@ -1,5 +1,4 @@
-﻿using System.Net.WebSockets;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using QUIZ_GAME_WEB.Models.InputModels;
 
 namespace QUIZ_GAME_WEB.Models.Interfaces
@@ -11,10 +10,6 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         ========================== */
         Task Handle(HttpContext context);
 
-        void Register(int userId, WebSocket socket);
-
-        void Unregister(int userId);
-
         /* =========================
            MATCHMAKING – RANDOM
         ========================== */
@@ -23,21 +18,13 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         /* =========================
            🔥 PRIVATE ROOM
         ========================== */
-
-        /// <summary>
-        /// Tạo phòng riêng – trả về roomCode cho client
-        /// </summary>
         Task HandleCreateRoomAsync(int userId);
 
-        /// <summary>
-        /// Join phòng riêng bằng mã phòng
-        /// </summary>
         Task HandleJoinPrivateRoomAsync(int userId, string roomCode);
 
         /* =========================
-           MATCH ROOM
+           GAMEPLAY
         ========================== */
-
         Task HandleSubmitAnswerAsync(
             int userId,
             string matchCode,
@@ -47,7 +34,6 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         /* =========================
            SEND MESSAGE
         ========================== */
-
         Task Send(int userId, object message);
 
         Task Broadcast(string matchCode, object message);
@@ -55,7 +41,6 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         /* =========================
            INFO
         ========================== */
-
         int GetOnlineCount();
     }
 }
