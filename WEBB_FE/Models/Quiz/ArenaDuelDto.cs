@@ -2,7 +2,7 @@
 {
     public class ArenaRoomDto
     {
-        public int RoomId { get; set; }
+        public string Code { get; set; }
         public string Name { get; set; }
         public int CurrentPlayers { get; set; }
         public int MaxPlayers { get; set; }

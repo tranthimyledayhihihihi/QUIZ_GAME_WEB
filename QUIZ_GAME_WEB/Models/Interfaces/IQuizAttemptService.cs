@@ -29,8 +29,8 @@ namespace QUIZ_GAME_WEB.Models.Interfaces
         /// </summary>
         /// <param name="answer">Thông tin câu hỏi và đáp án</param>
         /// <returns>True nếu lưu thành công</returns>
-        Task<bool> SubmitAnswerAsync(AnswerSubmitModel answer);
-
+        //Task<bool> SubmitAnswerAsync(AnswerSubmitModel answer);
+        Task<(bool IsCorrect, string CorrectAnswer)> SubmitAnswerAsync(AnswerSubmitModel answer);
         /// <summary>
         /// Kết thúc phiên làm bài và lưu kết quả vào database
         /// </summary>

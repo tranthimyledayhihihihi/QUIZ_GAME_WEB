@@ -157,9 +157,18 @@ public class OnlineMatchService : IOnlineMatchService
                 KetQua = "Wait", // Ký hiệu chờ
                 WinnerHoTen = "Đang chờ đối thủ...",
                 DiemPlayer1 = match.DiemPlayer1,
-                DiemPlayer2 = match.DiemPlayer2
+                DiemPlayer2 = match.DiemPlayer2,
+                Player1ID = match.Player1ID,
+                Player2ID = match.Player2ID
             };
         }
+
+        // 🟢 FIX: TÍNH TOÁN LẠI ĐIỂM TỪ LOG ĐỂ TRÁNH SAI SÓT (Race Condition)
+        int scoreP1 = answers.Where(a => a.UserID == match.Player1ID).Sum(a => a.DiemNhanDuoc);
+        int scoreP2 = answers.Where(a => a.UserID == match.Player2ID).Sum(a => a.DiemNhanDuoc);
+        
+        match.DiemPlayer1 = scoreP1;
+        match.DiemPlayer2 = scoreP2;
         // 4. NẾU ĐÃ ĐỦ => TÍNH TOÁN KẾT QUẢ CUỐI CÙNG (Code cũ)
         string result = "Hoa";
         int? winner = null;
@@ -189,7 +198,9 @@ public class OnlineMatchService : IOnlineMatchService
             KetQua = result,
             WinnerHoTen = winnerName,
             DiemPlayer1 = match.DiemPlayer1,
-            DiemPlayer2 = match.DiemPlayer2
+            DiemPlayer2 = match.DiemPlayer2,
+            Player1ID = match.Player1ID, // <--- Gán giá trị
+            Player2ID = match.Player2ID  // <--- Gán giá trị
         };
     }
 }

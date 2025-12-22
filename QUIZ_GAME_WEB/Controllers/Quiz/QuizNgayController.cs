@@ -114,8 +114,7 @@ namespace QUIZ_GAME_WEB.Controllers.Quiz
             {
                 model.UserID = GetUserIdFromClaim();
 
-                // ✅ Tái sử dụng hàm SubmitAnswerAsync chung của QuizAttemptService
-                bool isCorrect = await _quizAttemptService.SubmitAnswerAsync(model);
+                (bool isCorrect, string correctAnswer) = await _quizAttemptService.SubmitAnswerAsync(model);
 
                 return Ok(new { isCorrect = isCorrect, message = "Đáp án đã được ghi nhận." });
             }

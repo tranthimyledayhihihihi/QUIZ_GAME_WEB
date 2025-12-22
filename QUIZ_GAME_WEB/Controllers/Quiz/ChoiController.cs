@@ -68,8 +68,13 @@ namespace QUIZ_GAME_WEB.Controllers.Quiz
             try
             {
                 answer.UserID = GetUserId();
-                bool isCorrect = await _quizService.SubmitAnswerAsync(answer);
-                return Ok(new { isCorrect = isCorrect, message = "Đáp án đã được ghi nhận." });
+                var result = await _quizService.SubmitAnswerAsync(answer);
+                return Ok(new
+                {
+                    isCorrect = result.IsCorrect,
+                    correctAnswer = result.CorrectAnswer, // Frontend cần field này!
+                    message = "Đáp án đã được ghi nhận."
+                });
             }
             catch (Exception ex)
             {

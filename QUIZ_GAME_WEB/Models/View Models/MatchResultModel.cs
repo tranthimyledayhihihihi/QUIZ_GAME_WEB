@@ -16,6 +16,9 @@ namespace QUIZ_GAME_WEB.Models.ViewModels
         [Required]
         public int DiemPlayer2 { get; set; }
 
+        public int Player1ID { get; set; } // <--- Thêm mới
+        public int Player2ID { get; set; } // <--- Thêm mới
+
         public string? WinnerHoTen { get; set; } // Tên người thắng hoặc "Hòa"
 
         // Tuỳ chọn: tổng thưởng sau trận

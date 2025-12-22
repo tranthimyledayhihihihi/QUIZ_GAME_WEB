@@ -1443,17 +1443,15 @@
         }
 
         // ================= LOAD NEXT QUESTION =================
+        // ================= LOAD NEXT QUESTION (ĐÃ SỬA FIX LỖI) =================
         async function loadNextQuestion() {
-            // Kiểm tra xem đã hết câu hỏi chưa
+            // 1. Kiểm tra chỉ số: Nếu vượt quá tổng số câu -> Kết thúc luôn
             if (currentQuestionIndex > totalQuestions) {
                 await showFinalResults();
                 return;
             }
-
             if (isLoading) return;
             isLoading = true;
-
-
             try {
                 const res = await $.ajax({
                     url: '@Url.Action("NextQuestion", "Play", new { area = "Quiz" })',
@@ -1462,71 +1460,116 @@
                     data: JSON.stringify({ attemptId: currentAttemptId }),
                     dataType: 'json'
                 });
-
+                // 2. Nếu Server báo đã hết câu (isFinished) -> Kết thúc
                 if (res && res.isFinished === true) {
                     await showFinalResults();
                     return;
                 }
-
                 if (!res) {
-                    throw new Error('Không nhận được câu hỏi');
+                    throw new Error('Không nhận được dữ liệu');
                 }
-
                 hideLoading();
                 renderQuestion(res);
                 isLoading = false;
-
             } catch (error) {
+                console.warn("Không tải được câu tiếp theo, có thể đã hết câu hỏi.", error);
+
                 hideLoading();
                 isLoading = false;
-
-                // Nếu có lỗi, chuyển sang kết quả
-                if (currentQuestionIndex >= totalQuestions) {
-                    await showFinalResults();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Lỗi!',
-                        text: 'Không thể tải câu hỏi tiếp theo',
-                        confirmButtonText: 'Thử lại'
-                    }).then(() => loadNextQuestion());
-                }
+                // 3. FIX QUAN TRỌNG:
+                // Thay vì hiện Lỗi Popup, ta gọi luôn màn hình kết quả.
+                // Điều này xử lý trường hợp server trả về 404/500 ở câu cuối cùng.
+                await showFinalResults();
             }
         }
 
         // ================= SHOW FINAL RESULTS =================
         async function showFinalResults() {
             stopTimer();
-
-            // Tính toán kết quả
+            // Hiện loading
+            showLoading("Đang lưu kết quả...");
+            // --- 1. GỬI KẾT QUẢ VỀ SERVER ---
+            if (currentAttemptId > 0) {
+                try {
+                    // FIX QUAN TRỌNG: Bỏ contentType 'application/json' để gửi dạng Form Data
+                    // MVC Controller sẽ tự động nhận diện được attemptId
+                    await $.ajax({
+                        url: '@Url.Action("EndGame", "Play", new { area = "Quiz" })',
+                        type: 'POST',
+                        data: { attemptId: currentAttemptId }, // Gửi object thường, jQuery tự encode
+                        success: function (res) {
+                            console.log("✅ Đã lưu lịch sử thành công!", res);
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("❌ Lỗi lưu lịch sử:", error);
+                            // Dù lỗi cũng không chặn hiển thị kết quả
+                        }
+                    });
+                } catch (e) {
+                    console.error("Lỗi kết nối khi lưu", e);
+                }
+            }
+            // --- 2. TÍNH TOÁN HIỂN THỊ ---
             const correctCount = gameResults.filter(r => r.isCorrect).length;
             const wrongCount = gameResults.filter(r => !r.isCorrect && !r.skipped).length;
             const skippedCount = gameResults.filter(r => r.skipped).length;
-            const scorePercent = Math.round((correctCount / totalQuestions) * 100);
+            const scorePercent = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0;
             const totalScore = correctCount * 10;
-
-            // Hiển thị màn hình kết quả
+            // --- 3. HIỆN MÀN HÌNH KẾT QUẢ ---
+            hideLoading(); // Tắt loading
             $('#play-screen').fadeOut(300, () => {
                 $('#result-screen').fadeIn(300);
             });
-
-            // Cập nhật thông tin kết quả
+            // Update số liệu lên UI
             $('#score-percent').text(scorePercent + '%');
             $('#correct-count').text(correctCount);
             $('#wrong-count').text(wrongCount);
             $('#skipped-count').text(skippedCount);
             $('#total-score').text(totalScore);
-
-            // Hiển thị chi tiết kết quả
+            // Hiện danh sách chi tiết (Gọi hàm bên dưới)
             displayResultDetails();
         }
-
+        // ================= DISPLAY RESULT DETAILS (Hàm hiển thị bảng chi tiết) =================
+        function displayResultDetails() {
+            const tbody = $('#result-details');
+            tbody.empty();
+            if (typeof gameResults === 'undefined' || gameResults.length === 0) {
+                tbody.html(`<div class="text-center py-4 text-muted">Không có dữ liệu kết quả</div>`);
+                return;
+            }
+            // Duyệt qua từng câu kết quả và render ra HTML
+            gameResults.forEach((result) => {
+                const statusClass = result.isCorrect ? 'status-correct' :
+                                   result.skipped ? 'status-skipped' : 'status-wrong';
+                const statusIcon = result.isCorrect ? '✓' :
+                                 result.skipped ? '⏭️' : '✗';
+                const statusText = result.isCorrect ? 'Đúng' :
+                                 result.skipped ? 'Bỏ qua' : 'Sai';
+                // Format câu hỏi và đáp án nếu null
+                const qText = result.question || '';
+                const uAns = result.userAnswer || '-';
+                const cAns = result.correctAnswer || '-';
+                const row = `
+                    <div class="table-row">
+                        <div class="question-number">${result.questionNumber}</div>
+                        <div class="question-preview" title="${qText}">
+                            ${qText.substring(0, 50)}${qText.length > 50 ? '...' : ''}
+                        </div>
+                        <div class="user-answer">${uAns}</div>
+                        <div class="correct-answer">${cAns}</div>
+                        <div class="result-status ${statusClass}">
+                            ${statusIcon} ${statusText}
+                        </div>
+                    </div>
+                `;
+                tbody.append(row);
+            });
+        }
         // ================= DISPLAY RESULT DETAILS =================
         function displayResultDetails() {
             const tbody = $('#result-details');
             tbody.empty();
-
-            if (gameResults.length === 0) {
+            if (typeof gameResults === 'undefined' || gameResults.length === 0) {
                 tbody.html(`
                     <div style="text-align: center; padding: 40px; color: #6c757d;">
                         <i class="fas fa-info-circle" style="font-size: 3rem; margin-bottom: 20px;"></i>
@@ -1535,20 +1578,18 @@
                 `);
                 return;
             }
-
             gameResults.forEach((result) => {
                 const statusClass = result.isCorrect ? 'status-correct' :
-                                   result.skipped ? 'status-skipped' : 'status-wrong';
+                    result.skipped ? 'status-skipped' : 'status-wrong';
                 const statusIcon = result.isCorrect ? '✓' :
-                                 result.skipped ? '⏭️' : '✗';
+                    result.skipped ? '⏭️' : '✗';
                 const statusText = result.isCorrect ? 'Đúng' :
-                                 result.skipped ? 'Bỏ qua' : 'Sai';
-
+                    result.skipped ? 'Bỏ qua' : 'Sai';
                 const row = `
                     <div class="table-row">
                         <div class="question-number">${result.questionNumber}</div>
                         <div class="question-preview" title="${result.question}">
-                            ${result.question.substring(0, 60)}${result.question.length > 60 ? '...' : ''}
+                            ${result.question ? result.question.substring(0, 60) : ''}...
                         </div>
                         <div class="user-answer">${result.userAnswer || '-'}</div>
                         <div class="correct-answer">${result.correctAnswer || '-'}</div>
@@ -1560,7 +1601,6 @@
                 tbody.append(row);
             });
         }
-
         // ================= REVIEW WRONG ANSWERS =================
         function reviewWrongAnswers() {
             if (wrongAnswers.length === 0) {

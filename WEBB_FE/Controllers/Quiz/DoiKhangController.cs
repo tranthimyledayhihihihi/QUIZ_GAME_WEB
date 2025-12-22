@@ -24,7 +24,7 @@ namespace WEBB.Controllers.Quiz
 
         private string GetToken()
         {
-            var token = Session["JwtToken"] as string;
+            var token = Session["JWT_TOKEN"] as string;
             if (string.IsNullOrEmpty(token))
                 token = Session["JWT_TOKEN"] as string;
             return token;

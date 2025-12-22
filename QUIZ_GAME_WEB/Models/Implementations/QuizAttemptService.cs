@@ -129,7 +129,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         // ... (Các hàm GetNextQuestionAsync và SubmitAnswerAsync giữ nguyên)
 
         // 3. Nộp đáp án (Không đổi, vì nó chỉ cập nhật session trong memory và thêm CauSai vào DB)
-        public async Task<bool> SubmitAnswerAsync(AnswerSubmitModel answer)
+        public async Task<(bool, string)> SubmitAnswerAsync(AnswerSubmitModel answer)
         {
             if (!_activeSessions.ContainsKey(answer.QuizAttemptID))
                 throw new Exception("Phiên làm bài không tồn tại.");
@@ -160,7 +160,7 @@ namespace QUIZ_GAME_WEB.Models.Implementations
             session.QuizAttempt.SoCauHoiLam++;
             session.QuizAttempt.SoCauDung = session.CorrectAnswers;
 
-            return isCorrect;
+            return (isCorrect, correct);
         }
 
         // 4. Kết thúc bài

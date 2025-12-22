@@ -69,6 +69,48 @@ namespace WEBB.Controllers.Quiz
             }
         }
 
+        // Hàm giải mã Token để lấy UserID
+        private int GetUserIdFromToken()
+        {
+            try
+            {
+                var token = GetToken();
+                if (string.IsNullOrEmpty(token)) return 0;
+
+                var parts = token.Split('.');
+                if (parts.Length < 2) return 0;
+
+                var payload = parts[1];
+                switch (payload.Length % 4)
+                {
+                    case 2: payload += "=="; break;
+                    case 3: payload += "="; break;
+                }
+                
+                var jsonBytes = Convert.FromBase64String(payload.Replace("-", "+").Replace("_", "/"));
+                var jsonString = System.Text.Encoding.UTF8.GetString(jsonBytes);
+
+                // Dùng JObject thay vì dynamic để access key có ký tự đặc biệt
+                var json = Newtonsoft.Json.Linq.JObject.Parse(jsonString);
+
+                // 1. Thử các key ngắn gọn
+                if (json["UserID"] != null) return (int)json["UserID"];
+                if (json["userid"] != null) return (int)json["userid"];
+                if (json["nameid"] != null) return (int)json["nameid"];
+                
+                // 2. Thử key dài chuẩn SOAP/XML
+                // ClaimTypes.NameIdentifier thường ra cái này nếu không cấu hình mapping
+                string longKey = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier";
+                if (json[longKey] != null) return (int)json[longKey];
+
+                return 0;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         // ================================
         // POST: SubmitAnswer
         // ================================
@@ -80,14 +122,15 @@ namespace WEBB.Controllers.Quiz
                 System.Net.ServicePointManager.ServerCertificateValidationCallback =
                     (s, cert, chain, sslErr) => true;
 
-                int userId = 2; // TODO: Lấy UserID thật từ Session
+                // Lấy UserID thật từ Token
+                int userId = GetUserIdFromToken();
 
                 var payload = new
                 {
                     QuizAttemptID,
                     CauHoiID,
                     DapAnDaChon,
-                    UserID = userId
+                    UserID = userId // Gửi ID chính chủ
                 };
 
                 var json = JsonConvert.SerializeObject(payload);
@@ -133,6 +176,31 @@ namespace WEBB.Controllers.Quiz
                         return Json(new { isFinished = true });
 
                     return new HttpStatusCodeResult(response.StatusCode, "Lỗi lấy câu hỏi");
+                }
+            }
+            catch (Exception ex)
+            {
+                return new HttpStatusCodeResult(500, "Lỗi Server: " + ex.Message);
+            }
+        }
+        // POST: EndGame (BẮT BUỘC PHẢI CÓ ĐỂ LƯU LỊCH SỬ)
+        // ================================
+        [HttpPost]
+        public async Task<ActionResult> EndGame(int attemptId)
+        {
+            try
+            {
+                using (var client = CreateHttpClient())
+                {
+                    // Gọi Backend để chốt kết quả và tính điểm
+                    var response = await client.PostAsync($"{_apiBaseUrl}/end/{attemptId}", null);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+                        return Content(result, "application/json");
+                    }
+
+                    return new HttpStatusCodeResult(response.StatusCode, "Lỗi kết thúc game");
                 }
             }
             catch (Exception ex)

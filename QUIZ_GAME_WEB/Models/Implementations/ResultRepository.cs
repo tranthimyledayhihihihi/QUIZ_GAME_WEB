@@ -60,8 +60,8 @@ namespace QUIZ_GAME_WEB.Models.Implementations
                     Diem = kq.Diem,
                     SoCauDung = kq.SoCauDung,
                     TongCauHoi = kq.TongCauHoi,
-                    TrangThaiKetQua = kq.TrangThaiKetQua
-                    // Giả định KetQuaDto không chứa thời gian
+                    TrangThaiKetQua = kq.TrangThaiKetQua,
+                    NgayBatDau = kq.ThoiGian
                 })
                 .ToListAsync();
 

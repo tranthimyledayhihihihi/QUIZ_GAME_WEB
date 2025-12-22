@@ -43,25 +43,36 @@
     @RenderSection("Styles", required: false)
 </head>
 <body>
-    <!-- Top Right Icons (Header mới) -->
+    <!-- Top Right Icons -->
     <div class="top-right-nav">
-        <!-- Nút Cài đặt -->
+        <!-- Nút Cài đặt (Luôn hiện hoặc ẩn tùy bạn) -->
         <a href="@Url.Action("Index", "Settings")" class="nav-icon-btn">
             <i class="fa-solid fa-gear"></i>
         </a>
+
         <a href="@Url.Action("Index", "Home")" class="nav-icon-btn">
             <i class="fa-solid fa-house"></i>
         </a>
-
-        <!-- Nút Hồ sơ -->
-        <a href="@Url.Action("Login", "Account", new { area = "User" })" class="nav-icon-btn">
-            <i class="fa-solid fa-user"></i>
-        </a>
-
-        <!-- Nút Đăng xuất (Màu đỏ) -->
-        <a href="#" class="nav-icon-btn" style="background: #fa5252; border-bottom-color: #c92a2a;">
-            <i class="fa-solid fa-right-from-bracket"></i>
-        </a>
+        <!-- 👇 LOGIC CHECK ĐĂNG NHẬP 👇 -->
+        <!-- 👇 LOGIC CHECK ĐĂNG NHẬP 👇 -->
+        @if (Session["JWT_TOKEN"] == null)
+        {
+            <!-- CHƯA LOGIN: Hiện nút Đăng nhập -->
+            <a href="@Url.Action("Login", "Account")" class="nav-icon-btn" title="Đăng nhập">
+                <i class="fa-solid fa-right-to-bracket"></i>
+            </a>
+        }
+        else
+        {
+            <!-- ĐÃ LOGIN: Hiện nút Profile -->
+            <a href="@Url.Action("Index", "Profile")" class="nav-icon-btn" title="Hồ sơ cá nhân">
+                <i class="fa-solid fa-user"></i>
+            </a>
+            <!-- Và nút Đăng xuất -->
+            <a href="@Url.Action("Logout", "Account")" class="nav-icon-btn" style="background: #fa5252; border-bottom-color: #c92a2a;" title="Đăng xuất">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </a>
+        }
     </div>
 
     <!-- Main Content -->

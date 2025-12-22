@@ -143,6 +143,8 @@
     <Compile Include="Controllers\Social\DailyStreakController.cs" />
     <Compile Include="Controllers\Social\LeaderboardController.cs" />
     <Compile Include="Controllers\User\AccountController.cs" />
+    <Compile Include="Controllers\User\HistoryController.cs" />
+    <Compile Include="Controllers\User\ProfileController.cs" />
     <Compile Include="Controllers\User\SettingsController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -173,11 +175,13 @@
     <Compile Include="Models\ViewModels\DailyStreakViewModel.cs" />
     <Compile Include="Models\ViewModels\DashboardViewModel.cs" />
     <Compile Include="Models\ViewModels\DuelLobbyViewModel.cs" />
+    <Compile Include="Models\ViewModels\HistoryViewModels.cs" />
     <Compile Include="Models\ViewModels\LeaderboardViewModel.cs" />
     <Compile Include="Models\ViewModels\QuizPlayViewModel.cs" />
     <Compile Include="Models\ViewModels\ReportFilterViewModel.cs" />
     <Compile Include="Models\ViewModels\SystemConfigViewModel.cs" />
     <Compile Include="Models\ViewModels\DailyRewardViewModel.cs" />
+    <Compile Include="Models\ViewModels\UserProfileViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -325,10 +329,14 @@
     <Content Include="Views\Quiz\Arena\Create.cshtml" />
     <Content Include="Views\Quiz\Arena\Join.cshtml" />
     <Content Include="Views\Quiz\DoiKhang\Match.cshtml" />
+    <Content Include="Views\User\Profile\Index.cshtml" />
+    <Content Include="Views\User\History\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\Arena\" />
+    <Folder Include="Views\History\" />
+    <Folder Include="Views\Profile\" />
     <Folder Include="Views\SettingsControllers\" />
   </ItemGroup>
   <ItemGroup>
