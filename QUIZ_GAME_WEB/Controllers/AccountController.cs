@@ -72,7 +72,7 @@ public class AccountController : ControllerBase
             UserID = user.UserID,
             ThoiGianBatDau = DateTime.Now,
             Token = token,
-            ThoiGianKetThuc = DateTime.UtcNow.AddHours(2),
+            ThoiGianKetThuc = null,
             TrangThai = true
         };
         await _context.PhienDangNhaps.AddAsync(newSession);
@@ -203,22 +203,34 @@ public class AccountController : ControllerBase
         {
             userId = GetUserIdFromClaim();
         }
-        catch (UnauthorizedAccessException)
+        catch
         {
+            // Không lấy được user → coi như logout OK
             return Ok(new { message = "Đăng xuất thành công." });
         }
 
-        string token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        // Lấy token hiện tại
+        string token = HttpContext.Request.Headers["Authorization"]
+            .ToString()
+            .Replace("Bearer ", "")
+            .Trim();
 
+        // 🔍 Tìm PHIÊN ĐANG HOẠT ĐỘNG (CHUẨN)
         var activeSession = await _context.PhienDangNhaps
-                                          .Where(s => s.UserID == userId && s.Token == token && s.TrangThai == true)
-                                          .OrderByDescending(s => s.ThoiGianBatDau)
-                                          .FirstOrDefaultAsync();
+            .Where(s =>
+                s.UserID == userId &&
+                s.Token == token &&
+                s.ThoiGianKetThuc == null) // ✅ CHUẨN
+            .OrderByDescending(s => s.ThoiGianBatDau)
+            .FirstOrDefaultAsync();
 
         if (activeSession != null)
         {
-            activeSession.TrangThai = false;
+            // ✅ KẾT THÚC PHIÊN
             activeSession.ThoiGianKetThuc = DateTime.UtcNow;
+
+            // ⚠️ Nếu bạn vẫn giữ TrangThai → sync cho đúng
+            activeSession.TrangThai = false;
 
             _context.PhienDangNhaps.Update(activeSession);
             await _context.SaveChangesAsync();
@@ -226,6 +238,7 @@ public class AccountController : ControllerBase
 
         return Ok(new { message = "Đăng xuất thành công." });
     }
+
 
     // ===============================================
     // 🛠️ HÀM HỖ TRỢ (SECURITY & DATA ACCESS)
@@ -263,7 +276,10 @@ public class AccountController : ControllerBase
             new Claim(ClaimTypes.Name, user.TenDangNhap),
             new Claim(ClaimTypes.Role, role)
         };
-
+        if (role == "SuperAdmin")
+        {
+            claims.Add(new Claim(ClaimTypes.Role, "SuperAdmin"));
+        }
         var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? throw new ArgumentNullException("Jwt:Key is missing"));
         var tokenDescriptor = new SecurityTokenDescriptor
         {

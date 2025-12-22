@@ -47,7 +47,10 @@
                             <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
                                 Tổng số phiên
                             </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(ViewBag.TotalCount ?? Model.Count)
+                            </div>
+
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-history fa-2x text-gray-300"></i>
@@ -86,12 +89,9 @@
                                 Phiên hôm nay
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                @{
-                                    var todaySessions = Model.Count(s =>
-                                        s.ThoiGianBatDau.Date == DateTime.Today.Date);
-                                }
-                                @todaySessions
+                                @(ViewBag.TodayCount ?? 0)
                             </div>
+
                         </div>
                         <div class="col-auto">
                             <i class="fas fa-calendar-day fa-2x text-gray-300"></i>
@@ -110,7 +110,7 @@
                                 Desktop
                             </div>
                             <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                @Model.Count(s => s.DeviceType == "Desktop")
+                                @(ViewBag.TotalCount ?? Model.Count)
                             </div>
                         </div>
                         <div class="col-auto">

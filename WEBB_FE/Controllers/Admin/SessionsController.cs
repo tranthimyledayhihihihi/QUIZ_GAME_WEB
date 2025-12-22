@@ -48,6 +48,7 @@ namespace WEBB.Controllers.Admin
                 ViewBag.TotalCount = result.TotalCount;
                 ViewBag.Page = page;
                 ViewBag.PageSize = pageSize;
+                ViewBag.TodayCount = result.TodayCount;
 
                 return View("~/Views/Admin/Sessions/Index.cshtml", result.Sessions);
             }
@@ -79,6 +80,7 @@ namespace WEBB.Controllers.Admin
         // FORCE LOGOUT (SuperAdmin)
         // ==================================================
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> ForceLogout(int id)
         {
             using (var client = CreateClient())
@@ -96,6 +98,7 @@ namespace WEBB.Controllers.Admin
                 return RedirectToAction("Index");
             }
         }
+
 
         // ==================================================
         // JWT CLIENT
