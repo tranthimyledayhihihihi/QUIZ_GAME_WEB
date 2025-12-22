@@ -1,0 +1,507 @@
+﻿@model List<WEBB.Models.Admin.QuizNgayDto>
+
+@{
+    ViewBag.Title = "Quiz Ngày";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    var currentDate = DateTime.Now;
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="quiz-icon me-3">
+                <i class="fas fa-calendar-day fa-2x text-primary"></i>
+            </div>
+            <div>
+                <h1 class="h3 mb-1">📅 Quản lý Quiz Ngày</h1>
+                <p class="text-muted mb-0">Thiết lập câu hỏi cho từng ngày trong tháng</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#helpModal">
+                <i class="fas fa-question-circle me-2"></i>Hướng dẫn
+            </button>
+            <a href="/Admin/Quiz" class="btn btn-outline-secondary">
+                <i class="fas fa-list me-2"></i>Danh sách Quiz
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Messages -->
+    <div class="alerts-container mb-4">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                <i class="fas fa-check-circle me-3 fs-5"></i>
+                <div class="flex-grow-1">@TempData["Success"]</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                <i class="fas fa-exclamation-circle me-3 fs-5"></i>
+                <div class="flex-grow-1">@TempData["Error"]</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white border-bottom">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-filter text-primary me-2"></i>
+                Chọn tháng/năm
+            </h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar-alt me-1"></i>Tháng
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                        <input type="number"
+                               name="month"
+                               class="form-control"
+                               value="@ViewBag.Month"
+                               min="1"
+                               max="12"
+                               required />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">
+                        <i class="fas fa-calendar me-1"></i>Năm
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+                        <input type="number"
+                               name="year"
+                               class="form-control"
+                               value="@ViewBag.Year"
+                               required />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Xem lịch Quiz
+                        </button>
+                        <a href="/Admin/QuizNgay?month=@currentDate.Month&year=@currentDate.Year"
+                           class="btn btn-outline-secondary">
+                            <i class="fas fa-sync me-2"></i>Tháng hiện tại
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            @ViewBag.Error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Quiz Calendar Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-calendar-check text-success me-2"></i>
+                Lịch Quiz tháng @ViewBag.Month/@ViewBag.Year
+                @if (Model != null && Model.Count > 0)
+                {
+                    <span class="badge bg-primary ms-2">@Model.Count ngày</span>
+                }
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchQuiz" class="form-control" placeholder="Tìm theo nội dung...">
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="quizTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="15%" class="ps-4">
+                                <i class="fas fa-calendar-day me-2"></i>Ngày
+                            </th>
+                            <th width="45%">
+                                <i class="fas fa-question-circle me-2"></i>Nội dung câu hỏi
+                            </th>
+                            <th width="30%">
+                                <i class="fas fa-cog me-2"></i>Thiết lập câu hỏi
+                            </th>
+                            <th width="10%" class="text-center">
+                                <i class="fas fa-info-circle me-2"></i>Trạng thái
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model != null && Model.Count > 0)
+                        {
+                            foreach (var q in Model)
+                            {
+                                var isToday = q.Ngay.Date == DateTime.Today;
+                                var hasQuiz = !string.IsNullOrEmpty(q.NoiDungCauHoi);
+
+                                <tr class="@(isToday ? "table-primary" : "") align-middle">
+                                    <!-- NGÀY -->
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="date-badge me-3 @(isToday ? "today" : "")">
+                                                <div class="day-number">@q.Ngay.ToString("dd")</div>
+                                                <div class="day-name">@q.Ngay.ToString("ddd", new System.Globalization.CultureInfo("vi-VN"))</div>
+                                            </div>
+                                            <div>
+                                                <div class="fw-semibold">@q.Ngay.ToString("dd/MM/yyyy")</div>
+                                                @if (isToday)
+                                                {
+                                                    <small class="text-primary fw-bold">
+                                                        <i class="fas fa-star me-1"></i>Hôm nay
+                                                    </small>
+                                                }
+                                                else if (q.Ngay < DateTime.Today)
+                                                {
+                                                    <small class="text-muted">Đã qua</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- NỘI DUNG -->
+                                    <td>
+                                        @if (hasQuiz)
+                                        {
+                                            <div class="question-content">
+                                                <div class="fw-medium mb-1">@q.NoiDungCauHoi</div>
+                                                <div class="text-muted small">
+                                                    <i class="fas fa-hashtag me-1"></i>ID: @q.CauHoiID
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-center text-muted py-2">
+                                                <i class="fas fa-calendar-times fa-lg mb-2"></i>
+                                                <div>Chưa thiết lập câu hỏi</div>
+                                            </div>
+                                        }
+                                    </td>
+
+                                    <!-- THIẾT LẬP -->
+                                    <td>
+                                        <form method="post"
+                                              action="/Admin/QuizNgay/SetDaily"
+                                              class="set-quiz-form">
+                                            <input type="hidden"
+                                                   name="ngay"
+                                                   value="@q.Ngay.ToString("yyyy-MM-dd")" />
+
+                                            <div class="input-group">
+                                                <span class="input-group-text">
+                                                    <i class="fas fa-hashtag"></i>
+                                                </span>
+                                                <input type="number"
+                                                       name="cauHoiID"
+                                                       class="form-control"
+                                                       placeholder="Nhập Câu hỏi ID"
+                                                       required
+                                                       value="@q.CauHoiID"
+                                                       data-original-value="@q.CauHoiID" />
+
+                                                <button type="submit"
+                                                        class="btn @(q.CauHoiID > 0 ? "btn-success" : "btn-outline-success") save-btn"
+                                                        @(q.CauHoiID > 0 ? "data-has-quiz='true'" : "")>
+                                                    <i class="fas @(q.CauHoiID > 0 ? "fa-sync" : "fa-save") me-1"></i>
+                                                    @(q.CauHoiID > 0 ? "Cập nhật" : "Lưu")
+                                                </button>
+                                            </div>
+
+                                            @if (q.CauHoiID > 0)
+                                            {
+                                                <div class="mt-2">
+                                                    <a href="/Admin/Quiz/Edit/@q.CauHoiID"
+                                                       class="btn btn-sm btn-outline-info w-100">
+                                                        <i class="fas fa-external-link-alt me-1"></i>
+                                                        Mở câu hỏi #@q.CauHoiID
+                                                    </a>
+                                                </div>
+                                            }
+                                        </form>
+                                    </td>
+
+                                    <!-- TRẠNG THÁI -->
+                                    <td class="text-center">
+                                        @if (hasQuiz)
+                                        {
+                                            <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                                                <i class="fas fa-check me-1"></i>Đã cài
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2">
+                                                <i class="fas fa-clock me-1"></i>Chờ cài
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="empty-state">
+                                        <i class="fas fa-calendar-alt fa-4x text-muted mb-3"></i>
+                                        <h5 class="text-muted">Không có dữ liệu lịch Quiz</h5>
+                                        <p class="text-muted mb-3">Chưa có thiết lập quiz nào cho tháng @ViewBag.Month/@ViewBag.Year</p>
+                                        <a href="/Admin/QuizNgay?month=@currentDate.Month&year=@currentDate.Year"
+                                           class="btn btn-primary">
+                                            <i class="fas fa-calendar me-2"></i>Xem tháng hiện tại
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer bg-white border-top">
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Tổng cộng: @(Model?.Count ?? 0) ngày trong tháng
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small class="text-muted me-3">
+                        <span class="badge bg-primary me-1">●</span> Hôm nay
+                    </small>
+                    <small class="text-muted me-3">
+                        <span class="badge bg-success me-1">●</span> Đã cài quiz
+                    </small>
+                    <small class="text-muted">
+                        <span class="badge bg-secondary me-1">●</span> Chưa cài
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-question-circle me-2"></i>Hướng dẫn sử dụng
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>📝 Cách sử dụng:</h6>
+                <ol class="mb-3">
+                    <li><strong>Chọn tháng/năm</strong> để xem lịch quiz</li>
+                    <li><strong>Nhập ID câu hỏi</strong> cho từng ngày</li>
+                    <li><strong>Click "Lưu"</strong> để gán câu hỏi cho ngày đó</li>
+                </ol>
+
+                <h6>💡 Lưu ý quan trọng:</h6>
+                <ul class="mb-3">
+                    <li>ID câu hỏi phải tồn tại trong hệ thống</li>
+                    <li>Mỗi ngày chỉ có 1 câu hỏi quiz</li>
+                    <li>Có thể thay đổi câu hỏi bất kỳ lúc nào</li>
+                </ul>
+
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Quan trọng:</strong> Người dùng sẽ thấy câu hỏi này vào đúng ngày đã thiết lập
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+    .quiz-icon {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        width: 70px;
+        height: 70px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .date-badge {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border: 2px solid #e9ecef;
+        transition: all 0.3s;
+    }
+
+        .date-badge.today {
+            background-color: #e7f1ff;
+            border-color: #0d6efd;
+            box-shadow: 0 4px 6px rgba(13, 110, 253, 0.1);
+        }
+
+        .date-badge .day-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .date-badge .day-name {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+        transform: translateX(2px);
+        transition: all 0.2s;
+    }
+
+    .table-hover tbody tr.table-primary:hover {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+
+    .empty-state {
+        opacity: 0.7;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .set-quiz-form .form-control:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+    }
+
+    .question-content {
+        padding: 0.5rem;
+        border-left: 3px solid #0d6efd;
+        background-color: #f8f9fa;
+        border-radius: 0 5px 5px 0;
+    }
+
+    .alerts-container .alert {
+        border: none;
+        border-radius: 10px;
+    }
+
+    .badge {
+        font-weight: 500;
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchQuiz');
+    const quizTable = document.getElementById('quizTable');
+
+    if (searchInput && quizTable) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = quizTable.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+
+    // Highlight changed inputs
+    const inputs = document.querySelectorAll('input[name="cauHoiID"]');
+    inputs.forEach(input => {
+        const originalValue = input.getAttribute('data-original-value') || '0';
+        const saveBtn = input.closest('.set-quiz-form').querySelector('.save-btn');
+
+        input.addEventListener('input', function() {
+            if (this.value !== originalValue) {
+                this.classList.add('is-changed');
+                saveBtn.innerHTML = '<i class="fas fa-save me-1"></i>Lưu thay đổi';
+                saveBtn.classList.remove('btn-outline-success');
+                saveBtn.classList.add('btn-warning');
+            } else {
+                this.classList.remove('is-changed');
+                const hasQuiz = saveBtn.getAttribute('data-has-quiz') === 'true';
+                saveBtn.innerHTML = hasQuiz
+                    ? '<i class="fas fa-sync me-1"></i>Cập nhật'
+                    : '<i class="fas fa-save me-1"></i>Lưu';
+                saveBtn.classList.remove('btn-warning');
+                saveBtn.classList.add(hasQuiz ? 'btn-success' : 'btn-outline-success');
+            }
+        });
+
+        // Form submission loading
+        const form = input.closest('.set-quiz-form');
+        form.addEventListener('submit', function(e) {
+            const btn = this.querySelector('.save-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang lưu...';
+            btn.disabled = true;
+        });
+    });
+
+    // Auto focus today's row
+    const todayRow = document.querySelector('.table-primary');
+    if (todayRow) {
+        setTimeout(() => {
+            todayRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+    }
+
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('#quizTable tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            row.style.transition = 'opacity 0.3s, transform 0.3s';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 30);
+    });
+});
+</script>

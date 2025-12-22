@@ -1,7 +1,18 @@
-﻿
+﻿@model WEBB.Models.Admin.AdminUserDto
 @{
-    ViewBag.Title = "Details";
+    ViewBag.Title = "Chi tiết người dùng";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Details</h2>
+<h2>Chi tiết người dùng</h2>
 
+<table class="table table-bordered">
+    <tr><th>ID</th><td>@Model.UserID</td></tr>
+    <tr><th>Tên đăng nhập</th><td>@Model.TenDangNhap</td></tr>
+    <tr><th>Email</th><td>@Model.Email</td></tr>
+    <tr><th>Họ tên</th><td>@Model.HoTen</td></tr>
+    <tr><th>Vai trò</th><td>@Model.RoleName</td></tr>
+    <tr><th>Trạng thái</th><td>@(Model.TrangThai ? "Hoạt động" : "Đã khóa")</td></tr>
+</table>
+
+<a href="@Url.Action("Index")" class="btn btn-secondary">Quay lại</a>

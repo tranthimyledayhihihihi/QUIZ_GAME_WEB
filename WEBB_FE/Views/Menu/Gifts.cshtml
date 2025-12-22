@@ -1,259 +1,787 @@
-﻿@model WEBB.Models.ViewModels.DailyRewardViewModel
+﻿@model WEBB.Models.ViewModels.DailyRewardPageViewModel
 @{
-    ViewBag.Title = "Thưởng Ngày";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Quà tặng hằng ngày";
+
+
+    // Tạo dữ liệu thống kê động
+    var totalRewards = Model.Rewards?.Count(r => r.TrangThaiNhan) ?? 0;
+    var totalPoints = Model.Rewards?.Sum(r => r.DiemThuong) ?? 0;
+    var averagePoints = totalRewards > 0 ? totalPoints / totalRewards : 0;
+    var currentMonthRewards = Model.Rewards?.Count(r => r.NgayNhan.Month == DateTime.Now.Month && r.TrangThaiNhan) ?? 0;
+    var longestStreak = CalculateLongestStreak(Model.Rewards);
+    var todayRewardPoints = Model.SoNgayLienTiep * 10;
+    var nextMilestone = GetNextMilestone(Model.SoNgayLienTiep);
 }
 
-<div class="game-container d-flex align-items-center justify-content-center min-vh-100">
-    <div class="card reward-card p-4 shadow-lg border-0" style="max-width: 500px; width: 100%;">
-        <!-- Header với biểu tượng nổi bật -->
-        <div class="text-center mb-4">
-            <div class="reward-icon mx-auto mb-3">
-                <i class="fa-solid fa-gift"></i>
-            </div>
-            <h3 class="fw-bold mb-2 text-primary">Thưởng Đăng Nhập Hằng Ngày</h3>
-            <p class="text-muted mb-0">Đăng nhập mỗi ngày để nhận phần thưởng đặc biệt</p>
-        </div>
+@functions {
+    // Hàm tính chuỗi ngày dài nhất
+    private int CalculateLongestStreak(IEnumerable<WEBB.Models.ViewModels.RewardItemViewModel> rewards)
+    {
+        if (rewards == null || !rewards.Any()) return 0;
 
-        <!-- Thông báo trạng thái -->
-        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
-            <i class="fa-solid fa-circle-info me-2"></i>
-            @Model.Message
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+        var receivedRewards = rewards.Where(r => r.TrangThaiNhan)
+                                   .OrderBy(r => r.NgayNhan)
+                                   .ToList();
 
-        <!-- Hiển thị số ngày liên tiếp -->
-        <div class="streak-container text-center p-4 mb-4 rounded-3">
-            <div class="streak-label text-uppercase small fw-semibold text-muted mb-2">
-                <i class="fa-solid fa-fire me-1"></i> CHUỖI NGÀY ĐĂNG NHẬP
-            </div>
-            <div class="streak-count display-2 fw-bold text-warning">
-                @Model.SoNgayLienTiep
-            </div>
-            <div class="streak-text text-muted">ngày liên tiếp</div>
+        if (!receivedRewards.Any()) return 0;
 
-            @if (Model.NgayCapNhatCuoi.HasValue)
+        int longestStreak = 1;
+        int currentStreak = 1;
+
+        for (int i = 1; i < receivedRewards.Count; i++)
+        {
+            var daysDifference = (receivedRewards[i].NgayNhan - receivedRewards[i - 1].NgayNhan).Days;
+
+            if (daysDifference == 1)
             {
-                <div class="last-update mt-3 pt-3 border-top">
-                    <i class="fa-solid fa-clock me-1"></i>
-                    Cập nhật lần cuối: <span class="fw-semibold">@Model.NgayCapNhatCuoi.Value.ToString("dd/MM/yyyy")</span>
-                </div>
+                currentStreak++;
+                longestStreak = Math.Max(longestStreak, currentStreak);
             }
-        </div>
+            else if (daysDifference > 1)
+            {
+                currentStreak = 1;
+            }
+        }
 
-        <!-- Nút nhận thưởng -->
-        <div class="d-grid gap-2">
-            <button id="btn-claim" class="btn btn-claim btn-lg py-3 fw-bold">
-                <i class="fa-solid fa-sack-dollar me-2"></i>
-                <span class="btn-text">Nhận thưởng hôm nay</span>
-            </button>
-        </div>
+        return longestStreak;
+    }
 
-        <!-- Hiển thị phần thưởng có thể nhận -->
-        <div class="reward-preview mt-4 p-3 bg-light rounded-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="fw-semibold mb-1"><i class="fa-solid fa-coins me-2 text-warning"></i>Phần thưởng hôm nay</h6>
-                    <p class="text-muted small mb-0">Xu, vật phẩm và nhiều hơn nữa</p>
+    // Hàm xác định mốc tiếp theo
+    private string GetNextMilestone(int currentStreak)
+    {
+        var milestones = new[] { 3, 7, 14, 30, 60, 100 };
+        var next = milestones.FirstOrDefault(m => m > currentStreak);
+        return next > 0 ? $"{next} ngày" : "Đã đạt tất cả mốc!";
+    }
+}
+
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-5">
+        <div class="d-flex align-items-center mb-3 mb-md-0">
+            <div class="icon-wrapper bg-gradient-primary p-3 rounded-circle me-3">
+                <i class="fas fa-gift text-white fa-2x"></i>
+            </div>
+            <div>
+                <h1 class="h2 fw-bold text-dark mb-1">Quà tặng hằng ngày</h1>
+                <p class="text-muted mb-0">Đăng nhập mỗi ngày để nhận phần thưởng hấp dẫn</p>
+            </div>
+        </div>
+        <div class="text-muted">
+            <i class="fas fa-clock me-1"></i>
+            <span class="current-time">@DateTime.Now.ToString("HH:mm dd/MM/yyyy")</span>
+        </div>
+    </div>
+
+    <!-- Thông báo -->
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <div class="alert alert-info alert-dismissible fade show d-flex align-items-center shadow-sm mb-4" role="alert">
+            <i class="fas fa-info-circle me-3 fa-lg"></i>
+            <div class="flex-grow-1">@Model.Message</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Phần chính bên trái (scrollable) -->
+        <div class="col-lg-8">
+            <div class="scrollable-content" style="max-height: 80vh; overflow-y: auto; padding-right: 10px;">
+                <!-- Card chuỗi ngày và nhận thưởng -->
+                <div class="card border-0 shadow-lg mb-4">
+                    <div class="card-header bg-gradient-primary text-white border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-fire me-2"></i>Thành tích đăng nhập
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 text-center mb-4 mb-md-0">
+                                <div class="streak-display position-relative d-inline-block">
+                                    <div class="streak-number display-1 fw-bold text-gradient-primary">
+                                        @Model.SoNgayLienTiep
+                                    </div>
+                                    <div class="streak-label h5 text-muted">NGÀY LIÊN TIẾP</div>
+                                    <div class="streak-badge bg-success text-white px-3 py-1 rounded-pill position-absolute top-0 end-0 mt-2 me-2">
+                                        <i class="fas fa-trophy me-1"></i>#@Model.SoNgayLienTiep
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="reward-today-card p-4 border rounded">
+                                    <h6 class="fw-semibold mb-3">
+                                        <i class="fas fa-gift text-success me-2"></i>Phần thưởng hôm nay
+                                    </h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span class="text-muted">Điểm thưởng:</span>
+                                        <span class="h4 fw-bold text-success">+@todayRewardPoints điểm</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <span class="text-muted">Nhân với chuỗi:</span>
+                                        <span class="fw-bold">@Model.SoNgayLienTiep ngày × 10</span>
+                                    </div>
+                                    <form method="post" action="@Url.Action("ClaimDailyReward", "Gift")">
+                                        <button type="submit" class="btn btn-gradient-success btn-lg w-100 py-3">
+                                            <i class="fas fa-gift me-2"></i>Nhận thưởng ngay
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Thanh tiến trình và mốc -->
+                        <div class="mt-4 pt-4 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="fas fa-flag me-2"></i>Hành trình của bạn
+                                </h6>
+                                <span class="text-muted">Mốc tiếp theo: <span class="fw-bold text-primary">@nextMilestone</span></span>
+                            </div>
+
+                            <div class="progress" style="height: 12px;">
+                                @{
+                                    var progressPercentage = Math.Min(100, (Model.SoNgayLienTiep * 100) / 30);
+                                }
+                                <div class="progress-bar bg-gradient-progress"
+                                     role="progressbar"
+                                     style="width: @progressPercentage%"
+                                     aria-valuenow="@Model.SoNgayLienTiep"
+                                     aria-valuemin="0"
+                                     aria-valuemax="30"></div>
+                            </div>
+
+                            <div class="milestones d-flex justify-content-between mt-2">
+                                @{
+                                    var milestones = new[] { 0, 3, 7, 14, 30 };
+                                    foreach (var milestone in milestones)
+                                    {
+                                        var isActive = Model.SoNgayLienTiep >= milestone;
+                                        <div class="milestone-point text-center" style="position: relative; width: 20%;">
+                                            <div class="milestone-dot @(isActive ? "active" : "")
+                                                 @(milestone == 0 ? "first" : milestone == 30 ? "last" : "")"
+                                                 data-bs-toggle="tooltip"
+                                                 data-bs-placement="top"
+                                                 title="@(milestone == 0 ? "Bắt đầu" : $"{milestone} ngày")">
+                                            </div>
+                                            <div class="milestone-label small mt-1 @(isActive ? "text-primary fw-bold" : "text-muted")">
+                                                @(milestone == 0 ? "BĐ" : milestone.ToString())
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="reward-amount">
-                    <span class="badge bg-success fs-6">+500</span>
+
+                <!-- Lịch sử nhận thưởng -->
+                <div class="card border-0 shadow-lg">
+                    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history me-2 text-primary"></i>Lịch sử nhận thưởng
+                        </h5>
+                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                            @totalRewards phần thưởng
+                        </span>
+                    </div>
+                    <div class="card-body p-0">
+                        @if (Model.Rewards == null || !Model.Rewards.Any())
+                        {
+                            <div class="text-center py-5">
+                                <div class="empty-state-icon mb-3">
+                                    <i class="fas fa-box-open fa-3x text-muted"></i>
+                                </div>
+                                <h5 class="text-muted mb-2">Chưa có phần thưởng nào</h5>
+                                <p class="text-muted mb-4">Hãy nhận thưởng hôm nay để bắt đầu!</p>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-4">
+                                                <i class="fas fa-calendar me-2 text-muted"></i>Ngày nhận
+                                            </th>
+                                            <th>
+                                                <i class="fas fa-gift me-2 text-muted"></i>Phần thưởng
+                                            </th>
+                                            <th>
+                                                <i class="fas fa-coins me-2 text-muted"></i>Điểm
+                                            </th>
+                                            <th class="pe-4">
+                                                <i class="fas fa-chart-line me-2 text-muted"></i>Chuỗi
+                                            </th>
+                                            <th class="text-end pe-4">
+                                                <i class="fas fa-check-circle me-2 text-muted"></i>Trạng thái
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int streakCounter = 1;
+                                            DateTime? lastDate = null;
+                                        }
+                                        @foreach (var r in Model.Rewards.OrderByDescending(r => r.NgayNhan))
+                                        {
+                                            if (lastDate.HasValue && (lastDate.Value - r.NgayNhan).Days == 1)
+                                            {
+                                                streakCounter++;
+                                            }
+                                            else if (lastDate.HasValue && (lastDate.Value - r.NgayNhan).Days > 1)
+                                            {
+                                                streakCounter = 1;
+                                            }
+
+                                            <tr class="reward-item align-middle">
+                                                <td class="ps-4">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="date-icon bg-light rounded p-2 me-3">
+                                                            <div class="text-center">
+                                                                <div class="text-primary fw-bold">@r.NgayNhan.ToString("dd")</div>
+                                                                <div class="text-muted small">@r.NgayNhan.ToString("MMM")</div>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-medium">@r.NgayNhan.ToString("dd/MM/yyyy")</div>
+                                                            <small class="text-muted">@r.NgayNhan.ToString("HH:mm")</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="reward-icon bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                                                            <i class="fas fa-gift"></i>
+                                                        </div>
+                                                        <div>
+                                                            <div class="fw-medium">@r.PhanThuong</div>
+                                                            @if (r.DiemThuong >= 50)
+                                                            {
+                                                                <small class="text-warning">
+                                                                    <i class="fas fa-star me-1"></i>Phần thưởng đặc biệt
+                                                                </small>
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="points-icon bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                                                            <i class="fas fa-coins"></i>
+                                                        </div>
+                                                        <span class="fw-bold text-success">+@r.DiemThuong</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="streak-indicator d-flex align-items-center">
+                                                        <span class="badge bg-info bg-opacity-10 text-info">
+                                                            <i class="fas fa-link me-1"></i>@streakCounter ngày
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td class="text-end pe-4">
+                                                    @if (r.TrangThaiNhan)
+                                                    {
+                                                        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 p-2">
+                                                            <i class="fas fa-check-circle me-1"></i>Đã nhận
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 p-2">
+                                                            <i class="fas fa-clock me-1"></i>Chưa nhận
+                                                        </span>
+                                                    }
+                                                </td>
+                                            </tr>
+
+                                            lastDate = r.NgayNhan;
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Card thống kê chi tiết -->
+                <div class="card border-0 shadow-lg mt-4">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2 text-warning"></i>Thống kê chi tiết
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Thống kê tổng quan -->
+                            <div class="col-md-6">
+                                <div class="stat-card p-4 border rounded h-100">
+                                    <h6 class="fw-semibold mb-3 text-primary">
+                                        <i class="fas fa-chart-bar me-2"></i>Tổng quan
+                                    </h6>
+                                    <div class="stat-list">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="text-muted">Tổng điểm nhận được:</span>
+                                            <span class="fw-bold text-success h5">@totalPoints</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="text-muted">Số phần thưởng:</span>
+                                            <span class="fw-bold text-primary">@totalRewards</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="text-muted">Điểm trung bình:</span>
+                                            <span class="fw-bold text-warning">@averagePoints</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">Tháng này:</span>
+                                            <span class="fw-bold text-info">@currentMonthRewards phần thưởng</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Thống kê chuỗi -->
+                            <div class="col-md-6">
+                                <div class="stat-card p-4 border rounded h-100">
+                                    <h6 class="fw-semibold mb-3 text-success">
+                                        <i class="fas fa-fire me-2"></i>Thống kê chuỗi
+                                    </h6>
+                                    <div class="stat-list">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="text-muted">Chuỗi hiện tại:</span>
+                                            <span class="fw-bold text-success">@Model.SoNgayLienTiep ngày</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="text-muted">Chuỗi dài nhất:</span>
+                                            <span class="fw-bold text-warning">@longestStreak ngày</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                            <span class="text-muted">Hiệu suất chuỗi:</span>
+                                            <div class="progress flex-grow-1 mx-3" style="height: 8px;">
+                                                @{
+                                                    var streakEfficiency = longestStreak > 0 ?
+                                                        (Model.SoNgayLienTiep * 100) / longestStreak : 0;
+                                                    streakEfficiency = Math.Min(100, streakEfficiency);
+                                                }
+                                                <div class="progress-bar bg-success" style="width: @streakEfficiency%"></div>
+                                            </div>
+                                            <span class="fw-bold">@streakEfficiency%</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="text-muted">Điểm chuỗi tích lũy:</span>
+                                            <span class="fw-bold text-success">@(Model.SoNgayLienTiep * 10)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Phân tích điểm số -->
+                        <div class="mt-4 pt-4 border-top">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="fas fa-chart-line me-2 text-info"></i>Phân tích điểm số
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <div class="h2 fw-bold text-primary mb-1">
+                                            @(totalRewards > 0 ? (totalPoints / totalRewards) : 0)
+                                        </div>
+                                        <div class="text-muted small">Điểm trung bình/phần thưởng</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <div class="h2 fw-bold text-success mb-1">
+                                            @(totalPoints / Math.Max(1, Model.SoNgayLienTiep))
+                                        </div>
+                                        <div class="text-muted small">Điểm trung bình/ngày</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="text-center p-3 bg-light rounded">
+                                        <div class="h2 fw-bold text-warning mb-1">
+                                            @(longestStreak > 0 ? totalPoints / longestStreak : 0)
+                                        </div>
+                                        <div class="text-muted small">Điểm trung bình/chuỗi</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Thông báo kết quả -->
-        <div id="reward-message" class="alert mt-3 d-none alert-dismissible fade show" role="alert">
-            <span class="alert-message"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-
-        <!-- Tiến trình tuần -->
-        <div class="weekly-progress mt-4 pt-4 border-top">
-            <h6 class="fw-semibold mb-3"><i class="fa-solid fa-calendar-week me-2"></i>Tiến trình tuần này</h6>
-            <div class="d-flex justify-content-between">
-                @for (int i = 1; i <= 7; i++)
-                {
-                    <div class="day-progress text-center @(i <= Model.SoNgayLienTiep ? "completed" : "")">
-                        <div class="day-icon @(i <= Model.SoNgayLienTiep ? "bg-success" : "bg-secondary")">
-                            @i
+        <!-- Sidebar bên phải -->
+        <div class="col-lg-4">
+            <!-- Thống kê nhanh -->
+            <div class="card border-0 shadow-lg sticky-top" style="top: 20px;">
+                <div class="card-header bg-gradient-primary text-white border-0 py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>Thống kê nhanh
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="quick-stats">
+                        <div class="quick-stat-item d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-primary bg-opacity-10 text-primary rounded-circle p-2 me-3">
+                                    <i class="fas fa-gift"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">Tổng phần thưởng</div>
+                                    <div class="small text-muted">Đã nhận được</div>
+                                </div>
+                            </div>
+                            <div class="h4 fw-bold text-primary">@totalRewards</div>
                         </div>
-                        <small class="d-block mt-1">Ngày @i</small>
+
+                        <div class="quick-stat-item d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-success bg-opacity-10 text-success rounded-circle p-2 me-3">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">Tổng điểm</div>
+                                    <div class="small text-muted">Đã tích lũy</div>
+                                </div>
+                            </div>
+                            <div class="h4 fw-bold text-success">@totalPoints</div>
+                        </div>
+
+                        <div class="quick-stat-item d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-warning bg-opacity-10 text-warning rounded-circle p-2 me-3">
+                                    <i class="fas fa-fire"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">Chuỗi dài nhất</div>
+                                    <div class="small text-muted">Kỷ lục cá nhân</div>
+                                </div>
+                            </div>
+                            <div class="h4 fw-bold text-warning">@longestStreak</div>
+                        </div>
+
+                        <div class="quick-stat-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                <div class="icon-wrapper bg-info bg-opacity-10 text-info rounded-circle p-2 me-3">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-semibold">Tháng này</div>
+                                    <div class="small text-muted">Phần thưởng đã nhận</div>
+                                </div>
+                            </div>
+                            <div class="h4 fw-bold text-info">@currentMonthRewards</div>
+                        </div>
                     </div>
-                }
+
+                    <!-- Biểu đồ đơn giản -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="fw-semibold mb-3">
+                            <i class="fas fa-chart-simple me-2"></i>Hiệu suất chuỗi
+                        </h6>
+                        <div class="simple-chart">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="flex-grow-1 me-3">
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success"
+                                             style="width: @progressPercentage%"
+                                             title="Tiến độ chuỗi hiện tại: @progressPercentage%"></div>
+                                    </div>
+                                </div>
+                                <div class="fw-bold">@progressPercentage%</div>
+                            </div>
+                            <div class="text-center small text-muted">
+                                Tiến độ chuỗi hiện tại: @Model.SoNgayLienTiep/30 ngày
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mẹo và thông tin -->
+                    <div class="mt-4 pt-4 border-top">
+                        <h6 class="fw-semibold mb-3">
+                            <i class="fas fa-lightbulb me-2 text-warning"></i>Mẹo tăng điểm
+                        </h6>
+                        <ul class="list-unstyled small">
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Đăng nhập trước 12h để không mất chuỗi
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Chuỗi càng dài, điểm thưởng càng cao
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Đạt 30 ngày liên tục nhận quà đặc biệt
+                            </li>
+                            <li>
+                                <i class="fas fa-check-circle text-success me-2"></i>
+                                Theo dõi thống kê để cải thiện hiệu suất
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
+<!-- CSS tùy chỉnh -->
 <style>
-    .reward-card {
-        border-radius: 20px;
-        overflow: hidden;
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    /* Scrollable content */
+    .scrollable-content {
+        scrollbar-width: thin;
+        scrollbar-color: #667eea #f1f1f1;
     }
 
-    .reward-icon {
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        color: white;
-        box-shadow: 0 8px 20px rgba(106, 17, 203, 0.3);
-    }
-
-    .streak-container {
-        background: linear-gradient(135deg, #2c3e50 0%, #4a6491 100%);
-        color: white;
-        position: relative;
-        overflow: hidden;
-    }
-
-        .streak-container::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+        .scrollable-content::-webkit-scrollbar {
+            width: 6px;
         }
 
-    .streak-count {
-        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        line-height: 1;
+        .scrollable-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .scrollable-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+            .scrollable-content::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            }
+
+    /* Gradient và màu sắc */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
     }
 
-    .btn-claim {
-        background: linear-gradient(135deg, #00b09b 0%, #96c93d 100%);
+    .bg-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    }
+
+    .btn-gradient-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
         border: none;
         color: white;
-        border-radius: 12px;
         transition: all 0.3s ease;
-        position: relative;
-        overflow: hidden;
     }
 
-        .btn-claim:hover {
+        .btn-gradient-success:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 176, 155, 0.4);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.3);
         }
 
-        .btn-claim:disabled {
-            background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
-            transform: none;
-            box-shadow: none;
-        }
+    .bg-gradient-progress {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%) !important;
+    }
 
-        .btn-claim::after {
-            content: "";
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: rotate(30deg);
-            transition: all 0.5s ease;
-        }
+    .text-gradient-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-        .btn-claim:hover::after {
-            transform: rotate(30deg) translate(50%, 50%);
-        }
+    /* Streak display */
+    .streak-display {
+        position: relative;
+    }
 
-    .day-progress .day-icon {
-        width: 36px;
-        height: 36px;
+    .streak-number {
+        font-size: 5rem;
+        line-height: 1;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Milestone dots */
+    .milestone-dot {
+        width: 16px;
+        height: 16px;
+        background-color: #dee2e6;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
         margin: 0 auto;
-        font-weight: bold;
+        position: relative;
         transition: all 0.3s ease;
     }
 
-    .day-progress.completed .day-icon {
-        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-    }
-
-    .reward-preview {
-        border-left: 4px solid #ffc107;
-        transition: all 0.3s ease;
-    }
-
-        .reward-preview:hover {
-            transform: translateX(5px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .milestone-dot.active {
+            background-color: #667eea;
+            transform: scale(1.2);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
         }
 
-    .last-update {
-        font-size: 0.9rem;
+        .milestone-dot.first::after,
+        .milestone-dot.last::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 50%;
+            height: 2px;
+            background-color: #dee2e6;
+        }
+
+        .milestone-dot.first::after {
+            left: 50%;
+        }
+
+        .milestone-dot.last::after {
+            right: 50%;
+        }
+
+        .milestone-dot.active.first::after,
+        .milestone-dot.active.last::after {
+            background-color: #667eea;
+        }
+
+    /* Card styling */
+    .card {
+        border-radius: 16px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important;
+        }
+
+    /* Stat cards */
+    .stat-card {
+        transition: all 0.3s ease;
+    }
+
+        .stat-card:hover {
+            border-color: #667eea !important;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.1);
+        }
+
+    .quick-stat-item:hover {
+        background-color: rgba(102, 126, 234, 0.05);
+        margin-left: -10px;
+        margin-right: -10px;
+        padding-left: 10px;
+        padding-right: 10px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    /* Table styling */
+    .reward-item {
+        transition: all 0.3s ease;
+    }
+
+        .reward-item:hover {
+            background-color: rgba(102, 126, 234, 0.05) !important;
+            transform: translateX(5px);
+        }
+
+    /* Reward today card */
+    .reward-today-card {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border: 1px solid rgba(102, 126, 234, 0.2) !important;
+    }
+
+    /* Sticky sidebar */
+    .sticky-top {
+        position: -webkit-sticky;
+        position: sticky;
+        z-index: 1020;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .scrollable-content {
+            max-height: none;
+            overflow-y: visible;
+            padding-right: 0;
+        }
+
+        .streak-number {
+            font-size: 3.5rem;
+        }
+
+        .sticky-top {
+            position: static;
+        }
     }
 </style>
 
-@section Scripts {
+<!-- JavaScript -->
+@section scripts {
     <script>
-        $(function () {
-            $("#btn-claim").on("click", function () {
-                var $btn = $(this);
-                var $btnText = $btn.find(".btn-text");
-                $btn.prop("disabled", true);
-                $btnText.text("Đang xử lý...");
+        $(document).ready(function () {
+            // Khởi tạo tooltip
+            $('[data-bs-toggle="tooltip"]').tooltip();
 
-                $.ajax({
-                    url: '@Url.Action("ClaimDailyReward", "Menu")',
-                    type: 'POST',
-                    success: function (res) {
-                        var awarded = res.awarded ?? res.Awarded;
-                        var msg = res.message ?? res.Message;
-                        var $alert = $("#reward-message");
-                        var $alertMessage = $alert.find(".alert-message");
-
-                        $alert
-                            .removeClass("d-none alert-success alert-warning alert-danger")
-                            .addClass(awarded ? "alert-success" : "alert-warning")
-                            .addClass("show");
-
-                        $alertMessage.html(`<i class="fa-solid ${awarded ? 'fa-circle-check' : 'fa-circle-exclamation'} me-2"></i>${msg}`);
-
-                        if (!awarded) {
-                            $btnText.text("Đã nhận thưởng hôm nay");
-                            $btn.removeClass("btn-claim").addClass("btn-secondary");
-                        } else {
-                            $btnText.text("Đã nhận thưởng hôm nay");
-                            $btn.removeClass("btn-claim").addClass("btn-secondary");
-
-                            // Cập nhật hiển thị ngày liên tiếp
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
-                        }
-                    },
-                    error: function () {
-                        $("#reward-message")
-                            .removeClass("d-none alert-success alert-warning")
-                            .addClass("alert-danger show")
-                            .find(".alert-message")
-                            .html('<i class="fa-solid fa-circle-xmark me-2"></i>Có lỗi xảy ra, vui lòng thử lại.');
-
-                        $btn.prop("disabled", false);
-                        $btnText.text("Nhận thưởng hôm nay");
-                    }
+            // Cập nhật thời gian thực
+            function updateCurrentTime() {
+                const now = new Date();
+                const timeString = now.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit'
                 });
+                const dateString = now.toLocaleDateString('vi-VN');
+                $('.current-time').text(`${timeString} ${dateString}`);
+            }
+
+            // Cập nhật mỗi giây
+            setInterval(updateCurrentTime, 1000);
+
+            // Hiệu ứng cho nút nhận thưởng
+            $('form button[type="submit"]').hover(
+                function () {
+                    $(this).css({
+                        'transform': 'scale(1.05)',
+                        'box-shadow': '0 10px 25px rgba(17, 153, 142, 0.4)'
+                    });
+                },
+                function () {
+                    $(this).css({
+                        'transform': 'scale(1)',
+                        'box-shadow': '0 8px 20px rgba(17, 153, 142, 0.3)'
+                    });
+                }
+            );
+
+            // Hiệu ứng scroll cho sidebar
+            $(window).scroll(function () {
+                const scrollTop = $(this).scrollTop();
+                const sidebar = $('.sticky-top');
+
+                if (scrollTop > 100) {
+                    sidebar.css({
+                        'top': '10px',
+                        'transition': 'top 0.3s ease'
+                    });
+                } else {
+                    sidebar.css({
+                        'top': '20px',
+                        'transition': 'top 0.3s ease'
+                    });
+                }
             });
 
-            // Tự động đóng thông báo sau 5 giây
-            $(document).on('show.bs.alert', '#reward-message', function () {
-                var $alert = $(this);
-                setTimeout(function () {
-                    $alert.alert('close');
-                }, 5000);
+            // Click vào reward item để xem chi tiết
+            $('.reward-item').click(function () {
+                const rewardDate = $(this).find('.fw-medium').first().text();
+                const rewardPoints = $(this).find('.text-success').first().text();
+                alert(`Thông tin phần thưởng:\nNgày: ${rewardDate}\n${rewardPoints}`);
+            });
+
+            // Smooth scroll cho các phần
+            $('a[href^="#"]').click(function (e) {
+                e.preventDefault();
+                const target = $(this.hash);
+                if (target.length) {
+                    $('html, body').animate({
+                        scrollTop: target.offset().top - 80
+                    }, 800);
+                }
             });
         });
     </script>

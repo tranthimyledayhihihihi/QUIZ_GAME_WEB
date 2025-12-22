@@ -1,7 +1,38 @@
-﻿
+﻿@model WEBB.Models.Quiz.ChuDeDto
+
 @{
-    ViewBag.Title = "Edit";
+    ViewBag.Title = "Sửa Chủ đề";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";  // Sử dụng layout Admin
 }
 
-<h2>Edit</h2>
+<h2>Sửa Chủ đề</h2>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form action="/Admin/Topics/Edit" method="post">
+    <input type="hidden" name="ChuDeID" value="@Model.ChuDeID" />
+
+    <div class="form-group">
+        <label>Tên Chủ đề</label>
+        <input class="form-control" name="TenChuDe" value="@Model.TenChuDe" required />
+    </div>
+
+    <div class="form-group">
+        <label>Mô tả</label>
+        <textarea class="form-control" name="MoTa">@Model.MoTa</textarea>
+    </div>
+
+    <div class="form-group">
+        <label>Trạng thái</label>
+        <select class="form-control" name="TrangThai">
+            <option value="true" @(Model.TrangThai ? "selected" : "")>Hoạt động</option>
+            <option value="false" @(Model.TrangThai ? "" : "selected")>Ẩn</option>
+        </select>
+    </div>
+
+    <button class="btn btn-warning">Cập nhật</button>
+    <a href="@Url.Action("Index", "Topics")" class="btn btn-secondary">Quay lại</a>
+</form>

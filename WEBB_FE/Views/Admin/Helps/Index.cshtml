@@ -1,7 +1,926 @@
-﻿
+﻿@model List<WEBB.Models.Admin.TroGiupDto>
 @{
-    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewBag.Title = "Quản lý Trợ giúp";
 }
 
-<h2>Index</h2>
+<div class="container-fluid px-lg-4">
+    <!-- Header với gradient -->
+    <div class="d-flex justify-content-between align-items-center mb-5 pt-3">
+        <div>
+            <div class="d-flex align-items-center">
+                <div class="icon-shape bg-gradient-primary rounded-circle p-3 mr-3 shadow">
+                    <i class="fas fa-question-circle fa-2x text-white"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-1 text-gray-900 font-weight-800">Quản lý Trợ giúp</h1>
+                    <p class="mb-0 text-gray-600">Thêm, xóa và quản lý các mục trợ giúp trong hệ thống</p>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="badge badge-pill badge-light border mr-3 px-3 py-2">
+                <i class="fas fa-layer-group mr-2"></i>
+                <span id="itemCount">@Model.Count</span> mục
+            </span>
+        </div>
+    </div>
 
+    <!-- Form thêm mới với hiệu ứng -->
+    <div class="card shadow-lg border-0 mb-5 animate__animated animate__fadeInUp">
+        <div class="card-header bg-gradient-primary border-0 py-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="fas fa-plus-circle mr-2"></i>Thêm mục trợ giúp mới
+                </h6>
+                <span class="badge badge-light rounded-pill">Bước 1/2</span>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="/Admin/Helps/Create" id="addHelpForm">
+                <div class="row g-4">
+                    <div class="col-xl-5 col-lg-6">
+                        <div class="form-group">
+                            <label for="TenTroGiup" class="form-label font-weight-bold text-gray-700">
+                                <i class="fas fa-heading mr-2 text-primary"></i>Tên trợ giúp
+                                <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-question text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="text" name="TenTroGiup" id="TenTroGiup"
+                                       class="form-control border-left-0 py-3"
+                                       placeholder="Ví dụ: Hướng dẫn đăng nhập hệ thống"
+                                       required maxlength="200">
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>Tên ngắn gọn, dễ hiểu cho mục trợ giúp
+                            </small>
+                            <div class="progress mt-2" style="height: 3px; display: none;" id="nameProgress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-5 col-lg-6">
+                        <div class="form-group">
+                            <label for="MoTa" class="form-label font-weight-bold text-gray-700">
+                                <i class="fas fa-align-left mr-2 text-primary"></i>Mô tả chi tiết
+                            </label>
+                            <div class="input-group input-group-lg shadow-sm">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text bg-white border-right-0">
+                                        <i class="fas fa-file-alt text-primary"></i>
+                                    </span>
+                                </div>
+                                <input type="text" name="MoTa" id="MoTa"
+                                       class="form-control border-left-0 py-3"
+                                       placeholder="Mô tả nội dung chi tiết (tùy chọn)"
+                                       maxlength="500">
+                            </div>
+                            <small class="form-text text-muted mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>Mô tả chi tiết về nội dung trợ giúp
+                            </small>
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted" id="charCount">0/500 ký tự</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-lg-12 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-lg py-3"
+                                id="submitBtn">
+                            <i class="fas fa-plus mr-2"></i>
+                            <span class="submit-text">Thêm mới</span>
+                            <span class="spinner-border spinner-border-sm ml-2 d-none"
+                                  id="submitSpinner"></span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Danh sách trợ giúp -->
+    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-gradient-info border-0 py-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="fas fa-list mr-2"></i>Danh sách trợ giúp
+                </h6>
+                <div class="d-flex align-items-center">
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </span>
+                        </div>
+                        <input type="text" class="form-control" id="searchInput"
+                               placeholder="Tìm kiếm...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="helpTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="10%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>ID</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('id')"></i>
+                                    </div>
+                                </th>
+                                <th width="35%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Tên trợ giúp</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('name')"></i>
+                                    </div>
+                                </th>
+                                <th width="45%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Mô tả</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('desc')"></i>
+                                    </div>
+                                </th>
+                                <th width="10%" class="py-3 border-top-0 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var h in Model)
+                            {
+                                <tr class="animate__animated" id="row-@h.TroGiupID">
+                                    <td class="align-middle">
+                                        <span class="badge badge-pill badge-gradient-primary px-3 py-2">
+                                            #@h.TroGiupID
+                                        </span>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="icon-circle-small bg-info-light mr-3">
+                                                <i class="fas fa-question-circle text-info"></i>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-gray-800">@h.TenTroGiup</div>
+                                                <small class="text-muted">Thêm: @DateTime.Now.ToString("dd/MM/yyyy")</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="truncate-text" style="max-height: 60px; overflow: hidden;">
+                                            @if (!string.IsNullOrEmpty(h.MoTa))
+                                            {
+                                                @h.MoTa
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted font-italic">
+                                                    <i class="fas fa-minus mr-1"></i>Không có mô tả
+                                                </span>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-info btn-sm rounded-circle mr-2"
+                                                    title="Xem chi tiết" onclick="showDetail(@h.TroGiupID)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <form method="post" action="/Admin/Helps/Delete"
+                                                  onsubmit="return showDeleteModal('@h.TroGiupID', '@h.TenTroGiup.Replace("'", "\\'")')"
+                                                  class="d-inline">
+                                                <input type="hidden" name="id" value="@h.TroGiupID" />
+                                                <button type="submit" class="btn btn-outline-danger btn-sm rounded-circle"
+                                                        title="Xóa">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Pagination -->
+                <div class="d-flex justify-content-between align-items-center p-4 border-top">
+                    <div class="text-muted">
+                        Hiển thị <span id="visibleItems">@Model.Count</span> trên tổng số @Model.Count mục
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-6">
+                    <div class="empty-state">
+                        <div class="empty-state-icon bg-gradient-primary">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <h3 class="mt-4 text-gray-700">Chưa có mục trợ giúp nào</h3>
+                        <p class="text-gray-500 mb-4">Bắt đầu bằng cách thêm mục trợ giúp đầu tiên của bạn</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('TenTroGiup').focus()">
+                            <i class="fas fa-plus mr-2"></i>Thêm mục đầu tiên
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-danger border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="warning-icon bg-danger-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="fas fa-trash fa-2x text-danger"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-gray-800">Bạn có chắc chắn muốn xóa?</h5>
+                    <p class="text-muted" id="deleteItemName"></p>
+                    <p class="text-danger small">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Hành động này không thể hoàn tác. Tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light px-4" data-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <form method="post" action="/Admin/Helps/Delete" id="deleteForm">
+                    <input type="hidden" name="id" id="deleteItemId" />
+                    <button type="submit" class="btn btn-danger px-4">
+                        <i class="fas fa-trash mr-2"></i>Xác nhận xóa
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-info border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-info-circle mr-2"></i>Chi tiết Trợ giúp
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4" id="detailContent">
+                <!-- Nội dung sẽ được load bằng JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-gradient-success text-white border-0">
+                <i class="fas fa-check-circle mr-2"></i>
+                <strong class="me-auto">Thành công!</strong>
+                <small>Vừa xong</small>
+                <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body bg-white">
+                Đã thêm mục trợ giúp thành công!
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* CSS Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --info-gradient: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        --danger-gradient: linear-gradient(135deg, #f5365c 0%, #f56036 100%);
+        --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+        --shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+        --shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+    }
+
+    /* Custom Styles */
+    body {
+        background: linear-gradient(135deg, #f8f9fc 0%, #e9ecef 100%);
+        min-height: 100vh;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+    }
+
+    .bg-gradient-primary {
+        background: var(--primary-gradient);
+    }
+
+    .bg-gradient-info {
+        background: var(--info-gradient);
+    }
+
+    .bg-gradient-danger {
+        background: var(--danger-gradient);
+    }
+
+    .badge-gradient-primary {
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .input-group-text {
+        border-radius: 0.5rem 0 0 0.5rem;
+        border-right: none;
+        transition: all 0.3s;
+    }
+
+    .form-control {
+        border-radius: 0 0.5rem 0.5rem 0;
+        border-left: none;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #667eea;
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+
+    .btn {
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-primary {
+        background: var(--primary-gradient);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--danger-gradient);
+        color: white;
+        border: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-info:hover {
+        background: var(--info-gradient);
+        color: white;
+        border: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-rounded-circle {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        border-top: none;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: #4a5568;
+        background-color: #f8f9fe;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fe;
+        border-left-color: #667eea;
+        transform: translateX(2px);
+    }
+
+    .icon-shape {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-circle-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+
+    .bg-danger-light {
+        background-color: rgba(245, 54, 92, 0.1);
+    }
+
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .warning-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    .truncate-text {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Animation classes */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate__animated {
+        animation-duration: 0.6s;
+        animation-fill-mode: both;
+    }
+
+    .animate__fadeInUp {
+        animation-name: fadeInUp;
+    }
+
+    /* Ripple effect */
+    .ripple {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ripple:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 5px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.5);
+        opacity: 0;
+        border-radius: 100%;
+        transform: scale(1, 1) translate(-50%);
+        transform-origin: 50% 50%;
+    }
+
+    .ripple:focus:not(:active)::after {
+        animation: ripple 1s ease-out;
+    }
+
+    @@keyframes ripple {
+        0% {
+            transform: scale(0, 0);
+            opacity: 0.5;
+        }
+        20% {
+            transform: scale(25, 25);
+            opacity: 0.3;
+        }
+        100% {
+            opacity: 0;
+            transform: scale(40, 40);
+        }
+    }
+
+    /* Scrollbar styling */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 10px;
+    }
+
+    /* Loading spinner */
+    .spinner-border {
+        width: 1rem;
+        height: 1rem;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .btn-lg {
+            padding: 0.75rem 1rem;
+        }
+
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<script>
+    // Khởi tạo các biến
+    let currentSort = { column: 'id', direction: 'asc' };
+
+    // Đếm ký tự mô tả
+    document.getElementById('MoTa')?.addEventListener('input', function (e) {
+        const charCount = this.value.length;
+        const charCountElement = document.getElementById('charCount');
+        if (charCountElement) {
+            charCountElement.textContent = `${charCount}/500 ký tự`;
+
+            if (charCount > 450) {
+                charCountElement.classList.remove('text-muted');
+                charCountElement.classList.add('text-warning');
+            } else {
+                charCountElement.classList.remove('text-warning');
+                charCountElement.classList.add('text-muted');
+            }
+        }
+    });
+
+    // Hiển thị modal xóa
+    function showDeleteModal(id, name) {
+        event.preventDefault();
+        document.getElementById('deleteItemId').value = id;
+        document.getElementById('deleteItemName').textContent = `"${name}"`;
+
+        $('#deleteModal').modal('show');
+        return false;
+    }
+
+    // Xử lý xóa item
+    document.getElementById('deleteForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('deleteItemId').value;
+
+        // Hiển thị hiệu ứng loading
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xóa...';
+        submitBtn.disabled = true;
+
+        // Gửi request
+        fetch(this.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `id=${id}`
+        })
+            .then(response => {
+                if (response.ok) {
+                    // Hiệu ứng xóa
+                    const row = document.getElementById(`row-${id}`);
+                    if (row) {
+                        row.classList.add('animate__animated', 'animate__fadeOut');
+                        setTimeout(() => {
+                            row.remove();
+                            updateItemCount();
+                            showToast('success', 'Đã xóa thành công!');
+                        }, 500);
+                    }
+                    $('#deleteModal').modal('hide');
+                }
+            })
+            .catch(error => {
+                showToast('error', 'Có lỗi xảy ra!');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+    });
+
+    // Hiển thị chi tiết
+    function showDetail(id) {
+        // Giả lập dữ liệu chi tiết
+        const detailContent = document.getElementById('detailContent');
+        detailContent.innerHTML = `
+            <div class="text-center mb-4">
+                <div class="icon-circle-small bg-info-light mx-auto mb-3">
+                    <i class="fas fa-question-circle fa-2x text-info"></i>
+                </div>
+                <h4 class="font-weight-bold text-gray-800">Chi tiết mục trợ giúp #${id}</h4>
+            </div>
+            <div class="bg-light rounded p-4 mb-3">
+                <h6 class="font-weight-bold text-gray-700 mb-3">
+                    <i class="fas fa-info-circle mr-2 text-primary"></i>Thông tin cơ bản
+                </h6>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">ID:</small>
+                        <div class="font-weight-bold">${id}</div>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <small class="text-muted">Ngày tạo:</small>
+                        <div class="font-weight-bold">${new Date().toLocaleDateString('vi-VN')}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-light rounded p-4">
+                <h6 class="font-weight-bold text-gray-700 mb-3">
+                    <i class="fas fa-chart-line mr-2 text-success"></i>Thống kê
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-primary">12</div>
+                        <small class="text-muted">Lượt xem</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-success">8</div>
+                        <small class="text-muted">Hữu ích</small>
+                    </div>
+                    <div class="col-4">
+                        <div class="h4 font-weight-bold text-info">95%</div>
+                        <small class="text-muted">Hài lòng</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        $('#detailModal').modal('show');
+    }
+
+    // Sắp xếp bảng
+    function sortTable(column) {
+        const table = document.getElementById('helpTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        // Đảo ngược hướng sắp xếp nếu click lại cùng cột
+        if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.column = column;
+            currentSort.direction = 'asc';
+        }
+
+        rows.sort((a, b) => {
+            let aValue, bValue;
+
+            switch (column) {
+                case 'id':
+                    aValue = parseInt(a.querySelector('.badge').textContent.replace('#', ''));
+                    bValue = parseInt(b.querySelector('.badge').textContent.replace('#', ''));
+                    break;
+                case 'name':
+                    aValue = a.cells[1].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    bValue = b.cells[1].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    break;
+                case 'desc':
+                    aValue = a.cells[2].textContent.toLowerCase();
+                    bValue = b.cells[2].textContent.toLowerCase();
+                    break;
+            }
+
+            if (currentSort.direction === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        // Xóa và thêm lại các hàng đã sắp xếp
+        rows.forEach(row => tbody.appendChild(row));
+
+        // Cập nhật icon sắp xếp
+        updateSortIcons(column);
+    }
+
+    function updateSortIcons(currentColumn) {
+        document.querySelectorAll('.fa-sort').forEach(icon => {
+            icon.classList.remove('fa-sort-up', 'fa-sort-down');
+            icon.classList.add('fa-sort');
+        });
+
+        const currentIcon = document.querySelector(`[onclick="sortTable('${currentColumn}")"]`);
+        if (currentIcon) {
+            currentIcon.classList.remove('fa-sort');
+            currentIcon.classList.add(currentSort.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+        }
+    }
+
+    // Tìm kiếm
+    document.getElementById('searchInput')?.addEventListener('input', function (e) {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#helpTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('visibleItems').textContent = visibleCount;
+    });
+
+    // Cập nhật số lượng item
+    function updateItemCount() {
+        const count = document.querySelectorAll('#helpTable tbody tr').length;
+        document.getElementById('itemCount').textContent = count;
+        document.getElementById('visibleItems').textContent = count;
+    }
+
+    // Hiển thị toast
+    function showToast(type, message) {
+        const toast = document.getElementById('successToast');
+        const toastBody = toast.querySelector('.toast-body');
+
+        if (type === 'error') {
+            toast.querySelector('.toast-header').className = 'toast-header bg-gradient-danger text-white border-0';
+            toast.querySelector('.fas').className = 'fas fa-exclamation-circle mr-2';
+            toast.querySelector('.me-auto').textContent = 'Lỗi!';
+        } else {
+            toast.querySelector('.toast-header').className = 'toast-header bg-gradient-success text-white border-0';
+            toast.querySelector('.fas').className = 'fas fa-check-circle mr-2';
+            toast.querySelector('.me-auto').textContent = 'Thành công!';
+        }
+
+        toastBody.textContent = message;
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    // Xử lý form submit
+    document.getElementById('addHelpForm')?.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('submitSpinner');
+        const submitText = submitBtn.querySelector('.submit-text');
+
+        // Hiển thị loading
+        submitBtn.disabled = true;
+        spinner.classList.remove('d-none');
+        submitText.textContent = 'Đang xử lý...';
+
+        // Giả lập delay
+        setTimeout(() => {
+            // Submit form thực tế
+            this.submit();
+
+            // Reset form và hiển thị thông báo
+            setTimeout(() => {
+                this.reset();
+                document.getElementById('charCount').textContent = '0/500 ký tự';
+                showToast('success', 'Đã thêm mục trợ giúp thành công!');
+
+                // Reset button
+                submitBtn.disabled = false;
+                spinner.classList.add('d-none');
+                submitText.textContent = 'Thêm mới';
+            }, 500);
+        }, 1500);
+    });
+
+    // Hiệu ứng tiến độ cho input
+    document.getElementById('TenTroGiup')?.addEventListener('input', function (e) {
+        const progress = document.getElementById('nameProgress');
+        if (progress) {
+            const length = this.value.length;
+            const percentage = Math.min((length / 200) * 100, 100);
+            progress.style.display = 'block';
+            progress.querySelector('.progress-bar').style.width = percentage + '%';
+
+            if (length > 0) {
+                progress.querySelector('.progress-bar').classList.remove('bg-danger', 'bg-warning');
+                if (percentage < 50) {
+                    progress.querySelector('.progress-bar').classList.add('bg-danger');
+                } else if (percentage < 80) {
+                    progress.querySelector('.progress-bar').classList.add('bg-warning');
+                } else {
+                    progress.querySelector('.progress-bar').classList.add('bg-success');
+                }
+            } else {
+                progress.style.display = 'none';
+            }
+        }
+    });
+
+    // Khởi tạo
+    document.addEventListener('DOMContentLoaded', function () {
+        // Thêm ripple effect cho buttons
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.add('ripple');
+        });
+
+        // Initialize tooltips
+        $('[title]').tooltip();
+
+        // Update visible items count
+        updateItemCount();
+    });
+</script>

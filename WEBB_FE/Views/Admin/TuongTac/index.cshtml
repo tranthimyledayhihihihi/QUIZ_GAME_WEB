@@ -1,0 +1,1364 @@
+﻿@model List<WEBB.Models.Admin.TuongTacDto>
+
+@{
+    ViewBag.Title = "Quản lý Tương tác";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid px-lg-4">
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-5 pt-3">
+        <div>
+            <div class="d-flex align-items-center">
+                <div class="icon-shape bg-gradient-primary rounded-circle p-3 mr-3 shadow">
+                    <i class="fas fa-comments fa-2x text-white"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-1 text-gray-900 font-weight-800">Quản lý Bình Luận</h1>
+                    <p class="mb-0 text-gray-600">Theo dõi và quản lý tương tác của người dùng</p>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex align-items-center">
+            <span class="badge badge-pill badge-light border mr-3 px-3 py-2">
+                <i class="fas fa-layer-group mr-2"></i>
+                <span id="totalCount">@Model.Count</span> bình luận
+            </span>
+        </div>
+    </div>
+
+    <!-- Bộ lọc và thống kê -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-3">
+                    <div class="d-flex flex-wrap align-items-center">
+                        <form method="get" id="filterForm" class="form-inline">
+                            <div class="d-flex align-items-center">
+                                <label class="font-weight-bold text-gray-700 mr-3 mb-0">
+                                    <i class="fas fa-filter mr-2 text-primary"></i>Lọc theo loại:
+                                </label>
+                                <div class="input-group shadow-sm" style="width: 180px;">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0">
+                                            <i class="fas fa-tag text-primary"></i>
+                                        </span>
+                                    </div>
+                                    <select name="entityType" class="form-control border-left-0"
+                                            onchange="document.getElementById('filterForm').submit()">
+                                        <option value="">Tất cả loại</option>
+                                        <option value="Quiz" @(ViewBag.EntityType == "Quiz" ? "selected" : "")>Quiz</option>
+                                        <option value="Article" @(ViewBag.EntityType == "Article" ? "selected" : "")>Bài viết</option>
+                                        <option value="Video" @(ViewBag.EntityType == "Video" ? "selected" : "")>Video</option>
+                                        <option value="Post" @(ViewBag.EntityType == "Post" ? "selected" : "")>Bài đăng</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                        <div class="ml-4 d-flex">
+                            <button class="btn btn-outline-primary btn-sm mr-2" onclick="resetFilter()">
+                                <i class="fas fa-redo mr-1"></i>Hiển thị tất cả
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1 text-gray-700">Bình luận hôm nay</h6>
+                            <div class="h4 mb-0 font-weight-bold text-primary">
+                                @Model.Count(c => c.NgayTao.Date == DateTime.Today)
+                            </div>
+                        </div>
+                        <div class="icon-circle bg-primary-light">
+                            <i class="fas fa-calendar-day text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê nhanh -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-info-light rounded-circle mr-3">
+                            <i class="fas fa-question-circle text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Bình luận Quiz</h6>
+                            <h3 class="font-weight-bold mb-0 text-info" id="statQuiz">
+                                @Model.Count(c => c.EntityType == "Quiz")
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-success-light rounded-circle mr-3">
+                            <i class="fas fa-newspaper text-success"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Bình luận Bài viết</h6>
+                            <h3 class="font-weight-bold mb-0 text-success" id="statArticle">
+                                @Model.Count(c => c.EntityType == "Article")
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-warning-light rounded-circle mr-3">
+                            <i class="fas fa-video text-warning"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Bình luận Video</h6>
+                            <h3 class="font-weight-bold mb-0 text-warning" id="statVideo">
+                                @Model.Count(c => c.EntityType == "Video")
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="stat-icon bg-purple-light rounded-circle mr-3">
+                            <i class="fas fa-pen-alt text-purple"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Bình luận khác</h6>
+                            <h3 class="font-weight-bold mb-0 text-purple" id="statOther">
+                                @Model.Count(c => !new[] { "Quiz", "Article", "Video" }.Contains(c.EntityType))
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG BÌNH LUẬN -->
+    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-gradient-primary border-0 py-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="m-0 font-weight-bold text-white">
+                    <i class="fas fa-comment-dots mr-2"></i>Danh sách Bình Luận
+                    <small class="ml-2">(@Model.Count items)</small>
+                </h6>
+                <div class="d-flex align-items-center">
+                    <div class="input-group input-group-sm" style="width: 200px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </span>
+                        </div>
+                        <input type="text" class="form-control" id="searchInput"
+                               placeholder="Tìm bình luận...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="commentTable">
+                        <thead class="thead-light">
+                            <tr>
+                                <th width="40%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Nội dung</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('content')"></i>
+                                    </div>
+                                </th>
+                                <th width="15%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Người bình luận</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('user')"></i>
+                                    </div>
+                                </th>
+                                <th width="20%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Đối tượng</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('entity')"></i>
+                                    </div>
+                                </th>
+                                <th width="15%" class="py-3 border-top-0">
+                                    <div class="d-flex align-items-center">
+                                        <span>Thời gian</span>
+                                        <i class="fas fa-sort ml-2 text-gray-400 cursor-pointer"
+                                           onclick="sortTable('date')"></i>
+                                    </div>
+                                </th>
+                                <th width="10%" class="py-3 border-top-0 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model)
+                            {
+                                <tr class="comment-row"
+                                    data-content="@c.Content.ToLower()"
+                                    data-user="@c.Username.ToLower()"
+                                    data-entity="@c.EntityType.ToLower()">
+                                    <td class="align-middle">
+                                        <div class="d-flex">
+                                            <div class="comment-avatar mr-3">
+                                                <div class="avatar-initials bg-primary text-white">
+                                                    @GetInitials(c.Username)
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="comment-content mb-2">
+                                                    @if (c.Content.Length > 150)
+                                                    {
+                                                        <span class="comment-text">@c.Content.Substring(0, 150)...</span>
+                                                        <button class="btn btn-link btn-sm p-0 ml-1" onclick="toggleFullText(this)">
+                                                            <i class="fas fa-chevron-down"></i>
+                                                        </button>
+                                                        <div class="full-text d-none">@c.Content</div>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="comment-text">@c.Content</span>
+                                                    }
+                                                </div>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-reply mr-1"></i>Trả lời: <span class="font-weight-bold">@GetReplyCount(c.CommentID)</span>
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar avatar-xs mr-2">
+                                                <div class="avatar-initials @GetUserColor(c.Username)">
+                                                    @GetInitials(c.Username)
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <div class="font-weight-bold text-gray-800">@c.Username</div>
+                                                <small class="text-muted">Người dùng</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="d-flex align-items-center">
+                                            <div class="entity-icon mr-2 @GetEntityIconColor(c.EntityType)">
+                                                <i class="@GetEntityIcon(c.EntityType)"></i>
+                                            </div>
+                                            <div>
+                                                <span class="badge badge-pill @GetEntityBadgeClass(c.EntityType) px-3 py-2 mb-1">
+                                                    @c.EntityType
+                                                </span>
+                                                <div class="small text-muted">
+                                                    <i class="fas fa-hashtag mr-1"></i>ID: @c.RelatedEntityID
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle">
+                                        <div class="text-gray-800">
+                                            <i class="far fa-calendar mr-2"></i>@c.NgayTao.ToString("dd/MM/yyyy")
+                                        </div>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock mr-2"></i>@c.NgayTao.ToString("HH:mm")
+                                        </small>
+                                        <div class="small mt-1">
+                                            <span class="badge badge-light">
+                                                @GetTimeAgo(c.NgayTao)
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-info btn-sm rounded-circle mr-2"
+                                                    title="Xem chi tiết"
+                                                    onclick="showCommentDetail(@c.CommentID)">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+
+                                            @if (User.IsInRole("SuperAdmin"))
+                                            {
+                                                <button class="btn btn-outline-danger btn-sm rounded-circle"
+                                                        title="Xóa bình luận"
+                                                        onclick="deleteComment(@c.CommentID, '@c.Username.Replace("'", "\\'")', '@c.Content.Replace("'", "\\'").Replace("\"", "&quot;")')">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Phân trang -->
+                <div class="d-flex justify-content-between align-items-center p-4 border-top">
+                    <div class="text-muted">
+                        Hiển thị <span id="visibleItems">@Model.Count</span> trên tổng số @Model.Count bình luận
+                    </div>
+                    <nav>
+                        <ul class="pagination mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-6">
+                    <div class="empty-state">
+                        <div class="empty-state-icon bg-gradient-primary">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <h3 class="mt-4 text-gray-700">Không có bình luận nào</h3>
+                        <p class="text-gray-500 mb-4">Không tìm thấy bình luận phù hợp với bộ lọc</p>
+                        <button class="btn btn-primary" onclick="resetFilter()">
+                            <i class="fas fa-redo mr-2"></i>Hiển thị tất cả
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết Bình luận -->
+<div class="modal fade" id="commentDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-primary border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-comment-dots mr-2"></i>Chi tiết Bình Luận
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4" id="commentDetailContent">
+                <!-- Nội dung sẽ được load bằng JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xác nhận Xóa -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-gradient-danger border-0">
+                <h5 class="modal-title text-white">
+                    <i class="fas fa-trash-alt mr-2"></i>Xác nhận Xóa
+                </h5>
+                <button type="button" class="close text-white" data-dismiss="modal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="text-center mb-4">
+                    <div class="warning-icon bg-danger-light rounded-circle d-inline-flex p-4 mb-3">
+                        <i class="fas fa-exclamation-triangle fa-3x text-danger"></i>
+                    </div>
+                    <h5 class="font-weight-bold text-gray-800">Xóa bình luận này?</h5>
+                    <div class="alert alert-light mt-3">
+                        <div class="d-flex align-items-start">
+                            <div class="avatar avatar-sm mr-3">
+                                <div class="avatar-initials bg-primary text-white" id="deleteUserInitials"></div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="font-weight-bold text-gray-800" id="deleteUsername"></div>
+                                <p class="mb-1 text-muted small" id="deleteCommentPreview"></p>
+                                <div class="small text-muted">
+                                    <i class="far fa-clock mr-1"></i><span id="deleteCommentTime"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-danger small mt-3">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Hành động này không thể hoàn tác. Bình luận và tất cả phản hồi sẽ bị xóa vĩnh viễn.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light px-4" data-dismiss="modal">
+                    <i class="fas fa-times mr-2"></i>Hủy bỏ
+                </button>
+                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">
+                    <i class="fas fa-trash mr-2"></i>Xác nhận xóa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast notification -->
+<div aria-live="polite" aria-atomic="true" class="position-relative">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999;">
+        <div id="successToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header bg-gradient-success text-white border-0">
+                <i class="fas fa-check-circle mr-2"></i>
+                <strong class="me-auto">Thành công!</strong>
+                <small>Vừa xong</small>
+                <button type="button" class="ml-2 mb-1 close text-white" data-dismiss="toast">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="toast-body bg-white" id="toastMessage"></div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public string GetEntityBadgeClass(string entityType)
+    {
+        switch (entityType)
+        {
+            case "Quiz":
+                return "badge-info";
+            case "Comment":
+                return "badge-success";
+            case "Share":
+                return "badge-warning";
+            case "Like":
+                return "badge-danger";
+            default:
+                return "badge-secondary";
+        }
+    }
+
+
+    public string GetEntityIcon(string entityType)
+    {
+        switch (entityType)
+        {
+            case "Quiz":
+                return "fas fa-puzzle-piece";
+            case "Article":
+                return "fas fa-newspaper";
+            case "Video":
+                return "fas fa-video";
+            case "Post":
+                return "fas fa-pen-alt";
+            default:
+                return "fas fa-comment";
+        }
+    }
+
+
+    public string GetEntityIconColor(string entityType)
+    {
+        switch (entityType)
+        {
+            case "Quiz":
+                return "text-info";
+            case "Article":
+                return "text-success";
+            case "Video":
+                return "text-warning";
+            case "Post":
+                return "text-purple";
+            default:
+                return "text-secondary";
+        }
+    }
+
+
+    public string GetUserColor(string username)
+    {
+        if (string.IsNullOrEmpty(username))
+            return "bg-secondary";
+
+        int hash = 0;
+        foreach (char c in username)
+        {
+            hash = (hash << 5) - hash + c;
+        }
+        hash = Math.Abs(hash);
+
+        switch (hash % 5)
+        {
+            case 0:
+                return "bg-primary";
+            case 1:
+                return "bg-success";
+            case 2:
+                return "bg-warning";
+            case 3:
+                return "bg-danger";
+            default:
+                return "bg-info";
+        }
+    }
+
+
+    public string GetInitials(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
+            return "??";
+
+        // C# 7.3: phải truyền char[] thay vì char
+        var names = fullName.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+        if (names.Length >= 2)
+        {
+            // C# 7.3: không dùng ^1
+            char first = names[0][0];
+            char last = names[names.Length - 1][0];
+            return (first.ToString() + last.ToString()).ToUpper();
+        }
+
+        // Không dùng range [..2]
+        return fullName.Length >= 2
+            ? fullName.Substring(0, 2).ToUpper()
+            : fullName.ToUpper();
+    }
+
+
+    public int GetReplyCount(int commentId)
+    {
+        // Giả lập số lượng reply
+        var random = new Random(commentId);
+        return random.Next(0, 15);
+    }
+
+    public string GetTimeAgo(DateTime date)
+    {
+        var timeSpan = DateTime.Now - date;
+
+        if (timeSpan.TotalDays >= 365)
+            return $"{(int)(timeSpan.TotalDays / 365)} năm trước";
+        if (timeSpan.TotalDays >= 30)
+            return $"{(int)(timeSpan.TotalDays / 30)} tháng trước";
+        if (timeSpan.TotalDays >= 7)
+            return $"{(int)(timeSpan.TotalDays / 7)} tuần trước";
+        if (timeSpan.TotalDays >= 1)
+            return $"{(int)timeSpan.TotalDays} ngày trước";
+        if (timeSpan.TotalHours >= 1)
+            return $"{(int)timeSpan.TotalHours} giờ trước";
+        if (timeSpan.TotalMinutes >= 1)
+            return $"{(int)timeSpan.TotalMinutes} phút trước";
+
+        return "Vừa xong";
+    }
+}
+
+<style>
+    /* CSS Variables */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --info-gradient: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        --success-gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        --warning-gradient: linear-gradient(135deg, #ffc107 0%, #ff9900 100%);
+        --danger-gradient: linear-gradient(135deg, #f5365c 0%, #f56036 100%);
+        --purple-gradient: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+        --shadow-sm: 0 .125rem .25rem rgba(0,0,0,.075);
+        --shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+        --shadow-lg: 0 1rem 3rem rgba(0,0,0,.175);
+    }
+
+    /* Custom Styles */
+    body {
+        background: linear-gradient(135deg, #f8f9fc 0%, #e9ecef 100%);
+        min-height: 100vh;
+    }
+
+    .card {
+        border: none;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .card-header {
+        border-radius: 1rem 1rem 0 0 !important;
+    }
+
+    .bg-gradient-primary {
+        background: var(--primary-gradient);
+    }
+
+    /* Badge styles */
+    .badge-info {
+        background: var(--info-gradient);
+    }
+
+    .badge-success {
+        background: var(--success-gradient);
+    }
+
+    .badge-warning {
+        background: var(--warning-gradient);
+    }
+
+    .badge-danger {
+        background: var(--danger-gradient);
+    }
+
+    .badge-purple {
+        background: var(--purple-gradient);
+    }
+
+    /* Icon shapes */
+    .icon-shape {
+        width: 70px;
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .icon-circle {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .bg-primary-light {
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+
+    /* Stat icons */
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .bg-info-light {
+        background-color: rgba(23, 162, 184, 0.1);
+    }
+
+    .bg-success-light {
+        background-color: rgba(40, 167, 69, 0.1);
+    }
+
+    .bg-warning-light {
+        background-color: rgba(255, 193, 7, 0.1);
+    }
+
+    .bg-purple-light {
+        background-color: rgba(156, 39, 176, 0.1);
+    }
+
+    .bg-danger-light {
+        background-color: rgba(245, 54, 92, 0.1);
+    }
+
+    /* Comment avatar */
+    .comment-avatar {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    /* Avatar */
+    .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        font-weight: 600;
+    }
+
+    .avatar-sm {
+        width: 36px;
+        height: 36px;
+        font-size: 0.875rem;
+    }
+
+    .avatar-xs {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+
+    .avatar-initials {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        color: white;
+    }
+
+    /* Entity icon */
+    .entity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background-color: rgba(102, 126, 234, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    /* Comment content */
+    .comment-content {
+        line-height: 1.6;
+        color: #4a5568;
+    }
+
+    .full-text {
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        background-color: #f8f9fe;
+        border-radius: 0.5rem;
+        border-left: 3px solid #667eea;
+    }
+
+    /* Table styles */
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        border-top: none;
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        color: #4a5568;
+        background-color: #f8f9fe;
+    }
+
+    .table tbody tr {
+        transition: all 0.3s;
+        border-left: 3px solid transparent;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8f9fe;
+        border-left-color: #667eea;
+        transform: translateX(2px);
+    }
+
+    /* Form controls */
+    .input-group-text {
+        border-radius: 0.5rem 0 0 0.5rem;
+        border-right: none;
+        transition: all 0.3s;
+    }
+
+    .form-control {
+        border-radius: 0 0.5rem 0.5rem 0;
+        border-left: none;
+        transition: all 0.3s;
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        border-color: #667eea;
+    }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #667eea;
+        background-color: rgba(102, 126, 234, 0.1);
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: all 0.3s;
+    }
+
+    .btn-outline-danger:hover {
+        background: var(--danger-gradient);
+        color: white;
+        border: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-info:hover {
+        background: var(--info-gradient);
+        color: white;
+        border: none;
+        transform: translateY(-1px);
+    }
+
+    .btn-rounded-circle {
+        width: 38px;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Empty state */
+    .empty-state {
+        padding: 3rem 1rem;
+    }
+
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+    }
+
+    /* Warning icon */
+    .warning-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Cursor */
+    .cursor-pointer {
+        cursor: pointer;
+    }
+
+    /* Animation */
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate__animated {
+        animation-duration: 0.6s;
+        animation-fill-mode: both;
+    }
+
+    .animate__fadeInUp {
+        animation-name: fadeInUp;
+    }
+
+    /* Scrollbar */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+    }
+
+    /* Responsive */
+    @@media (max-width: 768px) {
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .table-responsive {
+            font-size: 0.9rem;
+        }
+
+        .btn-group {
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .btn-rounded-circle {
+            width: 34px;
+            height: 34px;
+        }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            font-size: 0.875rem;
+        }
+    }
+</style>
+
+<script>
+    // Khởi tạo các biến
+    let currentSort = { column: 'date', direction: 'desc' };
+    let currentCommentId = null;
+
+    // Reset filter
+    function resetFilter() {
+        window.location.href = window.location.pathname;
+    }
+
+    // Toggle full text
+    function toggleFullText(button) {
+        const contentDiv = button.parentElement;
+        const shortText = contentDiv.querySelector('.comment-text');
+        const fullText = contentDiv.querySelector('.full-text');
+        const icon = button.querySelector('i');
+
+        if (fullText.classList.contains('d-none')) {
+            shortText.style.display = 'none';
+            fullText.classList.remove('d-none');
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            shortText.style.display = 'inline';
+            fullText.classList.add('d-none');
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+
+    // Hiển thị chi tiết bình luận
+    function showCommentDetail(commentId) {
+        // Tìm hàng chứa bình luận
+        const rows = document.querySelectorAll('.comment-row');
+        let targetRow = null;
+
+        rows.forEach(row => {
+            const detailBtn = row.querySelector('[onclick^="showCommentDetail"]');
+            if (detailBtn && detailBtn.getAttribute('onclick').includes(commentId)) {
+                targetRow = row;
+            }
+        });
+
+        if (!targetRow) return;
+
+        const username = targetRow.cells[1].querySelector('.font-weight-bold').textContent;
+        const userInitials = targetRow.cells[1].querySelector('.avatar-initials').textContent;
+        const userColor = targetRow.cells[1].querySelector('.avatar-initials').className.match(/bg-\w+/)[0];
+        const content = targetRow.cells[0].querySelector('.full-text')?.textContent ||
+                       targetRow.cells[0].querySelector('.comment-text').textContent;
+        const entityType = targetRow.cells[2].querySelector('.badge').textContent.trim();
+        const entityId = targetRow.cells[2].querySelector('.text-muted').textContent.replace('ID: ', '');
+        const date = targetRow.cells[3].querySelector('.text-gray-800').textContent.replace('📅 ', '');
+        const time = targetRow.cells[3].querySelector('.text-muted').textContent.replace('🕒 ', '');
+        const timeAgo = targetRow.cells[3].querySelector('.badge-light').textContent;
+        const replies = targetRow.cells[0].querySelector('.font-weight-bold').textContent;
+
+        const detailContent = document.getElementById('commentDetailContent');
+        detailContent.innerHTML = `
+            <div class="comment-header mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="avatar avatar-lg mr-3 ${userColor} text-white">
+                        ${userInitials}
+                    </div>
+                    <div>
+                        <h4 class="font-weight-bold text-gray-800 mb-1">${username}</h4>
+                        <p class="text-muted mb-0">
+                            <i class="far fa-clock mr-1"></i>${date} ${time}
+                            <span class="mx-2">•</span>
+                            <span class="badge badge-light">${timeAgo}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-light rounded p-4 mb-4">
+                <h6 class="font-weight-bold text-gray-700 mb-3">
+                    <i class="fas fa-comment-alt mr-2 text-primary"></i>Nội dung bình luận
+                </h6>
+                <p class="mb-0 comment-detail-content">${content}</p>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="bg-light rounded p-3">
+                        <h6 class="font-weight-bold text-gray-700 mb-2">
+                            <i class="fas fa-tag mr-2 text-primary"></i>Thông tin đối tượng
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <div class="entity-icon mr-3 ${GetEntityIconColorClass(entityType)}">
+                                <i class="${GetEntityIconClass(entityType)}"></i>
+                            </div>
+                            <div>
+                                <span class="badge badge-pill ${GetEntityBadgeClass(entityType)} px-3 py-2 mb-1">
+                                    ${entityType}
+                                </span>
+                                <div class="small text-muted">
+                                    <i class="fas fa-hashtag mr-1"></i>ID: ${entityId}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="bg-light rounded p-3">
+                        <h6 class="font-weight-bold text-gray-700 mb-2">
+                            <i class="fas fa-chart-bar mr-2 text-primary"></i>Thống kê tương tác
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="h4 font-weight-bold text-primary">${replies}</div>
+                                <small class="text-muted">Phản hồi</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 font-weight-bold text-success">${Math.floor(Math.random() * 50)}</div>
+                                <small class="text-muted">Lượt thích</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 font-weight-bold text-warning">${Math.floor(Math.random() * 10)}</div>
+                                <small class="text-muted">Báo cáo</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button class="btn btn-primary mr-2" onclick="viewOriginalPost(${entityId}, '${entityType}')">
+                    <i class="fas fa-external-link-alt mr-2"></i>Xem bài viết gốc
+                </button>
+                <button class="btn btn-outline-info" onclick="viewUserProfile('${username}')">
+                    <i class="fas fa-user mr-2"></i>Xem hồ sơ người dùng
+                </button>
+            </div>
+        `;
+
+        $('#commentDetailModal').modal('show');
+    }
+
+    // Helper functions for entity icons
+    function GetEntityIconClass(entityType) {
+        const icons = {
+            'Quiz': 'fas fa-puzzle-piece',
+            'Article': 'fas fa-newspaper',
+            'Video': 'fas fa-video',
+            'Post': 'fas fa-pen-alt'
+        };
+        return icons[entityType] || 'fas fa-comment';
+    }
+
+    function GetEntityIconColorClass(entityType) {
+        const colors = {
+            'Quiz': 'text-info',
+            'Article': 'text-success',
+            'Video': 'text-warning',
+            'Post': 'text-purple'
+        };
+        return colors[entityType] || 'text-secondary';
+    }
+
+    function GetEntityBadgeClass(entityType) {
+        const classes = {
+            'Quiz': 'badge-info',
+            'Article': 'badge-success',
+            'Video': 'badge-warning',
+            'Post': 'badge-purple'
+        };
+        return classes[entityType] || 'badge-secondary';
+    }
+
+    // Xem bài viết gốc
+    function viewOriginalPost(entityId, entityType) {
+        alert(`Chuyển đến ${entityType} ID: ${entityId}`);
+        $('#commentDetailModal').modal('hide');
+    }
+
+    // Xem hồ sơ người dùng
+    function viewUserProfile(username) {
+        alert(`Chuyển đến hồ sơ của: ${username}`);
+        $('#commentDetailModal').modal('hide');
+    }
+
+    // Xóa bình luận
+    function deleteComment(commentId, username, content) {
+        currentCommentId = commentId;
+
+        // Cập nhật modal xóa
+        document.getElementById('deleteUserInitials').textContent = username.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        document.getElementById('deleteUsername').textContent = username;
+
+        // Rút gọn nội dung nếu quá dài
+        const previewContent = content.length > 100 ? content.substring(0, 100) + '...' : content;
+        document.getElementById('deleteCommentPreview').textContent = previewContent;
+
+        // Lấy thời gian từ hàng tương ứng
+        const rows = document.querySelectorAll('.comment-row');
+        let commentTime = '';
+        rows.forEach(row => {
+            const deleteBtn = row.querySelector('[onclick^="deleteComment"]');
+            if (deleteBtn && deleteBtn.getAttribute('onclick').includes(commentId)) {
+                const date = row.cells[3].querySelector('.text-gray-800').textContent.replace('📅 ', '');
+                const time = row.cells[3].querySelector('.text-muted').textContent.replace('🕒 ', '');
+                commentTime = `${date} ${time}`;
+            }
+        });
+        document.getElementById('deleteCommentTime').textContent = commentTime;
+
+        $('#deleteModal').modal('show');
+    }
+
+    // Xác nhận xóa
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+        if (!currentCommentId) return;
+
+        const btn = document.getElementById('confirmDeleteBtn');
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang xóa...';
+        btn.disabled = true;
+
+        // Gửi request xóa
+        fetch('@Url.Action("DeleteComment")', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `id=${currentCommentId}`
+        })
+        .then(response => {
+            if (response.ok) {
+                // Xóa hàng khỏi bảng
+                const rows = document.querySelectorAll('.comment-row');
+                rows.forEach(row => {
+                    const deleteBtn = row.querySelector('[onclick^="deleteComment"]');
+                    if (deleteBtn && deleteBtn.getAttribute('onclick').includes(currentCommentId)) {
+                        row.classList.add('animate__animated', 'animate__fadeOut');
+                        setTimeout(() => {
+                            row.remove();
+                            updateStats();
+                            updateVisibleCount();
+                            showToast('Đã xóa bình luận thành công!');
+                        }, 500);
+                    }
+                });
+                $('#deleteModal').modal('hide');
+            } else {
+                showToast('Có lỗi xảy ra khi xóa bình luận!', 'error');
+            }
+        })
+        .catch(error => {
+            showToast('Lỗi kết nối!', 'error');
+        })
+        .finally(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            currentCommentId = null;
+        });
+    });
+
+    // Cập nhật thống kê
+    function updateStats() {
+        const rows = document.querySelectorAll('.comment-row');
+        const total = rows.length;
+
+        let quizCount = 0, articleCount = 0, videoCount = 0, otherCount = 0;
+
+        rows.forEach(row => {
+            const entityType = row.cells[2].querySelector('.badge').textContent.trim();
+            switch(entityType) {
+                case 'Quiz': quizCount++; break;
+                case 'Article': articleCount++; break;
+                case 'Video': videoCount++; break;
+                default: otherCount++; break;
+            }
+        });
+
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('statQuiz').textContent = quizCount;
+        document.getElementById('statArticle').textContent = articleCount;
+        document.getElementById('statVideo').textContent = videoCount;
+        document.getElementById('statOther').textContent = otherCount;
+    }
+
+    // Hiển thị toast
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('successToast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        if (type === 'error') {
+            toast.querySelector('.toast-header').className = 'toast-header bg-gradient-danger text-white border-0';
+            toast.querySelector('.fas').className = 'fas fa-exclamation-circle mr-2';
+            toast.querySelector('.me-auto').textContent = 'Lỗi!';
+        } else {
+            toast.querySelector('.toast-header').className = 'toast-header bg-gradient-success text-white border-0';
+            toast.querySelector('.fas').className = 'fas fa-check-circle mr-2';
+            toast.querySelector('.me-auto').textContent = 'Thành công!';
+        }
+
+        toastMessage.textContent = message;
+
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    // Sắp xếp bảng
+    function sortTable(column) {
+        const table = document.getElementById('commentTable');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('.comment-row'));
+
+        if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.column = column;
+            currentSort.direction = 'asc';
+        }
+
+        rows.sort((a, b) => {
+            let aValue, bValue;
+
+            switch(column) {
+                case 'content':
+                    aValue = a.cells[0].querySelector('.comment-text').textContent.toLowerCase();
+                    bValue = b.cells[0].querySelector('.comment-text').textContent.toLowerCase();
+                    break;
+                case 'user':
+                    aValue = a.cells[1].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    bValue = b.cells[1].querySelector('.font-weight-bold').textContent.toLowerCase();
+                    break;
+                case 'entity':
+                    aValue = a.cells[2].querySelector('.badge').textContent.toLowerCase();
+                    bValue = b.cells[2].querySelector('.badge').textContent.toLowerCase();
+                    break;
+                case 'date':
+                    aValue = new Date(a.cells[3].querySelector('.text-gray-800').textContent.split('/').reverse().join('-'));
+                    bValue = new Date(b.cells[3].querySelector('.text-gray-800').textContent.split('/').reverse().join('-'));
+                    break;
+            }
+
+            if (currentSort.direction === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+        updateSortIcons(column);
+    }
+
+    function updateSortIcons(currentColumn) {
+        document.querySelectorAll('.fa-sort').forEach(icon => {
+            icon.classList.remove('fa-sort-up', 'fa-sort-down');
+            icon.classList.add('fa-sort');
+        });
+
+        const currentIcon = document.querySelector(`[onclick="sortTable('${currentColumn}")"]`);
+        if (currentIcon) {
+            currentIcon.classList.remove('fa-sort');
+            currentIcon.classList.add(currentSort.direction === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+        }
+    }
+
+    // Tìm kiếm
+    document.getElementById('searchInput')?.addEventListener('input', function(e) {
+        const searchTerm = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#commentTable .comment-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const content = row.getAttribute('data-content');
+            const user = row.getAttribute('data-user');
+            const entity = row.getAttribute('data-entity');
+            const searchText = `${content} ${user} ${entity}`;
+
+            if (searchText.includes(searchTerm)) {
+                row.style.display = '';
+                visibleCount++;
+
+                // Highlight kết quả tìm kiếm
+                if (searchTerm) {
+                    const commentText = row.querySelector('.comment-text');
+                    const originalText = commentText.getAttribute('data-original') || commentText.textContent;
+                    commentText.setAttribute('data-original', originalText);
+                    const highlighted = originalText.replace(
+                        new RegExp(searchTerm, 'gi'),
+                        match => `<span class="bg-warning text-dark px-1 rounded">${match}</span>`
+                    );
+                    commentText.innerHTML = highlighted;
+                }
+            } else {
+                row.style.display = 'none';
+
+                // Khôi phục text gốc
+                const commentText = row.querySelector('.comment-text');
+                if (commentText && commentText.getAttribute('data-original')) {
+                    commentText.textContent = commentText.getAttribute('data-original');
+                }
+            }
+        });
+
+        document.getElementById('visibleItems').textContent = visibleCount;
+    });
+
+    // Cập nhật số lượng hiển thị
+    function updateVisibleCount() {
+        const visibleCount = document.querySelectorAll('#commentTable .comment-row:not([style*="display: none"])').length;
+        document.getElementById('visibleItems').textContent = visibleCount;
+    }
+
+    // Khởi tạo
+    document.addEventListener('DOMContentLoaded', function() {
+        // Update visible count
+        updateVisibleCount();
+
+        // Add click handlers for table rows
+        document.querySelectorAll('.comment-row').forEach(row => {
+            row.addEventListener('click', function(e) {
+                if (!e.target.closest('.btn') && !e.target.closest('.btn-link')) {
+                    const detailBtn = this.querySelector('[onclick^="showCommentDetail"]');
+                    if (detailBtn) {
+                        const commentId = detailBtn.getAttribute('onclick').match(/\d+/)[0];
+                        showCommentDetail(commentId);
+                    }
+                }
+            });
+        });
+    });
+</script>

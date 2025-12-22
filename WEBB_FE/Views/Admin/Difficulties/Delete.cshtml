@@ -1,0 +1,27 @@
+﻿@model WEBB.Models.Quiz.DoKhoDto
+
+@{
+    ViewBag.Title = "Xóa Độ Khó";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2>Xóa Độ Khó</h2>
+
+<div class="alert alert-warning">
+    Bạn có chắc chắn muốn xóa độ khó:
+    <strong>@Model.TenDoKho</strong>
+    (Điểm thưởng: @Model.DiemThuong)?
+</div>
+
+<form action="/Admin/Difficulties/Delete" method="post">
+    <input type="hidden" name="id" value="@Model.DoKhoID" />
+
+    <button type="submit" class="btn btn-danger">
+        Xóa
+    </button>
+
+    <a href="@Url.Action("Index", "Difficulties")"
+       class="btn btn-secondary">
+        Hủy
+    </a>
+</form>

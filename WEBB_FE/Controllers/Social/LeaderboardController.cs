@@ -1,74 +1,81 @@
-﻿// WEBB/Controllers/Social/LeaderboardController.cs
+﻿using Newtonsoft.Json;
 using System;
-using System.Configuration;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Web.Mvc;
-using Newtonsoft.Json;
-using WEBB.Models.Social;
 using WEBB.Models.ViewModels;
+using WEBB.Models.Social;
+using System.Collections.Generic;
 
 namespace WEBB.Controllers.Social
 {
+    [Authorize]
+
     public class LeaderboardController : Controller
     {
-        private readonly string _apiBase;
+        private readonly string _apiBase = "https://localhost:7092/";
 
-        public LeaderboardController()
+        public async Task<ActionResult> Index(string type = "monthly", int page = 1)
         {
-            _apiBase = ConfigurationManager.AppSettings["ApiBaseUrl"] ?? "https://localhost:7180/";
-            if (!_apiBase.EndsWith("/")) _apiBase += "/";
-        }
+            var model = new LeaderboardViewModel
+            {
+                Type = type,
+                CurrentPage = page,
+                Items = new List<LeaderboardItemDto>()
+            };
 
-        // Lớp dùng để đọc JSON trả về từ API Ranking
-        private class LeaderboardApiResponse
-        {
-            public string Type { get; set; }
-            public int TongSoNguoi { get; set; }
-            public int TrangHienTai { get; set; }
-            public int TongSoTrang { get; set; }
-            public LeaderboardItemDto[] DanhSach { get; set; }
-        }
+            var token = Session["JWT_TOKEN"]?.ToString(); // 🔥 LẤY TOKEN
 
-        // GET: /Leaderboard?type=weekly|monthly&page=1
-        public async Task<ActionResult> Index(string type = "monthly", int page = 1, int pageSize = 10)
-        {
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_apiBase);
 
-                // BXH cho phép xem public nên không bắt buộc JWT
-                var url = $"api/Ranking/leaderboard?type={type}&pageNumber={page}&pageSize={pageSize}";
+                // 🔥 BẮT BUỘC: GỬI JWT
+                if (!string.IsNullOrEmpty(token))
+                {
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", token);
+                }
+
+                string url;
+
+                if (type == "yearly")
+                {
+                    // ✅ API YEARLY CỦA BẠN
+                    url = "api/Ranking/leaderboard?type=yearly&pageNumber=2024&pageSize=2025";
+                }
+                else
+                {
+                    // ✅ API MONTHLY
+                    url = $"api/Ranking/leaderboard?type=monthly&pageNumber={page}&pageSize=12";
+                }
+
                 var res = await client.GetAsync(url);
 
                 if (!res.IsSuccessStatusCode)
                 {
-                    // Lỗi API -> trả về view rỗng
-                    var emptyModel = new LeaderboardViewModel
-                    {
-                        Type = type,
-                        CurrentPage = 1,
-                        TotalPages = 1,
-                        TotalUsers = 0
-                    };
-                    ViewBag.Error = "Không lấy được dữ liệu xếp hạng.";
-                    return View(emptyModel);
+                    ViewBag.Error = "Không tải được bảng xếp hạng";
+                    return View("~/Views/Menu/Leaderboard.cshtml", model);
                 }
 
                 var json = await res.Content.ReadAsStringAsync();
-                var apiData = JsonConvert.DeserializeObject<LeaderboardApiResponse>(json);
 
-                var model = new LeaderboardViewModel
+                var data = JsonConvert.DeserializeObject<LeaderboardApiResponse>(json);
+
+                if (data == null)
                 {
-                    Type = apiData.Type,
-                    CurrentPage = apiData.TrangHienTai,
-                    TotalPages = apiData.TongSoTrang,
-                    TotalUsers = apiData.TongSoNguoi,
-                    Items = new System.Collections.Generic.List<LeaderboardItemDto>(apiData.DanhSach)
-                };
+                    ViewBag.Error = "Dữ liệu API không hợp lệ";
+                    return View("~/Views/Menu/Leaderboard.cshtml", model);
+                }
 
-                return View(model);
+                model.TotalUsers = data.TongSoNguoi;
+                model.TotalPages = data.TongSoTrang;
+                model.CurrentPage = data.TrangHienTai;
+                model.Items = data.DanhSach ?? new List<LeaderboardItemDto>();
             }
+
+            return View("~/Views/Menu/Leaderboard.cshtml", model);
         }
     }
 }

@@ -1,7 +1,589 @@
-﻿
+﻿@model WEBB.Models.Admin.BaoCaoDto
+
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Báo Cáo Hệ Thống";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Index</h2>
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-chart-bar me-2"></i>Báo Cáo Hệ Thống
+        </h1>
+        <div>
+            <span class="badge bg-primary">
+                <i class="fas fa-calendar-alt me-1"></i>@DateTime.Now.ToString("dd/MM/yyyy")
+            </span>
+        </div>
+    </div>
 
+    <!-- Thống kê nhanh -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng trận chơi
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.GamesByDate.Sum(g => g.SoTran)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-gamepad fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Người dùng mới
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.UserRegistrationByDate.Sum(u => u.SoNguoiDungMoi)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-user-plus fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Tổng điểm
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.GamesByDate.Sum(g => g.TongDiem)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Tỷ lệ đúng trung bình
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @{
+                                    var totalGames = Model.GamesByDate.Sum(g => g.SoTran);
+                                    var totalQuestions = Model.GamesByDate.Sum(g => g.SoCauDung);
+                                    var avgRate = totalGames > 0 ? Math.Round((double)totalQuestions / (totalGames * 10) * 100, 1) : 0;
+                                }
+                                @avgRate%
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-percentage fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Báo cáo Số trận chơi -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">
+                <i class="fas fa-calendar-day me-2"></i>Số Trận Chơi Theo Ngày
+                <span class="badge bg-primary ms-2">@Model.GamesByDate.Count ngày</span>
+            </h6>
+            <div class="text-muted small">
+                <i class="fas fa-info-circle me-1"></i>Cập nhật lần cuối: @DateTime.Now.ToString("HH:mm")
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center">Ngày</th>
+                            <th class="text-center">Số Trận</th>
+                            <th class="text-center">Tổng Điểm</th>
+                            <th class="text-center">Số Câu Đúng</th>
+                            <th class="text-center">Điểm Trung Bình</th>
+                            <th class="text-center">Tỷ Lệ Đúng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.GamesByDate.OrderByDescending(g => g.Ngay))
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <div class="fw-semibold text-primary">
+                                        @item.Ngay.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="small text-muted">
+                                        @item.Ngay.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info text-white" style="font-size: 1em;">
+                                        @item.SoTran
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold text-success">
+                                        <i class="fas fa-star me-1"></i>@item.TongDiem
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="fw-bold">
+                                        @item.SoCauDung/@{@(item.SoTran * 10)}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @{
+                                        var avgScore = item.SoTran > 0 ? Math.Round((double)item.TongDiem / item.SoTran, 1) : 0;
+                                    }
+                                    <span class="badge @GetScoreBadgeClass(avgScore)">
+                                        @avgScore
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @{
+                                        var correctRate = item.SoTran > 0 ? Math.Round((double)item.SoCauDung / (item.SoTran * 10) * 100, 1) : 0;
+                                    }
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar @GetProgressBarClass(correctRate)"
+                                             role="progressbar"
+                                             style="width: @(correctRate)%"
+                                             aria-valuenow="@correctRate"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+                                            @correctRate%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    @if (!Model.GamesByDate.Any())
+                    {
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-gamepad fa-3x text-gray-300 mb-3"></i>
+                                        <h5 class="text-muted">Không có dữ liệu trận chơi</h5>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Báo cáo Người dùng đăng ký -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-success">
+                <i class="fas fa-users me-2"></i>Người Dùng Đăng Ký Theo Ngày
+                <span class="badge bg-success ms-2">@Model.UserRegistrationByDate.Count ngày</span>
+            </h6>
+            <div class="text-muted small">
+                <i class="fas fa-info-circle me-1"></i>Tổng: @Model.UserRegistrationByDate.Sum(u => u.SoNguoiDungMoi) người dùng
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center">Ngày</th>
+                            <th class="text-center">Số Người Dùng Mới</th>
+                            <th class="text-center">Biểu Đồ</th>
+                            <th class="text-center">Tăng Trưởng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var previousCount = 0;
+                            var sortedUsers = Model.UserRegistrationByDate.OrderByDescending(u => u.Ngay).ToList();
+                        }
+                        @for (int i = 0; i < sortedUsers.Count; i++)
+                        {
+                            var item = sortedUsers[i];
+                            var nextItem = i + 1 < sortedUsers.Count ? sortedUsers[i + 1] : null;
+                            var growthRate = nextItem != null && nextItem.SoNguoiDungMoi > 0
+                                ? Math.Round((double)(item.SoNguoiDungMoi - nextItem.SoNguoiDungMoi) / nextItem.SoNguoiDungMoi * 100, 1)
+                                : 0;
+
+                            <tr>
+                                <td class="text-center">
+                                    <div class="fw-semibold text-success">
+                                        @item.Ngay.ToString("dd/MM/yyyy")
+                                    </div>
+                                    <div class="small text-muted">
+                                        @item.Ngay.ToString("dddd", new System.Globalization.CultureInfo("vi-VN"))
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success" style="font-size: 1.1em; padding: 0.5em 1em;">
+                                        <i class="fas fa-user-plus me-1"></i>@item.SoNguoiDungMoi
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <div class="me-2 small text-muted">@item.SoNguoiDungMoi</div>
+                                        <div class="progress flex-grow-1" style="height: 10px; max-width: 150px;">
+                                            @{
+                                                var maxUsers = sortedUsers.Max(u => u.SoNguoiDungMoi);
+                                                var userPercentage = maxUsers > 0 ? (item.SoNguoiDungMoi * 100 / maxUsers) : 0;
+                                            }
+                                            <div class="progress-bar bg-success"
+                                                 role="progressbar"
+                                                 style="width: @userPercentage%"
+                                                 aria-valuenow="@item.SoNguoiDungMoi"
+                                                 aria-valuemin="0"
+                                                 aria-valuemax="@maxUsers">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (nextItem != null)
+                                    {
+                                        <span class="badge @GetGrowthBadgeClass(growthRate)">
+                                            <i class="@GetGrowthIcon(growthRate) me-1"></i>
+                                            @Math.Abs(growthRate)%
+                                        </span>
+                                        <div class="small text-muted mt-1">
+                                            @if (growthRate > 0)
+                                            {
+                                                <text>Tăng so với hôm trước</text>
+                                            }
+                                            else if (growthRate < 0)
+                                            {
+                                                <text>Giảm so với hôm trước</text>
+                                            }
+                                            else
+                                            {
+                                                <text>Không đổi</text>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Không có dữ liệu trước</span>
+                                    }
+                                </td>
+                            </tr>
+                            previousCount = item.SoNguoiDungMoi;
+                        }
+                    </tbody>
+                    @if (!Model.UserRegistrationByDate.Any())
+                    {
+                        <tfoot>
+                            <tr>
+                                <td colspan="4" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-users fa-3x text-gray-300 mb-3"></i>
+                                        <h5 class="text-muted">Không có dữ liệu người dùng</h5>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Báo cáo Top câu hỏi sai -->
+    <div class="card shadow">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-danger">
+                <i class="fas fa-times-circle me-2"></i>Top Câu Hỏi Sai Nhiều Nhất
+                <span class="badge bg-danger ms-2">Top @Model.TopWrongAnswers.Count</span>
+            </h6>
+            <div class="text-muted small">
+                <i class="fas fa-info-circle me-1"></i>Tổng: @Model.TopWrongAnswers.Sum(w => w.SoLanSai) lần sai
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">#</th>
+                            <th class="text-center" style="width: 100px;">ID</th>
+                            <th>Câu Hỏi</th>
+                            <th class="text-center" style="width: 120px;">Số Lần Sai</th>
+                            <th class="text-center" style="width: 150px;">Tỷ Lệ Sai</th>
+                            <th class="text-center" style="width: 100px;">Mức Độ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            var rank = 1;
+                            var maxWrong = Model.TopWrongAnswers.Any() ? Model.TopWrongAnswers.Max(w => w.SoLanSai) : 1;
+                        }
+                        @foreach (var item in Model.TopWrongAnswers.OrderByDescending(w => w.SoLanSai))
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <div class="rank-badge">
+                                        @if (rank == 1)
+                                        {
+                                            <span class="badge bg-warning text-dark" style="font-size: 1em;">
+                                                <i class="fas fa-crown me-1"></i>1st
+                                            </span>
+                                        }
+                                        else if (rank == 2)
+                                        {
+                                            <span class="badge bg-secondary" style="font-size: 1em;">
+                                                <i class="fas fa-medal me-1"></i>2nd
+                                            </span>
+                                        }
+                                        else if (rank == 3)
+                                        {
+                                            <span class="badge bg-danger" style="font-size: 1em;">
+                                                <i class="fas fa-medal me-1"></i>3rd
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-dark" style="font-size: 1em;">
+                                                #@rank
+                                            </span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-dark">#@item.CauHoiID</span>
+                                </td>
+                                <td>
+                                    <div class="question-content">
+                                        <div class="fw-semibold">
+                                            @if (!string.IsNullOrEmpty(item.NoiDungCauHoi))
+                                            {
+                                                if (item.NoiDungCauHoi.Length > 120)
+                                                {
+                                                    @item.NoiDungCauHoi.Substring(0, 120)<text>...</text>
+                                                }
+                                                else
+                                                {
+                                                    @item.NoiDungCauHoi
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Không có nội dung</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-danger" style="font-size: 1.1em;">
+                                        <i class="fas fa-times me-1"></i>@item.SoLanSai
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @{
+                                        var wrongPercentage = maxWrong > 0 ? Math.Round((double)item.SoLanSai / maxWrong * 100, 1) : 0;
+                                    }
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar bg-danger"
+                                             role="progressbar"
+                                             style="width: @wrongPercentage%"
+                                             aria-valuenow="@item.SoLanSai"
+                                             aria-valuemin="0"
+                                             aria-valuemax="@maxWrong">
+                                            @wrongPercentage%
+                                        </div>
+                                    </div>
+                                    <div class="small text-muted mt-1">
+                                        @item.SoLanSai/@maxWrong
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    @if (item.SoLanSai >= maxWrong * 0.8)
+                                    {
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-fire me-1"></i>Rất khó
+                                        </span>
+                                    }
+                                    else if (item.SoLanSai >= maxWrong * 0.5)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Khó
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-info-circle me-1"></i>Trung bình
+                                        </span>
+                                    }
+                                </td>
+                            </tr>
+                            rank++;
+                        }
+                    </tbody>
+                    @if (!Model.TopWrongAnswers.Any())
+                    {
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="text-center py-4">
+                                    <div class="empty-state">
+                                        <i class="fas fa-times-circle fa-3x text-gray-300 mb-3"></i>
+                                        <h5 class="text-muted">Không có dữ liệu câu hỏi sai</h5>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- CSS tùy chỉnh -->
+<style>
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e3e6f0;
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #4e73df;
+        border-top: none;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+
+    .progress {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .progress-bar {
+        border-radius: 10px;
+    }
+
+    .question-content {
+        max-width: 500px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .empty-state {
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .rank-badge .badge {
+        min-width: 50px;
+    }
+
+    /* Màu cho card header */
+    .card-header.bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+
+    .card-header.bg-success {
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+    }
+
+    .card-header.bg-danger {
+        background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%) !important;
+    }
+</style>
+
+@functions {
+    // Hàm trả về class badge cho điểm số
+    public IHtmlString GetScoreBadgeClass(double score)
+    {
+        if (score >= 80)
+            return Html.Raw("bg-success text-white");
+        else if (score >= 60)
+            return Html.Raw("bg-warning text-dark");
+        else
+            return Html.Raw("bg-danger text-white");
+    }
+
+    // Hàm trả về class progress bar cho tỷ lệ đúng
+    public IHtmlString GetProgressBarClass(double rate)
+    {
+        if (rate >= 80)
+            return Html.Raw("bg-success");
+        else if (rate >= 60)
+            return Html.Raw("bg-warning");
+        else
+            return Html.Raw("bg-danger");
+    }
+
+    // Hàm trả về class badge cho tỷ lệ tăng trưởng
+    public IHtmlString GetGrowthBadgeClass(double rate)
+    {
+        if (rate > 0)
+            return Html.Raw("bg-success text-white");
+        else if (rate < 0)
+            return Html.Raw("bg-danger text-white");
+        else
+            return Html.Raw("bg-secondary text-white");
+    }
+
+    // Hàm trả về icon cho tỷ lệ tăng trưởng
+    public IHtmlString GetGrowthIcon(double rate)
+    {
+        if (rate > 0)
+            return Html.Raw("fas fa-arrow-up");
+        else if (rate < 0)
+            return Html.Raw("fas fa-arrow-down");
+        else
+            return Html.Raw("fas fa-minus");
+    }
+}

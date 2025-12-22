@@ -1,0 +1,402 @@
+﻿@model WEBB.Models.Admin.RoleDetailDto
+
+@{
+    ViewBag.Title = "Gán quyền";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    // 🔒 HARD-CODE DANH SÁCH QUYỀN
+    var allPermissions = new[]
+    {
+        new { QuyenID = 1, TenQuyen = "ql_nguoi_dung", MoTa = "Quản lý (Khóa/Mở khóa) tài khoản người dùng.", Icon = "👥" },
+        new { QuyenID = 2, TenQuyen = "ql_cau_hoi",   MoTa = "Thêm, sửa, xóa, duyệt câu hỏi.", Icon = "❓" },
+        new { QuyenID = 3, TenQuyen = "ql_baocao",    MoTa = "Truy cập và tạo báo cáo hệ thống.", Icon = "📊" },
+        new { QuyenID = 4, TenQuyen = "ql_vai_tro",   MoTa = "Quản lý vai trò và quyền hạn (Chỉ SuperAdmin).", Icon = "🛡️" }
+    };
+}
+
+<style>
+    .permission-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .permission-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+
+    .permission-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+    }
+
+    .card-header-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+
+    .permission-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 1.25rem;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s ease;
+    }
+
+    .permission-item:last-child {
+        border-bottom: none;
+    }
+
+    .permission-item:hover {
+        background-color: #f8f9ff;
+    }
+
+    .permission-icon {
+        font-size: 1.8rem;
+        margin-right: 15px;
+        flex-shrink: 0;
+    }
+
+    .permission-content {
+        flex-grow: 1;
+    }
+
+    .permission-title {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+    }
+
+    .permission-code {
+        background-color: #e9ecef;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.85rem;
+        margin-right: 10px;
+    }
+
+    .permission-description {
+        color: #718096;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .custom-checkbox {
+        width: 22px;
+        height: 22px;
+        margin-left: 10px;
+        cursor: pointer;
+        accent-color: #4f46e5;
+    }
+
+    .btn-custom-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-custom-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        color: white;
+    }
+
+    .btn-custom-secondary {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-custom-secondary:hover {
+        background-color: #e9ecef;
+        color: #495057;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .role-title {
+        display: flex;
+        align-items: center;
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 1.5rem;
+    }
+
+    .role-badge {
+        background-color: #e0e7ff;
+        color: #4f46e5;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        margin-left: 12px;
+    }
+
+    .stats-box {
+        background-color: #f8f9ff;
+        border-radius: 10px;
+        padding: 15px;
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 25px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #4f46e5;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #718096;
+        margin-top: 5px;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .selected-count {
+        background-color: #4f46e5;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        margin-left: 8px;
+    }
+
+    @@media (max-width: 768px) {
+        .header-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .permission-item {
+            flex-direction: column;
+        }
+
+        .permission-icon {
+            margin-bottom: 10px;
+            margin-right: 0;
+        }
+
+        .permission-title {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .permission-code {
+            margin-bottom: 5px;
+            margin-right: 0;
+        }
+
+        .custom-checkbox {
+            margin-left: 0;
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+    }
+</style>
+
+<div class="permission-container">
+    <div class="header-section">
+        <div>
+            <h1 class="role-title">
+                🔐 Gán Quyền Hệ Thống
+                <span class="role-badge">@Model.TenVaiTro</span>
+            </h1>
+            <p class="text-muted mb-0">Quản lý và phân quyền chi tiết cho vai trò này</p>
+        </div>
+        <div>
+            <a href="/Admin/Roles/Detail/@Model.VaiTroID" class="btn btn-custom-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+        </div>
+    </div>
+
+    <div class="stats-box">
+        <div class="stat-item">
+            <div class="stat-value">@allPermissions.Length</div>
+            <div class="stat-label">Tổng quyền</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="selectedCount">0</div>
+            <div class="stat-label">Đã chọn</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">@Model.VaiTroID</div>
+            <div class="stat-label">ID Vai trò</div>
+        </div>
+    </div>
+
+    <form method="post" action="/Admin/Roles/AssignPermissions" id="permissionForm">
+        <input type="hidden" name="roleId" value="@Model.VaiTroID" />
+
+        <div class="card permission-card">
+            <div class="card-header card-header-custom">
+                <div class="d-flex justify-content-between align-items-center">
+                    <strong class="fs-5">
+                        <i class="fas fa-key me-2"></i>Danh sách quyền hệ thống
+                    </strong>
+                    <span class="badge bg-light text-dark fs-6">
+                        Chọn: <span id="selectedBadge" class="selected-count">0</span>/@allPermissions.Length
+                    </span>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                @foreach (var p in allPermissions)
+                {
+                    var checkedAttr = Model.QuyenHienTai.Any(q => q.QuyenID == p.QuyenID)
+                        ? "checked"
+                        : "";
+                    var isChecked = Model.QuyenHienTai.Any(q => q.QuyenID == p.QuyenID);
+
+                    <div class="permission-item">
+                        <div class="permission-icon">
+                            @p.Icon
+                        </div>
+                        <div class="permission-content">
+                            <div class="permission-title">
+                                <span class="permission-code">@p.TenQuyen</span>
+                                @if (p.QuyenID == 4)
+                                {
+                                    <span class="badge bg-warning text-dark ms-2">SuperAdmin Only</span>
+                                }
+                            </div>
+                            <div class="permission-description">
+                                @p.MoTa
+                            </div>
+                        </div>
+                        <div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input custom-checkbox permission-checkbox"
+                                       type="checkbox"
+                                       name="quyenIds"
+                                       value="@p.QuyenID"
+                                       @checkedAttr
+                                       id="perm_@p.QuyenID"
+                                       role="switch">
+                                <label class="form-check-label" for="perm_@p.QuyenID"></label>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer bg-white border-0 d-flex justify-content-between align-items-center p-4">
+                <div class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Thay đổi sẽ được lưu khi nhấn nút "Lưu quyền"
+                </div>
+                <div>
+                    <button type="button" class="btn btn-custom-secondary me-2" id="selectAllBtn">
+                        <i class="fas fa-check-double me-2"></i>Chọn tất cả
+                    </button>
+                    <button type="submit" class="btn btn-custom-primary">
+                        <i class="fas fa-save me-2"></i>Lưu quyền
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Cập nhật số lượng quyền đã chọn
+            function updateSelectedCount() {
+                let selectedCount = $('.permission-checkbox:checked').length;
+                $('#selectedCount').text(selectedCount);
+                $('#selectedBadge').text(selectedCount);
+            }
+
+            // Khởi tạo số lượng ban đầu
+            updateSelectedCount();
+
+            // Cập nhật khi checkbox thay đổi
+            $('.permission-checkbox').change(function() {
+                updateSelectedCount();
+            });
+
+            // Chọn tất cả
+            $('#selectAllBtn').click(function() {
+                let allChecked = $('.permission-checkbox:checked').length === $('.permission-checkbox').length;
+
+                if (allChecked) {
+                    $('.permission-checkbox').prop('checked', false);
+                } else {
+                    $('.permission-checkbox').prop('checked', true);
+                }
+
+                updateSelectedCount();
+
+                // Thay đổi nút
+                if (allChecked) {
+                    $(this).html('<i class="fas fa-check-double me-2"></i>Chọn tất cả');
+                } else {
+                    $(this).html('<i class="fas fa-times me-2"></i>Bỏ chọn tất cả');
+                }
+            });
+
+            // Xử lý submit form
+            $('#permissionForm').submit(function(e) {
+                let selectedCount = $('.permission-checkbox:checked').length;
+
+                if (selectedCount === 0) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Chưa chọn quyền nào',
+                        text: 'Vui lòng chọn ít nhất một quyền để gán cho vai trò này.',
+                        confirmButtonText: 'Đã hiểu',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                    return false;
+                }
+
+                // Hiển thị loading
+                $('button[type="submit"]').html('<i class="fas fa-spinner fa-spin me-2"></i>Đang lưu...');
+                $('button[type="submit"]').prop('disabled', true);
+
+                return true;
+            });
+        });
+    </script>
+}

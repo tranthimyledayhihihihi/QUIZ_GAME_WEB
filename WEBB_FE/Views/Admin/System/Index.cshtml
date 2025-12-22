@@ -1,0 +1,190 @@
+﻿@model List<WEBB.Models.System.SystemSettingDto>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Cấu hình hệ thống";
+}
+
+<div class="container-fluid">
+
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">⚙️ Cấu hình hệ thống</h1>
+            <p class="text-muted mb-0">Quản lý các thiết lập hệ thống</p>
+        </div>
+    </div>
+
+    <!-- ALERT -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show">
+            @TempData["Success"]
+            <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show">
+            @TempData["Error"]
+            <button class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- ADD NEW -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            ➕ Thêm cấu hình mới
+        </div>
+        <div class="card-body">
+            <form method="post" action="/Admin/System/Create">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Key *</label>
+                        <input name="Key" class="form-control" required pattern="[A-Za-z0-9_]+" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Giá trị *</label>
+                        <input name="Value" class="form-control" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Mô tả</label>
+                        <input name="MoTa" class="form-control" />
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100">
+                            Thêm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LIST -->
+    <div class="card">
+        <div class="card-header">
+            📋 Danh sách cấu hình
+            <span class="badge bg-secondary">@Model.Count</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th width="25%">Key</th>
+                        <th width="30%">Giá trị</th>
+                        <th width="35%">Mô tả</th>
+                        <th width="10%" class="text-center">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in Model)
+                    {
+                        <tr>
+                            <td colspan="4">
+                                <!-- FORM PHẢI NẰM TRONG TD -->
+                                <form method="post"
+                                      action="/Admin/System/Edit"
+                                      class="config-form">
+
+                                    <div class="row align-items-center">
+                                        <div class="col-3">
+                                            <code class="text-primary">@s.Key</code>
+                                            <input type="hidden" name="Key" value="@s.Key" />
+                                        </div>
+
+                                        <div class="col-3">
+                                            <input name="Value"
+                                                   value="@s.Value"
+                                                   class="form-control form-control-sm"
+                                                   data-original-value="@s.Value" />
+                                        </div>
+
+                                        <div class="col-4">
+                                            <input name="MoTa"
+                                                   value="@s.MoTa"
+                                                   class="form-control form-control-sm"
+                                                   data-original-value="@s.MoTa" />
+                                        </div>
+
+                                        <div class="col-2 text-center">
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-primary save-btn"
+                                                    disabled>
+                                                💾 Lưu
+                                            </button>
+
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary reset-btn ms-1"
+                                                    disabled>
+                                                ↩
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-4 text-muted">
+                Chưa có cấu hình nào
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ================= JS ================= -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        document.querySelectorAll('.config-form').forEach(form => {
+
+            const inputs = form.querySelectorAll(
+                'input[name="Value"], input[name="MoTa"]'
+            );
+
+            const saveBtn = form.querySelector('.save-btn');
+            const resetBtn = form.querySelector('.reset-btn');
+
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+
+                    let changed = false;
+
+                    inputs.forEach(i => {
+                        if (i.value !== (i.dataset.originalValue || '')) {
+                            changed = true;
+                        }
+                    });
+
+                    saveBtn.disabled = !changed;
+                    resetBtn.disabled = !changed;
+
+                    saveBtn.classList.toggle('btn-primary', changed);
+                    saveBtn.classList.toggle('btn-outline-primary', !changed);
+                });
+            });
+
+            resetBtn.addEventListener('click', () => {
+                inputs.forEach(i => {
+                    i.value = i.dataset.originalValue || '';
+                });
+                saveBtn.disabled = true;
+                resetBtn.disabled = true;
+                saveBtn.classList.remove('btn-primary');
+                saveBtn.classList.add('btn-outline-primary');
+            });
+
+            form.addEventListener('submit', () => {
+                saveBtn.innerHTML = '⏳ Đang lưu...';
+                saveBtn.disabled = true;
+            });
+        });
+    });
+</script>

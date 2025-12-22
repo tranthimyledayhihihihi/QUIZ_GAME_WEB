@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -39,7 +40,8 @@ namespace WEBB.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var model = new DailyRewardViewModel();
+            // ✅ DTO ĐÚNG
+            var model = new DailyRewardPageViewModel();
 
             using (var client = new HttpClient())
             {
@@ -47,25 +49,43 @@ namespace WEBB.Controllers
                 client.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", token);
 
+                // =============================
+                // 1️⃣ STREAK
                 // GET api/user/achievement/streak
-                var res = await client.GetAsync("api/user/achievement/streak");
-                if (res.IsSuccessStatusCode)
+                // =============================
+                var streakRes = await client.GetAsync("api/user/achievement/streak");
+                if (streakRes.IsSuccessStatusCode)
                 {
-                    var json = await res.Content.ReadAsStringAsync();
+                    var json = await streakRes.Content.ReadAsStringAsync();
                     dynamic data = JsonConvert.DeserializeObject(json);
 
                     model.SoNgayLienTiep = (int)(data.soNgayLienTiep ?? 0);
-                    model.NgayCapNhatCuoi = data.ngayCapNhatCuoi;
                     model.Message = "Chuỗi ngày hiện tại của bạn.";
                 }
                 else
                 {
                     model.Message = "Không lấy được dữ liệu chuỗi ngày.";
                 }
+
+                // =============================
+                // 2️⃣ DANH SÁCH QUÀ
+                // GET api/user/achievement/my-rewards
+                // =============================
+                var rewardsRes = await client.GetAsync("api/user/achievement/my-rewards");
+                if (rewardsRes.IsSuccessStatusCode)
+                {
+                    var rewardsJson = await rewardsRes.Content.ReadAsStringAsync();
+                    var rewards = JsonConvert.DeserializeObject<List<RewardItemViewModel>>(rewardsJson);
+
+                    if (rewards != null)
+                        model.Rewards = rewards;
+                }
             }
 
-            return View(model);
+            // ✅ VIEW CỦA BẠN
+            return View("~/Views/Menu/Gifts.cshtml", model);
         }
+
 
         // POST: /Menu/ClaimDailyReward
         [HttpPost]
@@ -98,43 +118,60 @@ namespace WEBB.Controllers
         }
 
         // ================== XẾP HẠNG ==================
-        public async Task<ActionResult> Leaderboard(string type = "monthly", int page = 1, int pageSize = 10)
+        public async Task<ActionResult> Leaderboard(
+    string type = "monthly",
+    int page = 1,
+    int pageSize = 10)
         {
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri(_apiBase);
 
+                var token = Session["JWT_TOKEN"]?.ToString();
+                if (!string.IsNullOrEmpty(token))
+                {
+                    client.DefaultRequestHeaders.Authorization =
+                        new AuthenticationHeaderValue("Bearer", token);
+                }
+
                 var url = $"api/Ranking/leaderboard?type={type}&pageNumber={page}&pageSize={pageSize}";
                 var res = await client.GetAsync(url);
 
+                // ===== FAIL SAFE =====
                 if (!res.IsSuccessStatusCode)
                 {
-                    var emptyModel = new LeaderboardViewModel
+                    ViewBag.Error = "Không lấy được dữ liệu xếp hạng.";
+
+                    return View(new LeaderboardViewModel
                     {
                         Type = type,
                         CurrentPage = 1,
                         TotalPages = 1,
-                        TotalUsers = 0
-                    };
-                    ViewBag.Error = "Không lấy được dữ liệu xếp hạng.";
-                    return View(emptyModel);
+                        TotalUsers = 0,
+                        Items = new List<LeaderboardItemDto>()
+                    });
                 }
 
+                // ===== PARSE DATA =====
                 var json = await res.Content.ReadAsStringAsync();
                 var apiData = JsonConvert.DeserializeObject<LeaderboardApiResponse>(json);
 
+                // ===== MAP VIEWMODEL (FIX CHUẨN) =====
                 var model = new LeaderboardViewModel
                 {
                     Type = apiData.Type,
                     CurrentPage = apiData.TrangHienTai,
                     TotalPages = apiData.TongSoTrang,
                     TotalUsers = apiData.TongSoNguoi,
-                    Items = new System.Collections.Generic.List<LeaderboardItemDto>(apiData.DanhSach)
+                    Items = apiData.DanhSach != null
+                        ? apiData.DanhSach.ToList()
+                        : new List<LeaderboardItemDto>()
                 };
 
                 return View(model);
             }
         }
+
 
         private class LeaderboardApiResponse
         {

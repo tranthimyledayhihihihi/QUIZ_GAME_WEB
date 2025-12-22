@@ -1,191 +1,536 @@
-﻿@{
-    ViewBag.Title = "Chơi Quiz";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+﻿@model List<WEBB.Models.Admin.ThanhTuuDto>
+
+@{
+    ViewBag.Title = "Quản lý Thành Tựu";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<!-- CONTAINER CHÍNH CỦA GAME -->
-<div class="container mt-5" id="game-container">
-
-    <!-- 1. MÀN HÌNH BẮT ĐẦU -->
-    <div id="start-screen" class="text-center py-5">
-        <div class="mb-4">
-            <i class="fas fa-gamepad fa-5x text-warning mb-3"></i>
-            <h1 class="display-3 fw-black text-uppercase text-primary" style="font-family: 'Orbitron', sans-serif;">
-                Đấu Trường Tri Thứcb
-            </h1>
-        </div>
-        <p class="lead mb-5 fs-4">Bạn đã sẵn sàng chinh phục đỉnh cao chưa?</p>
-
-        <button onclick="startGame()" class="btn btn-danger btn-lg px-5 py-4 rounded-pill shadow-lg hover-scale fw-bold fs-3">
-            <i class="fas fa-rocket me-2"></i> CHIẾN THÔI!
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">
+            <i class="fas fa-trophy me-2"></i>Quản lý Thành Tựu
+        </h1>
+        <button class="btn btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#createAchievementModal">
+            <i class="fas fa-plus me-2"></i>Thêm Thành Tựu
         </button>
     </div>
 
-    <!-- 2. MÀN HÌNH CHƠI -->
-    <div id="play-screen" style="display:none;">
-        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
-            <!-- Header câu hỏi -->
-            <div class="card-header bg-gradient bg-dark text-white text-center py-4">
-                <span class="badge bg-warning text-dark mb-2">CÂU HỎI</span>
-                <h3 class="m-0 fw-bold" id="question-text">Đang tải dữ liệu...</h3>
-            </div>
+    <!-- Thông báo -->
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
 
-            <!-- Khu vực đáp án -->
-            <div class="card-body p-5 bg-light">
-                <div class="row g-4" id="answers-area">
-                    <!-- Các nút đáp án -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Thống kê -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Tổng số thành tựu
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">@Model.Count</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-medal fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Footer thông tin -->
-            <div class="card-footer bg-dark text-white text-center py-3">
-                <small class="text-white-50">Mã trận đấu: <span id="attempt-id" class="fw-bold text-warning">...</span></small>
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Tổng điểm thưởng
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Sum(a => a.DiemThuong)
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Loại điều kiện
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.Select(a => a.LoaiDieuKien).Distinct().Count()
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-tags fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Điểm trung bình
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @(Model.Any() ? Model.Average(a => a.DiemThuong).ToString("N0") : "0")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Bảng thành tựu -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách Thành Tựu</h6>
+            <div class="d-flex align-items-center">
+                <div class="input-group input-group-sm" style="width: 300px;">
+                    <input type="text" class="form-control" placeholder="Tìm kiếm thành tựu..." id="searchInput">
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover" id="achievementsTable" width="100%" cellspacing="0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="text-center" style="width: 80px;">ID</th>
+                            <th>Thành Tựu</th>
+                            <th class="text-center" style="width: 100px;">Điểm</th>
+                            <th class="text-center" style="width: 150px;">Loại Điều Kiện</th>
+                            <th class="text-center" style="width: 120px;">Giá Trị Cần</th>
+                            <th class="text-center" style="width: 150px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var achievement in Model)
+                        {
+                            <tr>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary">#@achievement.DefinitionID</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @if (!string.IsNullOrEmpty(achievement.BieuTuong))
+                                        {
+                                            <div class="achievement-icon me-3">
+                                                <i class="@achievement.BieuTuong fa-2x text-warning"></i>
+                                            </div>
+                                        }
+                                        <div>
+                                            <div class="fw-bold text-primary">@achievement.TenThanhTuu</div>
+                                            @if (!string.IsNullOrEmpty(achievement.MoTa))
+                                            {
+                                                <small class="text-muted">@achievement.MoTa</small>
+                                            }
+                                            <div>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-code me-1"></i>@achievement.AchievementCode
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @GetPointsBadgeClass(achievement.DiemThuong)">
+                                        <i class="fas fa-star me-1"></i>@achievement.DiemThuong
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info text-white">
+                                        <i class="fas fa-tag me-1"></i>@achievement.LoaiDieuKien
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success text-white">
+                                        <i class="fas fa-bullseye me-1"></i>@achievement.GiaTriCanThiet
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group">
+                                        <button class="btn btn-outline-warning btn-sm me-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editAchievementModal"
+                                                onclick="fillEditModal(@Html.Raw(Json.Encode(achievement)))"
+                                                title="Sửa">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-sm"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#deleteAchievementModal"
+                                                onclick="setDeleteId(@achievement.DefinitionID)"
+                                                title="Xóa">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
-<!-- PHẦN JAVASCRIPT XỬ LÝ GAME -->
-@section Scripts {
-    <script>
-        // Biến toàn cục để lưu trạng thái
-        let currentAttemptId = 0;
-        let currentQuestionId = 0;
+<!-- Modal Thêm Thành Tựu -->
+<div class="modal fade" id="createAchievementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-plus-circle me-2"></i>Thêm Thành Tựu Mới
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="@Url.Action("CreateAchievement", "Achievements")" method="post">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Tên Thành Tựu <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="TenThanhTuu"
+                                   placeholder="Nhập tên thành tựu..." required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Mã Thành Tựu <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="AchievementCode"
+                                   placeholder="Ví dụ: FIRST_LOGIN, QUIZ_MASTER..." required>
+                        </div>
+                    </div>
 
-        // --- HÀM 1: BẮT ĐẦU GAME ---
-        function startGame() {
-            // Cấu hình game
-            const options = {
-                ChuDeID: 1,
-                DoKhoID: 1,
-                SoLuongCauHoi: 10
-            };
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô Tả</label>
+                        <textarea class="form-control" name="MoTa" rows="2"
+                                  placeholder="Mô tả ngắn gọn về thành tựu..."></textarea>
+                    </div>
 
-            // Chuyển màn hình
-            $('#start-screen').fadeOut(300, function () {
-                $('#play-screen').fadeIn(300);
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Điểm Thưởng <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="DiemThuong"
+                                       placeholder="100" required min="1" max="1000">
+                                <span class="input-group-text">điểm</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Loại Điều Kiện <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="LoaiDieuKien"
+                                   placeholder="Ví dụ: Login, Quiz, Streak..." required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giá Trị Cần <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="GiaTriCanThiet"
+                                   placeholder="Ví dụ: 10" required min="1">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Biểu Tượng (Font Awesome)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">fas fa-</span>
+                            <input type="text" class="form-control" name="BieuTuong"
+                                   placeholder="Ví dụ: trophy, star, medal, crown...">
+                        </div>
+                        <div class="form-text">
+                            Icon Font Awesome (không cần thêm "fas fa-", chỉ cần tên icon)
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Lưu Thành Tựu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Sửa Thành Tựu -->
+<div class="modal fade" id="editAchievementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Sửa Thành Tựu
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="@Url.Action("UpdateAchievement", "Achievements")" method="post">
+                <input type="hidden" name="DefinitionID" id="editDefinitionID" />
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Tên Thành Tựu <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="TenThanhTuu" id="editTenThanhTuu" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-bold">Mã Thành Tựu <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="AchievementCode" id="editAchievementCode" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Mô Tả</label>
+                        <textarea class="form-control" name="MoTa" id="editMoTa" rows="2"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Điểm Thưởng <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" name="DiemThuong" id="editDiemThuong"
+                                       required min="1" max="1000">
+                                <span class="input-group-text">điểm</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Loại Điều Kiện <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="LoaiDieuKien" id="editLoaiDieuKien" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-bold">Giá Trị Cần <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" name="GiaTriCanThiet" id="editGiaTriCanThiet"
+                                   required min="1">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Biểu Tượng (Font Awesome)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">fas fa-</span>
+                            <input type="text" class="form-control" name="BieuTuong" id="editBieuTuong">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-sync-alt me-1"></i>Cập nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Xóa Thành Tựu -->
+<div class="modal fade" id="deleteAchievementModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Xác nhận xóa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="@Url.Action("DeleteAchievement", "Achievements")" method="post">
+                <input type="hidden" name="thanhTuuId" id="deleteId" />
+                <div class="modal-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-trophy fa-4x text-danger mb-3"></i>
+                        <h5 class="fw-bold">Xóa Thành Tựu</h5>
+                        <p class="text-muted">Thành tựu này sẽ bị xóa vĩnh viễn và không thể khôi phục.</p>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy bỏ
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash-alt me-1"></i>Xác nhận xóa
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Thêm Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- CSS tùy chỉnh -->
+<style>
+    .card {
+        border-radius: 10px;
+        border: 1px solid #e3e6f0;
+    }
+
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+
+    .table th {
+        font-weight: 600;
+        color: #4e73df;
+        border-top: none;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.85em;
+        padding: 0.5em 0.75em;
+        font-weight: 500;
+        border-radius: 6px;
+    }
+
+    .achievement-icon {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    }
+
+    .btn-group .btn {
+        border-radius: 6px !important;
+        transition: all 0.2s;
+    }
+
+        .btn-group .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+    .modal-header {
+        border-radius: 10px 10px 0 0;
+    }
+
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: #4e73df;
+        box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(78, 115, 223, 0.05);
+    }
+
+    .input-group-text {
+        background-color: #f8f9fc;
+        border-color: #e3e6f0;
+    }
+</style>
+
+<script>
+    function fillEditModal(achievement) {
+        document.getElementById("editDefinitionID").value = achievement.DefinitionID;
+        document.getElementById("editTenThanhTuu").value = achievement.TenThanhTuu;
+        document.getElementById("editMoTa").value = achievement.MoTa || '';
+        document.getElementById("editDiemThuong").value = achievement.DiemThuong;
+        document.getElementById("editLoaiDieuKien").value = achievement.LoaiDieuKien;
+        document.getElementById("editGiaTriCanThiet").value = achievement.GiaTriCanThiet;
+        document.getElementById("editAchievementCode").value = achievement.AchievementCode;
+
+        // Xử lý biểu tượng (loại bỏ "fas fa-" nếu có)
+        let icon = achievement.BieuTuong || '';
+        if (icon.startsWith('fas fa-')) {
+            icon = icon.replace('fas fa-', '');
+        }
+        document.getElementById("editBieuTuong").value = icon;
+    }
+
+    function setDeleteId(id) {
+        document.getElementById("deleteId").value = id;
+    }
+
+    // Tìm kiếm trong bảng
+    document.getElementById('searchInput')?.addEventListener('keyup', function () {
+        const filter = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#achievementsTable tbody tr');
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    });
+
+    // Hiệu ứng hover cho bảng
+    document.addEventListener('DOMContentLoaded', function () {
+        const tableRows = document.querySelectorAll('#achievementsTable tbody tr');
+        tableRows.forEach(row => {
+            row.addEventListener('mouseenter', function () {
+                this.classList.add('table-active');
             });
-            $('#question-text').text("Đang khởi tạo bài thi...");
-
-            // Gọi API
-            $.ajax({
-                url: '/Play/StartGame',
-                type: 'POST',
-                data: options, // Gửi data thường (Form Data) để Controller dễ nhận
-                success: function (response) {
-                    console.log("Start Response:", response);
-
-                    if (response.attemptID) {
-                        currentAttemptId = response.attemptID;
-                        $('#attempt-id').text(currentAttemptId);
-                        renderQuestion(response.question);
-                    } else {
-                        alert("Lỗi: Server không trả về ID lượt chơi.");
-                        resetGame();
-                    }
-                },
-                error: function (xhr) {
-                    console.error("Lỗi StartGame:", xhr);
-                    alert("Không thể bắt đầu game.");
-                    resetGame();
-                }
+            row.addEventListener('mouseleave', function () {
+                this.classList.remove('table-active');
             });
-        }
+        });
+    });
+</script>
 
-        // --- HÀM 2: HIỂN THỊ CÂU HỎI (RENDER) ---
-        function renderQuestion(question) {
-            if (!question) return;
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-            // Xử lý hoa thường
-            const qId = question.cauHoiID || question.CauHoiID;
-            const content = question.noiDung || question.NoiDung;
-            const ansA = question.dapAnA || question.DapAnA;
-            const ansB = question.dapAnB || question.DapAnB;
-            const ansC = question.dapAnC || question.DapAnC;
-            const ansD = question.dapAnD || question.DapAnD;
-
-            currentQuestionId = qId;
-            $('#question-text').text(content);
-
-            // Tạo nút bấm
-            const answersHtml = `
-                    <div class="col-md-6"><button onclick="submitAnswer('A')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">A. ${ansA}</button></div>
-                    <div class="col-md-6"><button onclick="submitAnswer('B')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">B. ${ansB}</button></div>
-                    <div class="col-md-6"><button onclick="submitAnswer('C')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">C. ${ansC}</button></div>
-                    <div class="col-md-6"><button onclick="submitAnswer('D')" class="btn btn-outline-primary w-100 p-4 fw-bold text-start h-100 shadow-sm">D. ${ansD}</button></div>
-                `;
-            $('#answers-area').html(answersHtml);
-        }
-
-        // --- HÀM 3: NỘP ĐÁP ÁN ---
-        function submitAnswer(answer) {
-            const data = {
-                QuizAttemptID: currentAttemptId,
-                CauHoiID: currentQuestionId,
-                DapAnDaChon: answer
-            };
-
-            // Khóa nút
-            $('#answers-area button').prop('disabled', true);
-
-            $.ajax({
-                url: '/Play/SubmitAnswer',
-                type: 'POST',
-                data: data,
-                success: function (response) {
-                    console.log("Submit Response:", response);
-
-                    if (response.isCorrect) {
-                        // Có thể thêm hiệu ứng màu xanh ở đây
-                        // alert("🎉 CHÍNH XÁC!");
-                    } else {
-                        // Có thể thêm hiệu ứng màu đỏ ở đây
-                        // alert("😢 SAI RỒI!");
-                    }
-
-                    // Tự động chuyển câu sau 1 chút (hoặc ngay lập tức)
-                    // setTimeout(loadNextQuestion, 1000); // Đợi 1 giây rồi chuyển
-                    loadNextQuestion();
-                },
-                error: function (xhr) {
-                    console.error("Lỗi Submit:", xhr);
-                    alert("Lỗi kết nối khi nộp bài.");
-                    $('#answers-area button').prop('disabled', false);
-                }
-            });
-        }
-
-        // --- HÀM 4: TẢI CÂU TIẾP THEO ---
-        function loadNextQuestion() {
-            $('#question-text').text("Đang tải câu tiếp theo...");
-            $('#answers-area').empty(); // Xóa đáp án cũ
-
-            $.ajax({
-                url: '/Play/NextQuestion',
-                type: 'POST',
-                data: { attemptId: currentAttemptId },
-                success: function (response) {
-                    console.log("Next Question:", response);
-
-                    if (response.isFinished) {
-                        alert("🏁 CHÚC MỪNG! BẠN ĐÃ HOÀN THÀNH BÀI THI.");
-                        location.reload();
-                    } else {
-                        renderQuestion(response);
-                    }
-                },
-                error: function (xhr) {
-                    console.error("Lỗi NextQuestion:", xhr);
-                    alert("Không thể tải câu hỏi tiếp theo.");
-                }
-            });
-        }
-
-        // Hàm phụ trợ: Reset game về màn hình đầu
-        function resetGame() {
-            $('#play-screen').hide();
-            $('#start-screen').show();
-        }
-    </script>
+@functions {
+    // Hàm trả về class badge cho điểm thưởng
+    public IHtmlString GetPointsBadgeClass(int diemThuong)
+    {
+        if (diemThuong <= 50)
+            return Html.Raw("bg-success text-white");
+        else if (diemThuong <= 100)
+            return Html.Raw("bg-warning text-dark");
+        else if (diemThuong <= 200)
+            return Html.Raw("bg-danger text-white");
+        else
+            return Html.Raw("bg-primary text-white");
+    }
 }

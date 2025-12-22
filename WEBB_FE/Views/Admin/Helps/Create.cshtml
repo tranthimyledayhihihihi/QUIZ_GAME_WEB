@@ -1,0 +1,49 @@
+﻿@model WEBB.Models.Admin.TroGiupDto
+
+@{
+    ViewBag.Title = "Thêm Trợ giúp";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h2 class="mb-3">➕ Thêm Trợ giúp</h2>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+<form method="post" action="/Admin/Help/Create">
+    <div class="card">
+        <div class="card-body">
+
+            <div class="mb-3">
+                <label class="form-label">Tên trợ giúp</label>
+                <input type="text"
+                       name="TenTroGiup"
+                       class="form-control"
+                       required
+                       maxlength="50"
+                       placeholder="Nhập tên trợ giúp..." />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mô tả</label>
+                <textarea name="MoTa"
+                          class="form-control"
+                          rows="3"
+                          maxlength="255"
+                          placeholder="Mô tả chi tiết..."></textarea>
+            </div>
+
+        </div>
+
+        <div class="card-footer text-end">
+            <a href="/Admin/Help" class="btn btn-secondary">
+                ⬅ Quay lại
+            </a>
+            <button type="submit" class="btn btn-primary">
+                💾 Lưu
+            </button>
+        </div>
+    </div>
+</form>

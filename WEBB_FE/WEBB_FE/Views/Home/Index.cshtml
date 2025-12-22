@@ -1,0 +1,72 @@
+﻿@{
+    ViewBag.Title = "Smash Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Sidebar Trái -->
+<div class="left-sidebar">
+    <a href="@Url.Action("Gifts", "Menu")" class="feature-card card-gift">
+        <span>Thưởng Ngày</span>
+        <i class="fa-solid fa-gift"></i>
+    </a>
+
+    <a href="@Url.Action("Leaderboard", "Menu")" class="feature-card card-rank">
+        <span>Xếp Hạng</span>
+        <i class="fa-solid fa-trophy"></i>
+    </a>
+
+    <a href="@Url.Action("Statistics", "Menu")" class="feature-card card-stats">
+        <span>Thống Kê</span>
+        <i class="fa-solid fa-chart-simple"></i>
+    </a>
+
+    <a href="@Url.Action("DailyStreak", "Menu")" class="feature-card card-streak">
+        <span>Chuỗi Ngày</span>
+        <i class="fa-solid fa-fire"></i>
+    </a>
+
+    <a href="@Url.Action("DoiKhang", "Menu")" class="feature-card card-pvp">
+        <span>Đối Kháng</span>
+        <i class="fa-solid fa-swords"></i>
+    </a>
+
+    <a href="@Url.Action("DauTruong", "Menu")" class="feature-card card-arena">
+        <span>Đấu Trường</span>
+        <i class="fa-solid fa-skull"></i>
+    </a>
+</div>
+
+<!-- Màn hình chính -->
+<div class="game-container">
+    <img src="https://cdn-icons-png.flaticon.com/512/3253/3253220.png"
+         alt="Kart"
+         class="center-illustration" />
+
+    <div class="buttons-wrapper">
+
+        <!-- Nút PLAY - KHÔNG CÒN LỒNG BUTTON TRONG A -->
+        <a href="@Url.Action("Index", "Play")"
+           class="btn-play-big d-inline-block text-decoration-none text-center">
+            <i class="fa-solid fa-play me-3"></i> PLAY
+        </a>
+
+        <!-- Nút Create / Join -->
+        <div class="sub-buttons">
+            <a href="@Url.Action("Create", "Arena")"
+               class="btn-action-3d text-decoration-none d-inline-block text-center">
+                Create
+            </a>
+
+            <a href="@Url.Action("Join", "Arena")"
+               class="btn-action-3d text-decoration-none d-inline-block text-center">
+                Join
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        /* CSS riêng nếu cần */
+    </style>
+}

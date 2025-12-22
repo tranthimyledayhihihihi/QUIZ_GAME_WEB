@@ -1,7 +1,36 @@
-﻿
+﻿@model WEBB.Models.Quiz.DoKhoDto
+
 @{
-    ViewBag.Title = "Edit";
+    ViewBag.Title = "Sửa Độ Khó";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Edit</h2>
+<h2>Sửa Độ Khó</h2>
 
+<form action="@Url.Action("Edit", "Difficulties")" method="post">
+    <input type="hidden" name="DoKhoID" value="@Model.DoKhoID" />
+
+    <div class="form-group">
+        <label>Tên Độ Khó</label>
+        <input class="form-control"
+               name="TenDoKho"
+               value="@Model.TenDoKho"
+               required />
+    </div>
+
+    <div class="form-group">
+        <label>Điểm Thưởng</label>
+        <input class="form-control"
+               name="DiemThuong"
+               type="number"
+               value="@Model.DiemThuong"
+               required />
+    </div>
+
+    <br />
+    <button class="btn btn-warning">Cập nhật</button>
+    <a href="@Url.Action("Index", "Difficulties")"
+       class="btn btn-secondary">
+        Quay lại
+    </a>
+</form>

@@ -1,0 +1,377 @@
+﻿@model WEBB.Models.Admin.RoleDetailDto
+
+@{
+    ViewBag.Title = "Chi tiết Vai trò";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/Admin/Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/Admin/Roles">Vai trò</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Chi tiết</li>
+                </ol>
+            </nav>
+            <div class="d-flex align-items-center">
+                <div class="role-icon me-3">
+                    <i class="fas fa-user-shield fa-2x text-primary"></i>
+                </div>
+                <div>
+                    <h1 class="h3 mb-1">@Model.TenVaiTro</h1>
+                    <p class="text-muted mb-0">Quản lý thông tin và quyền hạn của vai trò</p>
+                </div>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/Admin/Roles" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </a>
+            <a href="/Admin/Roles/AssignPermissions/@Model.VaiTroID" class="btn btn-warning">
+                <i class="fas fa-key me-2"></i>Gán quyền
+            </a>
+        </div>
+    </div>
+
+    <!-- Role Info Card -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-info-circle text-primary me-2"></i>
+                        Thông tin vai trò
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small mb-1">ID Vai trò</label>
+                            <div class="d-flex align-items-center">
+                                <div class="badge bg-light text-dark border px-3 py-2 rounded">
+                                    <code class="fs-6">@Model.VaiTroID</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted small mb-1">Tên vai trò</label>
+                            <div class="fs-5 fw-semibold text-dark">@Model.TenVaiTro</div>
+                        </div>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="d-flex gap-3">
+                                <div class="stat-card p-3 rounded-3 bg-light w-100">
+                                    <div class="text-center">
+                                        <div class="fs-4 fw-bold text-primary">
+                                            @Model.QuyenHienTai.Count
+                                        </div>
+                                        <div class="text-muted small">Tổng quyền</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card p-3 rounded-3 bg-light w-100">
+                                    <div class="text-center">
+                                        <div class="fs-4 fw-bold text-success">
+                                            @DateTime.Now.ToString("dd/MM/yyyy")
+                                        </div>
+                                        <div class="text-muted small">Cập nhật</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white border-bottom">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shield-alt text-warning me-2"></i>
+                        Quyền hệ thống
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.QuyenHienTai.Any())
+                    {
+                        <div class="permissions-summary">
+                            <p class="mb-3">Vai trò này có <span class="badge bg-primary">@Model.QuyenHienTai.Count quyền</span> được gán:</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var perm in Model.QuyenHienTai.Take(5))
+                                {
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                                        <i class="fas fa-check-circle me-1"></i>@perm.TenQuyen
+                                    </span>
+                                }
+                                @if (Model.QuyenHienTai.Count > 5)
+                                {
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-3 py-2">
+                                        +@(Model.QuyenHienTai.Count - 5) quyền khác
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <div class="empty-state">
+                                <i class="fas fa-lock-open fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">Chưa có quyền nào</h5>
+                                <p class="text-muted mb-0">Vai trò này chưa được gán quyền hệ thống</p>
+                                <a href="/Admin/Roles/AssignPermissions/@Model.VaiTroID" class="btn btn-sm btn-warning mt-3">
+                                    <i class="fas fa-key me-1"></i>Gán quyền ngay
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Table Card -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-list-check text-success me-2"></i>
+                Danh sách quyền chi tiết
+            </h5>
+            <div class="d-flex align-items-center gap-2">
+                <div class="input-group input-group-sm" style="width: 250px;">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="searchPermissions" class="form-control" placeholder="Tìm kiếm quyền...">
+                </div>
+                <span class="badge bg-primary">@Model.QuyenHienTai.Count quyền</span>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="permissionsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="15%">
+                                <i class="fas fa-hashtag me-1"></i>ID
+                            </th>
+                            <th width="25%">
+                                <i class="fas fa-tag me-1"></i>Tên quyền
+                            </th>
+                            <th width="50%">
+                                <i class="fas fa-align-left me-1"></i>Mô tả
+                            </th>
+                            <th width="10%" class="text-center">
+                                <i class="fas fa-circle-info me-1"></i>Trạng thái
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var q in Model.QuyenHienTai)
+                        {
+                            <tr class="align-middle">
+                                <td>
+                                    <div class="badge bg-light text-dark border px-3 py-2 rounded">
+                                        <code>@q.QuyenID</code>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="permission-icon me-2">
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold">@q.TenQuyen</div>
+                                            <div class="text-muted small">Đã được gán</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="permission-description">
+                                        @if (!string.IsNullOrEmpty(q.MoTa))
+                                        {
+                                            @q.MoTa
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted fst-italic">Không có mô tả</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2">
+                                        <i class="fas fa-check me-1"></i>Active
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.QuyenHienTai.Any())
+            {
+                <div class="text-center py-5">
+                    <div class="empty-state">
+                        <i class="fas fa-lock-open fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">Không có quyền nào</h5>
+                        <p class="text-muted">Vai trò này chưa được gán bất kỳ quyền hệ thống nào</p>
+                        <a href="/Admin/Roles/AssignPermissions/@Model.VaiTroID" class="btn btn-warning">
+                            <i class="fas fa-key me-2"></i>Gán quyền ngay
+                        </a>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="card-footer bg-white border-top">
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Hiển thị @Model.QuyenHienTai.Count quyền trong vai trò
+                    </small>
+                </div>
+                <div class="col-md-6 text-end">
+                    <a href="/Admin/Roles/AssignPermissions/@Model.VaiTroID" class="btn btn-sm btn-outline-warning">
+                        <i class="fas fa-edit me-1"></i>Chỉnh sửa quyền
+                    </a>
+                    <a href="/Admin/Roles" class="btn btn-sm btn-outline-secondary ms-2">
+                        <i class="fas fa-list me-1"></i>Xem tất cả vai trò
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CSS Styles -->
+<style>
+    .role-icon {
+        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        width: 70px;
+        height: 70px;
+        border-radius: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .stat-card {
+        transition: transform 0.2s;
+        border: 1px solid rgba(0,0,0,0.05);
+    }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+    .permission-icon {
+        width: 36px;
+        height: 36px;
+        background-color: rgba(25, 135, 84, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(13, 110, 253, 0.02);
+        transform: translateX(2px);
+        transition: all 0.2s;
+    }
+
+    .empty-state {
+        opacity: 0.7;
+    }
+
+    .card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid rgba(0,0,0,.08);
+    }
+
+    .breadcrumb {
+        background-color: transparent;
+        padding: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .breadcrumb-item a {
+        color: #6c757d;
+        text-decoration: none;
+    }
+
+        .breadcrumb-item a:hover {
+            color: #0d6efd;
+        }
+
+    .permission-description {
+        line-height: 1.5;
+        max-height: 3em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    .badge code {
+        font-size: 0.875em;
+        font-weight: 600;
+    }
+</style>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
+    const searchInput = document.getElementById('searchPermissions');
+    const permissionsTable = document.getElementById('permissionsTable');
+
+    if (searchInput && permissionsTable) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const rows = permissionsTable.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+
+    // Add animation to table rows
+    const tableRows = document.querySelectorAll('#permissionsTable tbody tr');
+    tableRows.forEach((row, index) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(20px)';
+
+        setTimeout(() => {
+            row.style.transition = 'opacity 0.3s, transform 0.3s';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, index * 50);
+    });
+
+    // Update stats date
+    const updateDateElement = document.querySelector('.text-success.fs-4.fw-bold');
+    if (updateDateElement) {
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('vi-VN');
+        updateDateElement.textContent = formattedDate;
+    }
+});
+</script>

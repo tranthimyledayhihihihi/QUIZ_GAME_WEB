@@ -1,7 +1,716 @@
-﻿
-@{
-    ViewBag.Title = "_AdminLayout";
-}
+﻿<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - Shop Admin</title>
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #7C3AED;
+            --primary-light: #EDE9FE;
+            --primary-dark: #6D28D9;
+            --secondary: #64748B;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --info: #3B82F6;
+            --dark: #1E293B;
+            --light: #F8FAFC;
+            --sidebar-width: 280px;
+            --header-height: 80px;
+            --border-radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
 
-<h2>_AdminLayout</h2>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #F8FAFC;
+            color: #334155;
+            line-height: 1.7;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar - Modern Design */
+        .admin-sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid rgba(124, 58, 237, 0.1);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+            transition: var(--transition);
+            box-shadow: 5px 0 25px rgba(0, 0, 0, 0.06);
+            overflow-y: auto;
+        }
+
+            .admin-sidebar::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .admin-sidebar::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+
+            .admin-sidebar::-webkit-scrollbar-thumb {
+                background: var(--primary);
+                border-radius: 3px;
+            }
+
+        .sidebar-header {
+            padding: 32px 24px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .logo-text {
+            font-weight: 700;
+            font-size: 20px;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .sidebar-menu {
+            padding: 24px 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            color: #64748B;
+            text-decoration: none;
+            transition: var(--transition);
+            margin: 0 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            position: relative;
+        }
+
+            .nav-item::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 3px;
+                height: 0;
+                background: var(--primary);
+                border-radius: 0 2px 2px 0;
+                transition: var(--transition);
+            }
+
+            .nav-item i {
+                width: 20px;
+                font-size: 16px;
+                margin-right: 12px;
+                transition: var(--transition);
+            }
+
+            .nav-item:hover {
+                background: var(--primary-light);
+                color: var(--primary);
+            }
+
+                .nav-item:hover::before {
+                    height: 60%;
+                }
+
+            .nav-item.active {
+                background: var(--primary);
+                color: white;
+            }
+
+                .nav-item.active::before {
+                    height: 60%;
+                    background: white;
+                }
+
+                .nav-item.active i {
+                    color: white;
+                }
+
+        .menu-divider {
+            height: 1px;
+            background: rgba(124, 58, 237, 0.1);
+            margin: 16px 20px;
+        }
+
+        .menu-section-title {
+            padding: 8px 24px;
+            margin: 12px 0 8px 0;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #94A3B8;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid rgba(124, 58, 237, 0.1);
+        }
+
+        .footer-text {
+            color: #64748B;
+            font-size: 12px;
+            text-align: center;
+        }
+
+            .footer-text i {
+                color: #EF4444;
+                margin-right: 4px;
+            }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            background: #F8FAFC;
+            min-height: 100vh;
+            transition: var(--transition);
+        }
+
+        .admin-header {
+            height: var(--header-height);
+            background: white;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--primary);
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+            .mobile-menu-btn:hover {
+                background: var(--primary-light);
+            }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--dark);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-container {
+            position: relative;
+            max-width: 300px;
+        }
+
+        .search-box {
+            padding: 12px 16px 12px 40px;
+            border: 2px solid #E2E8F0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+            .search-box:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 14px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: var(--transition);
+            cursor: pointer;
+            background: white;
+            border: 1px solid #E2E8F0;
+        }
+
+            .user-profile:hover {
+                border-color: var(--primary);
+            }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dark);
+        }
+
+        .user-role {
+            font-size: 12px;
+            color: var(--secondary);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 32px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Modern Cards */
+        .card-modern {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(124, 58, 237, 0.1);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+            .card-modern:hover {
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            }
+
+        .card-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+            background: rgba(248, 250, 252, 0.5);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark);
+            margin: 0;
+        }
+
+            .card-title i {
+                color: var(--primary);
+                font-size: 18px;
+            }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Buttons */
+        .btn-modern {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+            .btn-modern:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+            }
+
+        /* Footer */
+        .admin-footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--secondary);
+            font-size: 14px;
+            border-top: 1px solid rgba(124, 58, 237, 0.1);
+            margin-top: 40px;
+            background: white;
+        }
+
+        /* Responsive */
+        @@media (max-width: 1200px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+                .admin-sidebar.mobile-open {
+                    transform: translateX(0);
+                }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .content-area {
+                padding: 24px;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .admin-header {
+                padding: 0 20px;
+            }
+
+            .search-container {
+                display: none;
+            }
+
+            .user-info {
+                display: none;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Modern Sidebar -->
+        <div class="admin-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="logo-text">Shop Admin</div>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+
+                <!-- Dashboard -->
+                <a href="/Admin/Dashboard" class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Dashboard</span>
+                </a>
+
+                <div class="menu-divider"></div>
+
+                <!-- User Management -->
+                <div class="menu-section-title">Quản lý người dùng</div>
+
+                <a href="/Admin/Users" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Quản lý người dùng</span>
+                </a>
+
+                <a href="/Admin/Roles" class="nav-item">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Vai trò & Quyền</span>
+                </a>
+
+                <a href="/Admin/Sessions" class="nav-item">
+                    <i class="fas fa-key"></i>
+                    <span>Phiên đăng nhập</span>
+                </a>
+
+                <div class="menu-divider"></div>
+
+                <!-- Content -->
+                <div class="menu-section-title">Quản lý nội dung</div>
+
+                <a href="/Admin/Topics" class="nav-item">
+                    <i class="fas fa-book"></i>
+                    <span>Chủ đề</span>
+                </a>
+
+                <a href="/Admin/Difficulties" class="nav-item">
+                    <i class="fas fa-signal"></i>
+                    <span>Độ khó</span>
+                </a>
+
+                <a href="/Admin/Questions" class="nav-item">
+                    <i class="fas fa-question-circle"></i>
+                    <span>Câu hỏi</span>
+                </a>
+
+                <div class="menu-divider"></div>
+
+                <!-- Game & Achievement -->
+                <div class="menu-section-title">Trò chơi & Thành tựu</div>
+
+                <a href="/Admin/QuizNgay" class="nav-item">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Quiz mỗi ngày</span>
+                </a>
+
+                <a href="/Admin/QuizTuyChinh" class="nav-item">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Quiz tùy chỉnh</span>
+                </a>
+
+                <a href="/Admin/BXH" class="nav-item">
+                    <i class="fas fa-list-ol"></i>
+                    <span>Bảng xếp hạng</span>
+                </a>
+
+                <a href="/Admin/PhanThuong" class="nav-item">
+                    <i class="fas fa-gift"></i>
+                    <span>Phần thưởng</span>
+                </a>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Achievements">
+                        <i class="fas fa-trophy"></i>
+                        <span>Thành tựu</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("Index","TuongTac")">
+                        <i class="fas fa-comments"></i>
+                        <span>Bình luận</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="@Url.Action("LichSuChiaSe","TuongTac")">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Lịch sử chia sẻ</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="/Admin/Helps">
+                        <i class="fas fa-life-ring"></i>
+                        <span>Trợ giúp</span>
+                    </a>
+                </li>
+
+
+
+                <div class="menu-divider"></div>
+
+                <!-- System -->
+                <div class="menu-section-title">Hệ thống</div>
+
+                <a href="/Admin/Reports" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </a>
+
+                <a href="/Admin/ThongKe" class="nav-item">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Thống kê</span>
+                </a>
+
+                <a href="/Admin/System" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Cài đặt hệ thống</span>
+                </a>
+
+                <div class="menu-divider"></div>
+
+                <!-- Logout -->
+                <a class="nav-item text-danger" href="@Url.Action("Logout", "Account")">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Đăng xuất</span>
+                </a>
+
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="footer-text">
+                    <i class="fas fa-heart"></i>
+                    Made by Nhóm Web Số 1 UTE
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Modern Header -->
+            <div class="admin-header">
+                <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h1 class="page-title">Dashboard</h1>
+                </div>
+
+                <div class="header-actions">
+                    <div class="search-container">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-box" placeholder="Tìm kiếm...">
+                    </div>
+
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <a href="/Admin/Profile" class="nav-item">
+                            <i class="fas fa-cog"></i>
+                            <span>PROFILE</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                @RenderBody()
+            </div>
+
+            <!-- Footer -->
+            <div class="admin-footer">
+                <p>© @DateTime.Now.Year - Hệ thống quản lý | Phiên bản hiện đại</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="~/Scripts/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile menu functionality
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const sidebar = document.getElementById('sidebar');
+
+            function toggleMobileMenu() {
+                sidebar.classList.toggle('mobile-open');
+            }
+
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+            }
+
+            // Close menu when clicking on a link (mobile)
+            const sidebarLinks = document.querySelectorAll('.nav-item');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function () {
+                    if (window.innerWidth <= 1200) {
+                        sidebar.classList.remove('mobile-open');
+                    }
+                });
+            });
+
+            // Handle window resize
+            window.addEventListener('resize', function () {
+                if (window.innerWidth > 1200) {
+                    sidebar.classList.remove('mobile-open');
+                }
+            });
+
+            // Add hover effects to cards
+            const cards = document.querySelectorAll('.card-modern');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    this.style.transform = 'translateY(-4px)';
+                });
+
+                card.addEventListener('mouseleave', function () {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

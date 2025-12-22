@@ -1,0 +1,10 @@
+﻿@if (ViewBag.StatsError != null)
+{
+    <div class="alert alert-danger">@ViewBag.StatsError</div>
+}
+else
+{
+    <div class="alert alert-info">
+        @ViewBag.TodayStats
+    </div>
+}

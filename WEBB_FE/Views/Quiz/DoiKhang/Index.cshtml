@@ -1,4 +1,4 @@
-﻿@{
+﻿﻿@{
     ViewBag.Title = "Đối Kháng - Tìm Trận";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -298,7 +298,7 @@
             $('#statusText').text('❌ Lỗi kết nối');
         };
 
-       
+
     }
 
     function handleServerMessage(data) {
@@ -359,7 +359,7 @@
     if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ Type: 'FIND_MATCH' }));
         $('#statusText').text('⏳ Đang tìm đối thủ...');
-        
+
         // ✨ THÊM TIMEOUT 60 GIÂY
         findMatchTimeout = setTimeout(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
