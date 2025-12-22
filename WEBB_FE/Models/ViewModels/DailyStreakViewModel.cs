@@ -1,16 +1,25 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace WEBB.Models.ViewModels
 {
     public class DailyStreakViewModel
     {
-        // Số ngày liên tiếp
+        // Core streak
         public int SoNgayLienTiep { get; set; }
-
-        // Lần cập nhật chuỗi gần nhất (từ BE trả về)
         public DateTime? NgayCapNhatCuoi { get; set; }
 
-        // Thông báo hiển thị cho user
+        // UI info
         public string Message { get; set; }
+        public bool IsLoggedIn { get; set; }
+        public string UserName { get; set; }
+
+        // Timeline 7 ngày
+        public List<DateTime> LichSu7Ngay { get; set; }
+
+        public DailyStreakViewModel()
+        {
+            LichSu7Ngay = new List<DateTime>();
+        }
     }
 }

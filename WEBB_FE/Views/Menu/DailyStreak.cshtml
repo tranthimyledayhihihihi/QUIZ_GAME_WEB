@@ -1,79 +1,364 @@
-﻿@model WEBB.Models.ViewModels.DailyStreakViewModel
+﻿﻿@model WEBB.Models.ViewModels.DailyStreakViewModel
 @{
-    ViewBag.Title = "Chuỗi Ngày";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Chuỗi Ngày May Mắn";
 }
-
-<div class="game-container">
-    <div class="card p-4 shadow-lg" style="max-width: 480px; margin: 0 auto;">
-        <h3 class="fw-bold mb-3 text-center">
-            <i class="fa-solid fa-fire me-2"></i> Chuỗi Ngày Liên Tiếp
-        </h3>
-
-        <p class="text-muted text-center">
-            @Model.Message
-        </p>
-
-        <div class="text-center my-3">
-            <div class="display-4 fw-bold text-warning">
-                🔥 @Model.SoNgayLienTiep ngày
+<div class="streak-page-wrapper">
+    <div class="background-decor shadow-1"></div>
+    <div class="background-decor shadow-2"></div>
+    <div class="glass-container container py-5">
+        <!-- Header Section -->
+        <div class="text-center mb-5 fade-in">
+            <div class="streak-badge mb-3">
+                <div class="fire-icon-container">
+                    <i class="fa-solid fa-fire-flame-curved fire-icon"></i>
+                </div>
+                <div class="streak-number">@Model.SoNgayLienTiep</div>
             </div>
-
-            @if (Model.NgayCapNhatCuoi.HasValue)
-            {
-                <div class="text-secondary mt-2">
-                    Cập nhật lần cuối:
-                    @Model.NgayCapNhatCuoi.Value.ToString("dd/MM/yyyy")
-                </div>
-            }
-            else
-            {
-                <div class="text-secondary mt-2">
-                    Bạn chưa có chuỗi ngày nào, hãy bắt đầu chơi hôm nay!
-                </div>
-            }
+            <h1 class="main-title text-gradient">Chuỗi @Model.SoNgayLienTiep Ngày Liên Tiếp!</h1>
+            <p class="subtitle">Đừng để ngọn lửa vụt tắt, hãy duy trì chuỗi ngày của bạn mỗi ngày nhé!</p>
         </div>
-
-        <!-- Có thể vẽ thêm timeline đơn giản -->
-        @if (Model.SoNgayLienTiep > 0)
-        {
-            <div class="d-flex justify-content-center flex-wrap mt-3">
-                @for (int i = Model.SoNgayLienTiep; i >= 1 && i >= Model.SoNgayLienTiep - 6; i--)
+        <!-- Action Card -->
+        <div class="main-card glass-morph mb-5 slide-up">
+            <div class="card-body text-center p-4 p-md-5">
+                <div class="status-indicator mb-4">
+                    <span class="badge rounded-pill @(Model.Message.Contains("đã nhận") ? "bg-success-soft" : "bg-warning-soft")">
+                        <i class="fa-solid @(Model.Message.Contains("đã nhận") ? "fa-circle-check" : "fa-circle-info") me-2"></i>
+                        @Model.Message
+                    </span>
+                </div>
+                <form id="streakForm">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" id="btnNhanThuong" class="btn-game-premium @(Model.Message.Contains("đã nhận") ? "disabled-style" : "")">
+                        <span class="btn-content">
+                            <i class="fa-solid fa-gift me-2"></i>
+                            @(Model.Message.Contains("đã nhận") ? "NGỌN LỬA ĐANG CHÁY" : "THẮP SÁNG NGỌN LỬA")
+                        </span>
+                        <div class="btn-glow"></div>
+                    </button>
+                </form>
+                <div id="streakMessage" class="alert mt-4 d-none"></div>
+            </div>
+        </div>
+        <!-- Weekly Progress -->
+        <div class="progress-section slide-up-delay">
+            <h3 class="section-title"><i class="fa-solid fa-calendar-week me-3"></i>Tiến trình tuần này</h3>
+            <div class="timeline-wrapper mt-4">
+                @for (int i = 1; i <= 7; i++)
                 {
-                    <div class="streak-day">
-                        <div class="streak-circle">@i</div>
-                        <div class="streak-label">Ngày</div>
+                    var isCompleted = i <= Model.SoNgayLienTiep;
+                    var isCurrent = i == (Model.SoNgayLienTiep + 1) && !Model.Message.Contains("đã nhận");
+
+                    <div class="day-slot @(isCompleted ? "completed" : "") @(isCurrent ? "current" : "")">
+                        <div class="day-dot">
+                            <i class="fa-solid @(isCompleted ? "fa-check" : "fa-star")"></i>
+                        </div>
+                        <div class="day-label">Ngày @i</div>
+                        @if (isCompleted)
+                        {<div class="dot-glow"></div>}
                     </div>
                 }
             </div>
-        }
+        </div>
     </div>
 </div>
+<style>
+    :root {
+        --primary-gradient: linear-gradient(135deg, #6e8efb, #a777e3);
+        --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --fire-gradient: linear-gradient(to top, #f093fb, #f5576c);
+        --glass-bg: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.15);
+    }
 
-@section Styles {
-    <style>
-        .streak-day {
-            margin: 6px;
-            text-align: center;
+    .streak-page-wrapper {
+        min-vh: 100vh;
+        background: #0f172a;
+        color: white;
+        font-family: 'Inter', sans-serif;
+        position: relative;
+        overflow-x: hidden;
+        padding: 40px 0;
+    }
+    /* Background Decorations */
+    .background-decor {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        z-index: 0;
+    }
+
+    .shadow-1 {
+        width: 400px;
+        height: 400px;
+        background: rgba(110, 142, 251, 0.2);
+        top: -10%;
+        left: -5%;
+    }
+
+    .shadow-2 {
+        width: 500px;
+        height: 500px;
+        background: rgba(245, 87, 108, 0.2);
+        bottom: -10%;
+        right: -5%;
+    }
+
+    .glass-container {
+        position: relative;
+        z-index: 1;
+    }
+    /* Streak Badge & Fire Icon */
+    .streak-badge {
+        position: relative;
+        display: inline-block;
+    }
+
+    .fire-icon-container {
+        font-size: 5rem;
+        background: var(--fire-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: fire-pulse 2s infinite ease-in-out;
+    }
+
+    .streak-number {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -10%);
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: white;
+        text-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    /* Typography */
+    .text-gradient {
+        background: linear-gradient(90deg, #fff, #a777e3);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+    }
+
+    .main-title {
+        font-size: 3.5rem;
+    }
+
+    .subtitle {
+        color: #94a3b8;
+        font-size: 1.1rem;
+    }
+    /* Glassmorphism Card */
+    .glass-morph {
+        background: var(--glass-bg);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid var(--glass-border);
+        border-radius: 2rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    /* Premium Button */
+    .btn-game-premium {
+        position: relative;
+        padding: 1.2rem 3rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        border: none;
+        border-radius: 1rem;
+        background: var(--accent-gradient);
+        color: white;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px -5px rgba(245, 87, 108, 0.5);
+        overflow: hidden;
+    }
+
+        .btn-game-premium:hover:not(.disabled-style) {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(245, 87, 108, 0.7);
         }
 
-        .streak-circle {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #ff922b;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            margin: 0 auto 4px;
-            box-shadow: 0 4px 10px rgba(255, 146, 43, 0.5);
+        .btn-game-premium:active {
+            transform: scale(0.95);
         }
 
-        .streak-label {
-            font-size: 12px;
-            color: #6b7280;
+    .disabled-style {
+        background: #334155;
+        box-shadow: none;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .btn-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .btn-game-premium:hover .btn-glow {
+        opacity: 1;
+    }
+    /* Timeline */
+    .timeline-wrapper {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+        padding: 20px 0;
+    }
+
+        .timeline-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #334155;
+            z-index: 0;
         }
-    </style>
+
+    .day-slot {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    }
+
+    .day-dot {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #1e293b;
+        border: 4px solid #334155;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        color: #64748b;
+        transition: all 0.5s;
+    }
+
+    .day-slot.completed .day-dot {
+        background: var(--accent-gradient);
+        border-color: rgba(255,255,255,0.2);
+        color: white;
+        box-shadow: 0 0 20px rgba(245, 87, 108, 0.5);
+    }
+
+    .day-label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #94a3b8;
+    }
+
+    .day-slot.completed .day-label {
+        color: white;
+        font-weight: 700;
+    }
+
+    .dot-glow {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 60px;
+        background: radial-gradient(circle, rgba(245, 87, 108, 0.2), transparent);
+        z-index: -1;
+    }
+    /* Animations */
+    @@keyframes fire-pulse {
+        0%, 100% {
+            transform: scale(1);
+            filter: drop-shadow(0 0 10px rgba(245, 87, 108, 0.5));
+        }
+
+        50% {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 30px rgba(245, 87, 108, 0.8));
+        }
+    }
+
+    .fade-in {
+        animation: fadeIn 1s ease-out;
+    }
+
+    .slide-up {
+        animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide-up-delay {
+        animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+        animation-delay: 0.3s;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .bg-success-soft {
+        background: rgba(34, 197, 94, 0.2);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .bg-warning-soft {
+        background: rgba(234, 179, 8, 0.2);
+        color: #fde047;
+        border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+</style>
+@section Scripts {
+    <script>
+        $(function () {
+            $('#streakForm').on('submit', function (e) {
+                e.preventDefault();
+                var $btn = $('#btnNhanThuong');
+                if ($btn.hasClass('disabled-style')) return;
+                $btn.addClass('disabled-style').find('.btn-content').html('<i class="fa-solid fa-spinner fa-spin me-2"></i>ĐANG KÍCH HOẠT...');
+                $.post('@Url.Action("NhanThuong", "DailyStreak")',
+                    $(this).serialize(),
+                    function (res) {
+                        $('#streakMessage')
+                            .removeClass('d-none alert-danger alert-success')
+                            .addClass(res.success ? 'alert-success' : 'alert-danger')
+                            .text(res.message);
+                        if (res.success) {
+                            $btn.find('.btn-content').html('<i class="fa-solid fa-check me-2"></i>THÀNH CÔNG!');
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            $btn.removeClass('disabled-style').find('.btn-content').html('<i class="fa-solid fa-gift me-2"></i>THỬ LẠI');
+                        }
+                    }
+                ).fail(function() {
+                    $('#streakMessage').removeClass('d-none alert-danger').addClass('alert-danger').text('Lỗi kết nối máy chủ.');
+                    $btn.removeClass('disabled-style').find('.btn-content').html('<i class="fa-solid fa-gift me-2"></i>THỬ LẠI');
+                });
+            });
+        });
+    </script>
 }

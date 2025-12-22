@@ -147,6 +147,7 @@
     <Compile Include="Controllers\Quiz\SharedQuizController.cs" />
     <Compile Include="Controllers\Quiz\WrongAnswerController.cs" />
     <Compile Include="Controllers\Social\ActivityController.cs" />
+    <Compile Include="Controllers\Social\DailyStreakController .cs" />
     <Compile Include="Controllers\Social\LeaderboardController.cs" />
     <Compile Include="Controllers\User\AccountController.cs" />
     <Compile Include="Controllers\User\GiftController.cs" />
@@ -200,6 +201,7 @@
     <Compile Include="Models\ViewModels\ReportFilterViewModel.cs" />
     <Compile Include="Models\ViewModels\RewardItemViewModel.cs" />
     <Compile Include="Models\ViewModels\SystemConfigViewModel.cs" />
+    <Compile Include="Models\ViewModels\UserProfileViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -366,6 +368,8 @@
     <Content Include="Views\Quiz\DoiKhang\Create.cshtml" />
     <Content Include="Views\Quiz\DoiKhang\Join.cshtml" />
     <Content Include="Views\Quiz\DoiKhang\Match.cshtml" />
+    <Content Include="Views\Quiz\Play\Match.cshtml" />
+    <Content Include="Views\User\Profile\Indexplay.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

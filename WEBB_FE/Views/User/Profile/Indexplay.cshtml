@@ -1,0 +1,89 @@
+﻿@model WEBB_FE.Models.ViewModels.UserProfileViewModel
+@{
+    ViewBag.Title = "Hồ sơ cá nhân";
+   // Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container py-5">
+    <div class="row">
+        <!-- CỘT TRÁI: THÔNG TIN USER -->
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm text-center p-4 rounded-4" style="background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); color: white;">
+                <div class="position-relative d-inline-block">
+                    <img src="@(string.IsNullOrEmpty(Model.AnhDaiDien) ? "/images/default-avatar.png" : Model.AnhDaiDien)"
+                         class="rounded-circle border border-3 border-white mb-3"
+                         style="width: 120px; height: 120px; object-fit: cover;"
+                         alt="Avatar">
+                </div>
+
+                <h3 class="fw-bold mb-1">@Model.HoTen</h3>
+                <p class="text-white-50 mb-3">@@@Model.TenDangNhap</p>
+
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <div class="bg-white bg-opacity-25 rounded p-2 px-3">
+                        <small class="d-block text-white-50">Chuỗi</small>
+                        <span class="fw-bold fs-5">🔥 @Model.StreakCount</span>
+                    </div>
+                    <div class="bg-white bg-opacity-25 rounded p-2 px-3">
+                        <small class="d-block text-white-50">Trận</small>
+                        <span class="fw-bold fs-5">⚔️ @Model.TongTranDaChoi</span>
+                    </div>
+                </div>
+                <a href="@Url.Action("Index", "Settings")" class="btn btn-light w-100 fw-bold text-primary">
+                    <i class="fa-solid fa-gear me-2"></i> Cài đặt tài khoản
+                </a>
+            </div>
+        </div>
+        <!-- CỘT PHẢI: LỊCH SỬ ĐẤU -->
+        <div class="col-md-8">
+            <div class="card shadow border-0 rounded-4">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="fw-bold mb-0 text-primary">
+                        <i class="fa-solid fa-clock-rotate-left me-2"></i> Lịch Sử Đấu Gần Đây
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.LichSuDau != null && Model.LichSuDau.Count > 0)
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var match in Model.LichSuDau)
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center py-3 px-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded-circle p-2 me-3 text-primary">
+                                            <i class="fa-solid fa-bolt"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold">@match.TenQuiz</h6>
+                                            <small class="text-muted">
+                                                <i class="fa-regular fa-calendar me-1"></i> @match.NgayChoi
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold text-success fs-5">+@match.Diem điểm</div>
+                                        <small class="text-muted">Đúng: @match.SoCauDung câu</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-ghost fs-1 mb-3"></i>
+                            <p>Chưa có lịch sử đấu nào.</p>
+                            <a href="@Url.Action("Index", "Play")" class="btn btn-primary btn-sm rounded-pill px-4">Chơi ngay</a>
+                        </div>
+                    }
+                </div>
+                <div class="card-footer bg-white border-0 text-center py-3">
+                    <a href="@Url.Action("Index", "History")" class="text-decoration-none fw-bold small">
+                        Xem tất cả lịch sử <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+    </div>
+</div>
