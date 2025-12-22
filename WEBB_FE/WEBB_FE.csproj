@@ -125,6 +125,7 @@
     <Compile Include="Controllers\Admin\DifficultiesController.cs" />
     <Compile Include="Controllers\Admin\HelpsController.cs" />
     <Compile Include="Controllers\Admin\PhanThuongController.cs" />
+    <Compile Include="Controllers\Admin\ProfileController.cs" />
     <Compile Include="Controllers\Admin\QuestionsController.cs" />
     <Compile Include="Controllers\Admin\QuizNgayController.cs" />
     <Compile Include="Controllers\Admin\QuizTuyChinhController.cs" />
@@ -159,6 +160,7 @@
     <Compile Include="Models\Admin\BXHDto.cs" />
     <Compile Include="Models\Admin\PermissionDto.cs" />
     <Compile Include="Models\Admin\PhanThuongDto.cs" />
+    <Compile Include="Models\Admin\ProfileDto.cs" />
     <Compile Include="Models\Admin\QuizNgayDto.cs" />
     <Compile Include="Models\Admin\QuizTuyChinhDto.cs" />
     <Compile Include="Models\Admin\ReportData.cs" />
@@ -171,6 +173,7 @@
     <Compile Include="Models\Admin\TroGiupDto.cs" />
     <Compile Include="Models\Admin\TuongTacDto.cs" />
     <Compile Include="Models\Quiz\CauHoiDto.cs" />
+    <Compile Include="Models\Quiz\CauHoiUpdateDto.cs" />
     <Compile Include="Models\Quiz\CauTraLoiDto.cs" />
     <Compile Include="Models\Quiz\ChuDeDto.cs" />
     <Compile Include="Models\Quiz\DoKhoDto.cs" />
@@ -356,12 +359,14 @@
     <Content Include="Views\Admin\TuongTac\LichSuChiaSe.cshtml" />
     <Content Include="Views\Admin\PhanThuong\index.cshtml" />
     <Content Include="Views\Admin\ThongKe\index.cshtml" />
+    <Content Include="Views\Admin\Profile\index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Views\Arena\" />
     <Folder Include="Views\BXH\" />
     <Folder Include="Views\PhanThuong\" />
+    <Folder Include="Views\Profile\" />
     <Folder Include="Views\QuizNgay\" />
     <Folder Include="Views\QuizTuyChinh\" />
     <Folder Include="Views\SettingsControllers\" />

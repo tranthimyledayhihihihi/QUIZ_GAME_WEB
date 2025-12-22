@@ -21,7 +21,7 @@
     <div class="card shadow">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover" id="questionsTable">
+                <table class="table table-hover align-middle">
                     <thead class="table-light">
                         <tr>
                             <th class="text-center">ID</th>
@@ -54,21 +54,25 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge @(q.TrangThaiDuyet == "Đã duyệt" ? "bg-success" : "bg-warning")">
+                                    <span class="badge @(q.TrangThaiDuyet == "Approved" || q.TrangThaiDuyet == "Đã duyệt"
+                                                        ? "bg-success" : "bg-warning")">
                                         @q.TrangThaiDuyet
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-warning"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editQuestionModal"
-                                            onclick="fillEditModal(@Html.Raw(Json.Encode(q)))">
+                                    <!-- ===== SỬA → LINK SANG EDIT ===== -->
+                                    <a class="btn btn-sm btn-warning"
+                                       href="@Url.Action("Edit","Questions", new { id = q.CauHoiID })"
+                                       title="Sửa">
                                         <i class="fas fa-edit"></i>
-                                    </button>
+                                    </a>
+
+                                    <!-- ===== XÓA (MODAL) ===== -->
                                     <button class="btn btn-sm btn-danger"
                                             data-bs-toggle="modal"
                                             data-bs-target="#deleteQuestionModal"
-                                            onclick="setDeleteId(@q.CauHoiID)">
+                                            onclick="setDeleteId(@q.CauHoiID)"
+                                            title="Xóa">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -87,14 +91,12 @@
         <div class="modal-content">
             <form method="post" action="@Url.Action("Create","Questions")">
 
-                <!-- ====== FIELD BẮT BUỘC CHO API ====== -->
                 <input type="hidden" name="QuizTuyChinhID" value="0" />
                 <input type="hidden" name="AdminDuyetID" value="0" />
                 <input type="hidden" name="TrangThaiDuyet" value="CHO_DUYET" />
                 <input type="hidden" name="NgayTao" value="@DateTime.UtcNow.ToString("o")" />
                 <input type="hidden" name="HinhAnh" value="" />
                 <input type="hidden" name="CacLuaChon" value="" />
-                <!-- =================================== -->
 
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">Thêm Câu hỏi</h5>
@@ -164,56 +166,6 @@
     </div>
 </div>
 
-<!-- ================= EDIT MODAL ================= -->
-<div class="modal fade" id="editQuestionModal">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <form method="post" action="@Url.Action("Edit","Questions")">
-                <input type="hidden" name="CauHoiID" id="editCauHoiID" />
-
-                <div class="modal-header bg-warning">
-                    <h5 class="modal-title">Sửa Câu hỏi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <textarea id="editNoiDung" name="NoiDung" class="form-control mb-2"></textarea>
-                    <input id="editA" name="DapAnA" class="form-control mb-2" />
-                    <input id="editB" name="DapAnB" class="form-control mb-2" />
-                    <input id="editC" name="DapAnC" class="form-control mb-2" />
-                    <input id="editD" name="DapAnD" class="form-control mb-2" />
-
-                    <select id="editDapAnDung" name="DapAnDung" class="form-select mb-2">
-                        <option>A</option>
-                        <option>B</option>
-                        <option>C</option>
-                        <option>D</option>
-                    </select>
-
-                    <select id="editChuDe" name="ChuDeID" class="form-select mb-2">
-                        @foreach (var c in ViewBag.ChuDes)
-                        {
-                            <option value="@c.ChuDeID">@c.TenChuDe</option>
-                        }
-                    </select>
-
-                    <select id="editDoKho" name="DoKhoID" class="form-select">
-                        @foreach (var d in ViewBag.DoKhos)
-                        {
-                            <option value="@d.DoKhoID">@d.TenDoKho</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button class="btn btn-warning">Cập nhật</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <!-- ================= DELETE MODAL ================= -->
 <div class="modal fade" id="deleteQuestionModal">
     <div class="modal-dialog">
@@ -236,19 +188,7 @@
 </div>
 
 <script>
-    function fillEditModal(q) {
-        editCauHoiID.value = q.CauHoiID;
-        editNoiDung.value = q.NoiDung;
-        editA.value = q.DapAnA;
-        editB.value = q.DapAnB;
-        editC.value = q.DapAnC;
-        editD.value = q.DapAnD;
-        editDapAnDung.value = q.DapAnDung;
-        editChuDe.value = q.ChuDeID;
-        editDoKho.value = q.DoKhoID;
-    }
-
     function setDeleteId(id) {
-        deleteId.value = id;
+        document.getElementById("deleteId").value = id;
     }
 </script>

@@ -136,6 +136,8 @@ namespace WEBB.Controllers.Admin
         [HttpGet]
         public async Task<ActionResult> Edit(int id)
         {
+            await LoadDropdownData(); // ✅ THÊM DÒNG NÀY (để ViewBag.ChuDes / DoKhos có dữ liệu)
+
             using (var client = new HttpClient())
             {
                 var token = Session["JWT_TOKEN"]?.ToString();
@@ -150,18 +152,20 @@ namespace WEBB.Controllers.Admin
                 }
 
                 var json = await response.Content.ReadAsStringAsync();
-                var dto = JsonConvert.DeserializeObject<CauHoiDto>(json);
+                var dto = JsonConvert.DeserializeObject<CauHoiUpdateDto>(json);
 
                 return View("~/Views/Admin/Questions/Edit.cshtml", dto);
             }
         }
 
 
+
+
         // ================================
         // POST: EDIT
         // ================================
         [HttpPost]
-        public async Task<ActionResult> Edit(CauHoiDto model)
+        public async Task<ActionResult> Edit(CauHoiUpdateDto model)
         {
             using (var client = new HttpClient())
             {
@@ -182,6 +186,7 @@ namespace WEBB.Controllers.Admin
                 return RedirectToAction("Index");
             }
         }
+
 
         // ================================
         // POST: DELETE

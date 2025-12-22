@@ -1,41 +1,86 @@
-﻿@model WEBB.Models.Quiz.CauHoiDto
+﻿@model WEBB.Models.Quiz.CauHoiUpdateDto
+
 @{
-    ViewBag.Title = "Sửa Câu hỏi";
+    ViewBag.Title = "Sửa câu hỏi";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h2>Sửa Câu hỏi</h2>
+<div class="container-fluid px-4">
+    <h1 class="h3 mb-4 text-warning">
+        <i class="fas fa-edit me-2"></i>Sửa Câu hỏi #@Model.CauHoiID
+    </h1>
 
-<form method="post" action="@Url.Action("Edit", "Questions")">
-    @Html.HiddenFor(m => m.CauHoiID)
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" action="@Url.Action("Edit","Questions")">
 
-    <textarea name="NoiDung" class="form-control mb-2" required>@Model.NoiDung</textarea>
+                <input type="hidden" name="CauHoiID" value="@Model.CauHoiID" />
 
-    <input name="DapAnA" class="form-control mb-2" value="@Model.DapAnA" required />
-    <input name="DapAnB" class="form-control mb-2" value="@Model.DapAnB" required />
-    <input name="DapAnC" class="form-control mb-2" value="@Model.DapAnC" required />
-    <input name="DapAnD" class="form-control mb-2" value="@Model.DapAnD" required />
+                <div class="mb-3">
+                    <label class="form-label">Nội dung</label>
+                    <textarea name="NoiDung" class="form-control" required>@Model.NoiDung</textarea>
+                </div>
 
-    <input name="DapAnDung" class="form-control mb-2" value="@Model.DapAnDung" required />
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <input class="form-control" name="DapAnA" value="@Model.DapAnA" required />
+                    </div>
+                    <div class="col-md-6">
+                        <input class="form-control" name="DapAnB" value="@Model.DapAnB" required />
+                    </div>
+                    <div class="col-md-6">
+                        <input class="form-control" name="DapAnC" value="@Model.DapAnC" required />
+                    </div>
+                    <div class="col-md-6">
+                        <input class="form-control" name="DapAnD" value="@Model.DapAnD" required />
+                    </div>
+                </div>
 
-    <select name="ChuDeID" class="form-control mb-2">
-        @foreach (var cd in ViewBag.ChuDes)
-        {
-            <option value="@cd.chuDeID" @(cd.chuDeID == Model.ChuDeID ? "selected" : "")>
-                @cd.tenChuDe
-            </option>
-        }
-    </select>
+                <div class="mt-3">
+                    <label>Đáp án đúng</label>
+                    <select name="DapAnDung" class="form-select">
+                        @foreach (var a in new[] { "A", "B", "C", "D" })
+                        {
+                            <option value="@a" @(Model.DapAnDung == a ? "selected" : "")>@a</option>
+                        }
+                    </select>
+                </div>
 
-    <select name="DoKhoID" class="form-control mb-3">
-        @foreach (var dk in ViewBag.DoKhos)
-        {
-            <option value="@dk.doKhoID" @(dk.doKhoID == Model.DoKhoID ? "selected" : "")>
-                @dk.tenDoKho
-            </option>
-        }
-    </select>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <label>Chủ đề</label>
+                        <select name="ChuDeID" class="form-select">
+                            @foreach (var c in (ViewBag.ChuDes as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
+                            {
+                                <option value="@c.ChuDeID" @(Model.ChuDeID == c.ChuDeID ? "selected" : "")>
+                                    @c.TenChuDe
+                                </option>
+                            }
 
-    <button type="submit" class="btn btn-success">Lưu</button>
-    <a href="@Url.Action("Index")" class="btn btn-secondary">Hủy</a>
-</form>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Độ khó</label>
+                        <select name="DoKhoID" class="form-select">
+                            @foreach (var d in (ViewBag.DoKhos as IEnumerable<dynamic>) ?? Enumerable.Empty<dynamic>())
+                            {
+                                <option value="@d.DoKhoID" @(Model.DoKhoID == d.DoKhoID ? "selected" : "")>
+                                    @d.TenDoKho
+                                </option>
+                            }
+
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <a href="@Url.Action("Index","Questions")" class="btn btn-secondary">Hủy</a>
+                    <button class="btn btn-warning">
+                        <i class="fas fa-save me-1"></i>Cập nhật
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
