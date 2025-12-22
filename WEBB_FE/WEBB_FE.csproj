@@ -149,6 +149,7 @@
     <Compile Include="Controllers\Social\ActivityController.cs" />
     <Compile Include="Controllers\Social\LeaderboardController.cs" />
     <Compile Include="Controllers\User\AccountController.cs" />
+    <Compile Include="Controllers\User\GiftController.cs" />
     <Compile Include="Controllers\User\SettingsController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -189,14 +190,16 @@
     <Compile Include="Models\User\SettingDto.cs" />
     <Compile Include="Models\User\UserProfileDto.cs" />
     <Compile Include="Models\ViewModels\ArenaViewModels.cs" />
+    <Compile Include="Models\ViewModels\DailyRewardPageViewModel.cs" />
     <Compile Include="Models\ViewModels\DailyStreakViewModel.cs" />
     <Compile Include="Models\ViewModels\DashboardViewModel.cs" />
     <Compile Include="Models\ViewModels\DuelLobbyViewModel.cs" />
+    <Compile Include="Models\ViewModels\LeaderboardApiResponse.cs" />
     <Compile Include="Models\ViewModels\LeaderboardViewModel.cs" />
     <Compile Include="Models\ViewModels\QuizPlayViewModel.cs" />
     <Compile Include="Models\ViewModels\ReportFilterViewModel.cs" />
+    <Compile Include="Models\ViewModels\RewardItemViewModel.cs" />
     <Compile Include="Models\ViewModels\SystemConfigViewModel.cs" />
-    <Compile Include="Models\ViewModels\DailyRewardViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -365,6 +368,7 @@
     <Folder Include="App_Data\" />
     <Folder Include="Views\Arena\" />
     <Folder Include="Views\BXH\" />
+    <Folder Include="Views\Gift\" />
     <Folder Include="Views\PhanThuong\" />
     <Folder Include="Views\Profile\" />
     <Folder Include="Views\QuizNgay\" />
