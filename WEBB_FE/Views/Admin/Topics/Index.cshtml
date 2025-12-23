@@ -167,8 +167,9 @@
                                             <i class="fas fa-edit"></i>
                                         </button>
 
-                                        <form action="/Admin/Topics/Delete" method="post" style="display:inline;"
-                                              onsubmit="return confirmDelete(this)">
+<form action="@Url.Action("Delete", "Topics")"
+      method="post"
+      style="display:inline;                                              onsubmit="return confirmDelete(this)">
                                             <input type="hidden" name="id" value="@c.ChuDeID" />
                                             <button type="submit" class="btn btn-outline-danger btn-sm" title="Xóa">
                                                 <i class="fas fa-trash-alt"></i>
@@ -195,7 +196,7 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form action="/Admin/Topics/Create" method="post">
+            <form action="/Topics/Create" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label fw-bold">Tên Chủ đề <span class="text-danger">*</span></label>

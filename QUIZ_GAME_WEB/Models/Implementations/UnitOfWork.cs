@@ -1,6 +1,6 @@
 ﻿using QUIZ_GAME_WEB.Data;
 using QUIZ_GAME_WEB.Models.Interfaces;
-using QUIZ_GAME_WEB.Models.Implementations;
+using QUIZ_GAME_WEB.Models.ResultsModels; // Cần thiết cho GenericRepository<ThanhTuuDefinition> và <ThanhTuu>
 using System;
 using System.Threading.Tasks;
 
@@ -10,7 +10,14 @@ namespace QUIZ_GAME_WEB.Models.Implementations
     {
         private readonly QuizGameContext _context;
 
-        // --- Repository properties (Đã bổ sung Roles và Permissions) ---
+        // ===============================================
+        // KHAI BÁO CÁC BACKING FIELDS CHO REPOSITORIES MỚI/CÓ VẤN ĐỀ
+        // ===============================================
+        // Khai báo kiểu chung (GenericRepository) để triển khai các thuộc tính mới
+        private IGenericRepository<ThanhTuuDefinition>? _achievementDefinitions;
+        private IGenericRepository<ThanhTuu>? _userAchievements;
+
+        // --- Repository properties (Đã giữ nguyên kiểu cũ nếu không cần thay đổi) ---
         public ITranDauRepository TranDau { get; private set; }
         public IUserRepository Users { get; private set; }
         public IQuizRepository Quiz { get; private set; }
@@ -20,17 +27,31 @@ namespace QUIZ_GAME_WEB.Models.Implementations
         public IClientKeyRepository ClientKeys { get; private set; }
         public ICommentRepository Comments { get; private set; }
         public ILoginSessionRepository LoginSessions { get; private set; }
-        public IAchievementsRepository Achievements { get; private set; }
 
-        // ✅ BỔ SUNG KHAI BÁO THUỘC TÍNH
+        // ❌ IAchievementsRepository Achievements đã bị loại bỏ/thay thế. 
+        // Nếu giữ lại, bạn cần triển khai nó ở đây. Tạm thời tôi loại bỏ nó để tránh xung đột với IUnitOfWork mới.
+
         public IRoleRepository Roles { get; private set; }
         public IPermissionRepository Permissions { get; private set; }
 
+        // ===============================================
+        // ✅ TRIỂN KHAI CÁC PROPERTY MỚI/ĐÃ SỬA ĐỔI
+        // ===============================================
+
+        public IGenericRepository<ThanhTuuDefinition> AchievementDefinitions =>
+            _achievementDefinitions ??= new GenericRepository<ThanhTuuDefinition>(_context);
+
+        public IGenericRepository<ThanhTuu> UserAchievements =>
+            _userAchievements ??= new GenericRepository<ThanhTuu>(_context);
+
+        // ===============================================
+        // CONSTRUCTOR
+        // ===============================================
         public UnitOfWork(QuizGameContext context)
         {
             _context = context;
 
-            // --- Khởi tạo repository (Đã bổ sung Roles và Permissions) ---
+            // --- Khởi tạo repository (Giữ nguyên các khởi tạo cũ) ---
             TranDau = new TranDauRepository(_context);
             Users = new UserRepository(_context);
             Quiz = new QuizRepository(_context);
@@ -40,13 +61,20 @@ namespace QUIZ_GAME_WEB.Models.Implementations
             ClientKeys = new ClientKeyRepository(_context);
             Comments = new CommentRepository(_context);
             LoginSessions = new LoginSessionRepository(_context);
-            Achievements = new AchievementsRepository(_context);
 
-            // ✅ KHỞI TẠO IMPLEMENTATION CỦA REPOSITORIES MỚI
+            // ❌ Loại bỏ khởi tạo IAchievementsRepository cũ nếu nó không còn tồn tại trong IUnitOfWork
+            // Achievements = new AchievementsRepository(_context); 
+
             Roles = new RoleRepository(_context);
             Permissions = new PermissionRepository(_context);
+
+            // GHI CHÚ: Các Repository Generic mới (AchievementDefinitions, UserAchievements) 
+            // được khởi tạo lazily trong getter của chúng.
         }
 
+        // ===============================================
+        // ACTIONS
+        // ===============================================
         public async Task<int> CompleteAsync()
         {
             return await _context.SaveChangesAsync();
